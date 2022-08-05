@@ -38,7 +38,9 @@ name_as_string <- function(x) {
 }
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 # 2. Data Loading and basic wrangling #############################################
 # Get directories of files
 print("Fetching data...")
@@ -56,7 +58,7 @@ cds <- list()
 for (i in files) {
   string <- paste(cd, i, sep = "")
   # print(string)
-  cds <- append(cds, string,)
+  cds <- append(cds, string, )
 }
 
 # Read in data
@@ -73,7 +75,9 @@ names(df2)[names(df2) == 'Date'] <- 'date'
 names(df3)[names(df3) == 'Date'] <- 'date'
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 print("Reformatting data.shape...")
 start_time <- Sys.time()
@@ -102,12 +106,14 @@ df2 <- subset(df2, select = -date)
 df3 <- subset(df3, select = -date)
 
 # Remove remaining rows where all data points = NaN
-df2 <- df2[rowSums(is.na(df2)) != ncol(df2), ]
-df3 <- df3[rowSums(is.na(df3)) != ncol(df3), ]
+df2 <- df2[rowSums(is.na(df2)) != ncol(df2),]
+df3 <- df3[rowSums(is.na(df3)) != ncol(df3),]
 # NOTE: Does not remove all remaining NaNs because of 'date' col
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 3. I.D. data wrangling (strings) ################################################
 cat(
@@ -121,7 +127,7 @@ cd_dict = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertat
 cd_problem_stocks = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/problem_id_s.txt"
 name_dict = readxl::read_xlsx(cd_dict)
 # read in fully formatted names of problematic stock series
-problem_names = read.delim(cd_problem_stocks, header = FALSE) 
+problem_names = read.delim(cd_problem_stocks, header = FALSE)
 problem_names <- unlist(problem_names, use.names = FALSE)
 
 # copy df3 (market data) into list of market's and their data
@@ -143,7 +149,7 @@ market_list <- vector(mode = "list", length = length(df_3))
 names(market_list) <- keys2
 names(stock_list) <- keys2
 
-# Specify patterns 
+# Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
 trouble <-
   c(
@@ -159,13 +165,14 @@ trouble <-
     "STLA.FP.Equity",
     "X9618.HK.Equity",
     "IVG.IM.Equity",
-    "STLA.FP.Equity", #NOTE: this name is a double-up, but does not break code
+    "STLA.FP.Equity",
+    #NOTE: this name is a double-up, but does not break code
     "ENR.GY.Equity",
     "HON.UW.Equity",
     "X360.AT.Equity"
   )
 trouble_selector <- unique(trouble)
-trouble_selector <- paste("^",trouble_selector,"$", sep="")
+trouble_selector <- paste("^", trouble_selector, "$", sep = "")
 trouble_selector <- paste0(trouble_selector, collapse = "|")
 
 # Break ID data.frame into list to remove NANs
@@ -178,12 +185,10 @@ for (i in 1:3) {
       pattern = paste0(pattern_list, collapse = "|"),
       replacement = "."
     )
-  name_list <- lapply(
-    name_list,
-    stringr::str_replace_all,
-    pattern = trouble_selector,
-    replacement = NA_character_
-  )
+  name_list <- lapply(name_list,
+                      stringr::str_replace_all,
+                      pattern = trouble_selector,
+                      replacement = NA_character_)
   name_list <- lapply(name_list, na.omit)
   name_list <- lapply(name_list, fix_digit_names, "X")
   
@@ -197,7 +202,9 @@ for (i in 1:3) {
 }
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 4. Removal of empty columns #######################################################
 print("Dropping problematic share names.")
@@ -213,15 +220,18 @@ df2 <- subset(df2, select = names_to_keep)
 
 df2_problems <- subset(df2, select = problem_names)
 # df2 <- subset(df2, select = names_to_keep2)
-df2_test <- df2[,!(names(df2) %in% problem_names)]
+df2_test <- df2[, !(names(df2) %in% problem_names)]
 
 # Check carve happened correctly
-if ((any(trouble %in% names(df2)))==TRUE || (any(problem_names %in% names(df2)))==TRUE) {
+if ((any(trouble %in% names(df2))) == TRUE ||
+    (any(problem_names %in% names(df2))) == TRUE) {
   message("WARNING: Removal of problem columns failed")
-} 
+}
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 5. Creation of list of market-index data.frames ##############################
 
@@ -233,13 +243,15 @@ for (i in 1:length(keys2)) {
   temp_df <- as.data.frame(df3[, keys2[[i]], drop = FALSE])
   temp_df <- cbind(date = dates2, temp_df)
   
-  market_list[[keys2[[i]]]] <- temp_df  
-
+  market_list[[keys2[[i]]]] <- temp_df
+  
   rm(temp_df)
 }
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 # 6. data.frame2 Slicing process###################################################
 print("Begining 'data.frame 2' (df2) slicing process.")
 start_time <- Sys.time()
@@ -257,7 +269,8 @@ for (i in 1:length(keys2)) {
     # stock_series <- subset(df2, select=str_vec) #df2 = subset(df2, select = -c(X))
     
     # remove NA rows from data.frame
-    stock_series <- stock_series[rowSums(is.na(stock_series)) != ncol(stock_series), ]
+    stock_series <-
+      stock_series[rowSums(is.na(stock_series)) != ncol(stock_series),]
     
     # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
     stock_list[[keys2[[i]]]] <- stock_series
@@ -267,7 +280,9 @@ for (i in 1:length(keys2)) {
 }
 # NOTE: THERE ARE STILL NANs PRESENT IN THE ORGANISED DATASET
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 6.b Recording of problem data for inspection. Status = Inactive ########
 # write problem data to csv to view in excel
@@ -307,9 +322,14 @@ paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "second
 
 # 7. Removal of remaining NAs ##################################################
 cat(
-  "Removing NANs for data.frames in lists:", "\n",
-  "1. ", name_as_string(stock_list),"\n",
-  "2. ", name_as_string(market_list),"\n"
+  "Removing NANs for data.frames in lists:",
+  "\n",
+  "1. ",
+  name_as_string(stock_list),
+  "\n",
+  "2. ",
+  name_as_string(market_list),
+  "\n"
 )
 start_time <- Sys.time()
 
@@ -328,12 +348,12 @@ for (i in 1:length(market_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
   selector <- tibble::rownames_to_column(selector)
-  selector <- dplyr::rename(selector,date=rowname)
+  selector <- dplyr::rename(selector, date = rowname)
   rownames(selector) <- selector$date
   # remove the 'copy' column as it is no longer needed
   selector <- subset(selector, select = -c(copy))
@@ -352,12 +372,12 @@ for (i in 1:length(stock_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
   selector <- tibble::rownames_to_column(selector)
-  selector <- dplyr::rename(selector,date=rowname)
+  selector <- dplyr::rename(selector, date = rowname)
   rownames(selector) <- selector$date
   # change dtype of 'date' from 'character' dtype to 'Date' dtype
   # selector$date <- as.Date(as.character(selector$date))
@@ -368,33 +388,63 @@ for (i in 1:length(stock_list)) {
 }
 
 # CHECK CLEANING HAPPENED
-if ((identical(market_list,market_list_copy) == TRUE)&(identical(stock_list,stock_list_copy) == TRUE)) {
-  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n",
-              "1.", name_as_string(market_list)), "\n",
-              "2. ", name_as_string(stock_list)
-          )
-} else if (identical(market_list,market_list_copy) == TRUE) {
-  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n",
-              "1.", name_as_string(market_list))
-          )
-} else if (identical(stock_list,stock_list_copy) == TRUE) {
-  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n",
-              "1.", name_as_string(stock_list)))
+if ((identical(market_list, market_list_copy) == TRUE) &
+    (identical(stock_list, stock_list_copy) == TRUE)) {
+  message(
+    cat(
+      "WARNING: Attempted NAN removal has resulted in identical lists.",
+      "\n",
+      "1.",
+      name_as_string(market_list)
+    ),
+    "\n",
+    "2. ",
+    name_as_string(stock_list)
+  )
+} else if (identical(market_list, market_list_copy) == TRUE) {
+  message(
+    cat(
+      "WARNING: Attempted NAN removal has resulted in identical lists.",
+      "\n",
+      "1.",
+      name_as_string(market_list)
+    )
+  )
+} else if (identical(stock_list, stock_list_copy) == TRUE) {
+  message(
+    cat(
+      "WARNING: Attempted NAN removal has resulted in identical lists.",
+      "\n",
+      "1.",
+      name_as_string(stock_list)
+    )
+  )
 } else {
-  message(cat("NANs have been removed from the following lists", "\n",
-              "1. ", name_as_string(market_list), "\n",
-              "2. ", name_as_string(stock_list))
-          )
+  message(
+    cat(
+      "NANs have been removed from the following lists",
+      "\n",
+      "1. ",
+      name_as_string(market_list),
+      "\n",
+      "2. ",
+      name_as_string(stock_list)
+    )
+  )
 }
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 8. Application of Estudy2 ########################################################
 start_time <- Sys.time()
 # Create data storage lists
-reg_results_list <- vector(mode = "list", length = length(market_list))
+reg_results_list <-
+  vector(mode = "list", length = length(market_list))
 names(reg_results_list) <- keys2
-test_results_list <- vector(mode = "list", length = length(market_list))
+test_results_list <-
+  vector(mode = "list", length = length(market_list))
 names(test_results_list) <- keys2
 
 # Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
@@ -416,8 +466,9 @@ for (i in 1:length(market_list)) {
     )
     
     # FIX DTYPES OF COLUMN PRIOR TO TESTING
-    rates <- transform.data.frame(rates,date=as.Date(date))
-    rates_indx <- transform.data.frame(rates_indx,date=as.Date(date))
+    rates <- transform.data.frame(rates, date = as.Date(date))
+    rates_indx <-
+      transform.data.frame(rates_indx, date = as.Date(date))
     print("Done. Applying single-index market model.")
     
     # apply single-index market model to get ARs
@@ -449,7 +500,7 @@ for (i in 1:length(market_list)) {
         event_end = as.Date("2020-03-20")
       )
     )
-    print(paste("Merging results.",keys2[[i]]))
+    print(paste("Merging results.", keys2[[i]]))
     df_results <- data.frame(merge(para, non_para, by = "date"))
     
     test_results_list[[keys2[[i]]]] <- df_results
@@ -461,17 +512,21 @@ for (i in 1:length(market_list)) {
 }
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9. Recording of results in new datafiles #####################################
 start_time <- Sys.time()
 
 # WRITE RESULTS
-cd_results <- "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/"
-results_filenames <- vector(mode = "character",length=length(test_results_list))
+cd_results <-
+  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/"
+results_filenames <-
+  vector(mode = "character", length = length(test_results_list))
 for (i in 1:length(test_results_list)) {
-  fname <- paste0(keys2[[i]],".csv")
-  directory <- paste0(cd_results,fname)
+  fname <- paste0(keys2[[i]], ".csv")
+  directory <- paste0(cd_results, fname)
   results_filenames[[i]] = directory
   rm(fname)
   rm(directory)
@@ -480,9 +535,10 @@ for (i in 1:length(test_results_list)) {
 for (i in 1:length(test_results_list)) {
   temp_selector <- test_results_list[[i]]
   write.csv(temp_selector,
-            file = results_filenames[[i]]
-            )
+            file = results_filenames[[i]])
 }
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time-start_time,digits = 4), "seconds")
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 print("Terminating script...")
