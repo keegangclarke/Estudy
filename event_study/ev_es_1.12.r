@@ -3,6 +3,7 @@ print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
 library(estudy2)
+library(magrittr)
 
 fun_insert <- function(x, pos, insert) {
   # Create own function
@@ -130,24 +131,19 @@ name_dict = readxl::read_xlsx(cd_dict)
 problem_names = read.delim(cd_problem_stocks, header = FALSE)
 problem_names <- unlist(problem_names, use.names = FALSE)
 
-# copy df3 (market data) into list of market's and their data
-# NOTE: SEEMS TO BE REDUNDANT COPYING
-df_3 <- as.list(df3)
-
 # Get colnames
 keys <- colnames(name_dict)
-
 # Replace spaces with '.' to be able to select columns from data.frame
-keys2 <- as.vector(gsub(" ", ".", keys))
+keys <- as.vector(gsub(" ", ".", keys))
 
 # Initialise empty lists with required length
 # indice_list <- vector(mode = "list", length = n)
-stock_list <- vector(mode = "list", length = length(df_3))
-market_list <- vector(mode = "list", length = length(df_3))
+stock_list <- vector(mode = "list", length = length(df3))
+market_list <- vector(mode = "list", length = length(df3))
 
 # Swap numerical index for named index --> provides similarity to a python dictionary
-names(market_list) <- keys2
-names(stock_list) <- keys2
+names(market_list) <- keys
+names(stock_list) <- keys
 
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
@@ -238,12 +234,12 @@ paste("Complete. Time elapsed: ",
 print("Making list of market data.frame")
 start_time <- Sys.time()
 
-for (i in 1:length(keys2)) {
+for (i in 1:length(keys)) {
   # Select as.data.frame the market index
-  temp_df <- as.data.frame(df3[, keys2[[i]], drop = FALSE])
+  temp_df <- as.data.frame(df3[, keys[[i]], drop = FALSE])
   temp_df <- cbind(date = dates2, temp_df)
   
-  market_list[[keys2[[i]]]] <- temp_df
+  market_list[[keys[[i]]]] <- temp_df
   
   rm(temp_df)
 }
@@ -256,12 +252,12 @@ paste("Complete. Time elapsed: ",
 print("Begining 'data.frame 2' (df2) slicing process.")
 start_time <- Sys.time()
 
-for (i in 1:length(keys2)) {
+for (i in 1:length(keys)) {
   tryCatch({
     print(i)
-    print(keys2[[i]])
+    print(keys[[i]])
     # gets names corresponding to key: gets constituents of index
-    str_vec <- unlist(name_list[[keys2[[i]]]], use.names = FALSE)
+    str_vec <- unlist(name_list[[keys[[i]]]], use.names = FALSE)
     
     # selects index by their names
     stock_series <- df2[str_vec]
@@ -273,7 +269,7 @@ for (i in 1:length(keys2)) {
       stock_series[rowSums(is.na(stock_series)) != ncol(stock_series),]
     
     # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
-    stock_list[[keys2[[i]]]] <- stock_series
+    stock_list[[keys[[i]]]] <- stock_series
   }, error = function(e) {
     message(cat("ERROR: ", conditionMessage(e), "\n"))
   })
@@ -357,8 +353,6 @@ for (i in 1:length(market_list)) {
   rownames(selector) <- selector$date
   # remove the 'copy' column as it is no longer needed
   selector <- subset(selector, select = -c(copy))
-  # change dtype of 'date' from 'character' dtype to 'Date' dtype
-  # selector$date <- as.Date(as.character(selector$date))
   # return cleaned data.frame to list of data.frames
   # OUTPUT
   market_list[[i]] <- selector
@@ -379,8 +373,6 @@ for (i in 1:length(stock_list)) {
   selector <- tibble::rownames_to_column(selector)
   selector <- dplyr::rename(selector, date = rowname)
   rownames(selector) <- selector$date
-  # change dtype of 'date' from 'character' dtype to 'Date' dtype
-  # selector$date <- as.Date(as.character(selector$date))
   # return cleaned data.frame to list of data.frames
   # OUTPUT
   stock_list[[i]] <- selector
@@ -442,20 +434,20 @@ start_time <- Sys.time()
 # Create data storage lists
 reg_results_list <-
   vector(mode = "list", length = length(market_list))
-names(reg_results_list) <- keys2
+names(reg_results_list) <- keys
 # abnormal return
 ar_test_results_list <-
   vector(mode = "list", length = length(market_list))
-names(ar_test_results_list) <- keys2
+names(ar_test_results_list) <- keys
 # cumulative abnormal return
 car_test_results_list <-
   vector(mode = "list", length = length(market_list))
-names(car_test_results_list) <- keys2
+names(car_test_results_list) <- keys
 
 # Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
 for (i in 1:length(market_list)) {
   tryCatch({
-    print(paste("Getting rates from prices for", keys2[[i]]))
+    print(paste("Getting rates from prices for", keys[[i]]))
     rates <- get_rates_from_prices(
       stock_list[[i]],
       quote = "Close",
@@ -522,13 +514,13 @@ for (i in 1:length(market_list)) {
         event_end = as.Date("2020-03-20")
       )
     )
-    print(paste("Merging results.", keys2[[i]]))
+    print(paste("Merging results.", keys[[i]]))
     ar_results <- data.frame(merge(para, non_para, by = "date"))
     car_results <- data.frame(merge(car_para, car_non_para, by = "date"))
     
-    ar_test_results_list[[keys2[[i]]]] <- ar_results
-    car_test_results_list[[keys2[[i]]]] <- car_results
-    reg_results_list[[keys2[[i]]]] <- securities_returns
+    ar_test_results_list[[keys[[i]]]] <- ar_results
+    car_test_results_list[[keys[[i]]]] <- car_results
+    reg_results_list[[keys[[i]]]] <- securities_returns
     
     rm(ar_results)
     rm(car_results)
@@ -553,7 +545,7 @@ results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results
 for (i in 1:length(ar_test_results_list)) {
-  fname <- paste0(keys2[[i]], ".csv")
+  fname <- paste0(keys[[i]], ".csv")
   directory <- paste0(cd_results, fname)
   results_filenames[[i]] = directory
   rm(fname)
