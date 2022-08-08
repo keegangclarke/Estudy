@@ -147,29 +147,6 @@ names(stock_list) <- keys
 
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
-trouble <-
-  c(
-    "X009900.KS.Equity",
-    "ADMR.IJ.Equity",
-    "AEP.UW.Equity",
-    "X300866.CH.Equity",
-    "CTS.CT.Equity",
-    "ACWA.AB.Equity",
-    "DRR.AT.Equity",
-    "BHG.SJ.Equity",
-    "AYDEM.TI.Equity",
-    "STLA.FP.Equity",
-    "X9618.HK.Equity",
-    "IVG.IM.Equity",
-    "STLA.FP.Equity",
-    #NOTE: this name is a double-up, but does not break code
-    "ENR.GY.Equity",
-    "HON.UW.Equity",
-    "X360.AT.Equity"
-  )
-trouble_selector <- unique(trouble)
-trouble_selector <- paste("^", trouble_selector, "$", sep = "")
-trouble_selector <- paste0(trouble_selector, collapse = "|")
 
 # Break ID data.frame into list to remove NANs
 name_list <- as.list(name_dict)
@@ -181,20 +158,20 @@ for (i in 1:3) {
       pattern = paste0(pattern_list, collapse = "|"),
       replacement = "."
     )
-  name_list <- lapply(name_list,
-                      stringr::str_replace_all,
-                      pattern = trouble_selector,
-                      replacement = NA_character_)
+  # name_list <- lapply(name_list,
+  #                     stringr::str_replace_all,
+  #                     pattern = trouble_selector,
+  #                     replacement = NA_character_)
   name_list <- lapply(name_list, na.omit)
   name_list <- lapply(name_list, fix_digit_names, "X")
-  
+
   # Make syntactically compatible
   names(name_list) <-
     lapply(names(name_list),
            gsub,
            pattern = " ",
            replacement = ".")
-  
+
 }
 
 end_time <- Sys.time()
@@ -202,34 +179,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 4. Removal of empty columns #######################################################
-print("Dropping problematic share names.")
-start_time <- Sys.time()
-
-# Allocate colnames
-names_to_keep <- names(df2)[!(names(df2) %in% trouble)]
-names_to_keep2 <- names(df2)[!(names(df2) %in% problem_names)]
-
-# Drop from data
-df2_trouble <- subset(df2, select = trouble)
-df2 <- subset(df2, select = names_to_keep)
-
-df2_problems <- subset(df2, select = problem_names)
-# df2 <- subset(df2, select = names_to_keep2)
-df2_test <- df2[, !(names(df2) %in% problem_names)]
-
-# Check carve happened correctly
-if ((any(trouble %in% names(df2))) == TRUE ||
-    (any(problem_names %in% names(df2))) == TRUE) {
-  message("WARNING: Removal of problem columns failed")
-}
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-
-# 5. Creation of list of market-index data.frames ##############################
+# 4. Creation of list of market-index data.frames ##############################
 
 print("Making list of market data.frame")
 start_time <- Sys.time()
@@ -248,7 +198,7 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
-# 6. data.frame2 Slicing process###################################################
+# 5. data.frame2 Slicing process###################################################
 print("Begining 'data.frame 2' (df2) slicing process.")
 start_time <- Sys.time()
 
@@ -280,7 +230,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 6.b Recording of problem data for inspection. Status = Inactive ########
+# 6. Recording of problem data for inspection. STATUS = INACTIVE ########
 # write problem data to csv to view in excel
 # problem_list <-
 #   c(
