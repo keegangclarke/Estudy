@@ -59,7 +59,7 @@ cds <- list()
 for (i in files) {
   string <- paste(cd, i, sep = "")
   # print(string)
-  cds <- append(cds, string, )
+  cds <- append(cds, string,)
 }
 
 # Read in data
@@ -107,8 +107,8 @@ df2 <- subset(df2, select = -date)
 df3 <- subset(df3, select = -date)
 
 # Remove remaining rows where all data points = NaN
-df2 <- df2[rowSums(is.na(df2)) != ncol(df2),]
-df3 <- df3[rowSums(is.na(df3)) != ncol(df3),]
+df2 <- df2[rowSums(is.na(df2)) != ncol(df2), ]
+df3 <- df3[rowSums(is.na(df3)) != ncol(df3), ]
 # NOTE: Does not remove all remaining NaNs because of 'date' col
 
 end_time <- Sys.time()
@@ -160,16 +160,14 @@ for (i in 1:3) {
     )
   name_list <- lapply(name_list, na.omit)
   name_list <- lapply(name_list, fix_digit_names, "X")
-
+  
   # Make syntactically compatible
   names(name_list) <-
     lapply(names(name_list),
            gsub,
            pattern = " ",
            replacement = ".")
-
 }
-
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
@@ -212,7 +210,7 @@ for (i in 1:length(keys)) {
     
     # remove NA rows from data.frame
     stock_series <-
-      stock_series[rowSums(is.na(stock_series)) != ncol(stock_series),]
+      stock_series[rowSums(is.na(stock_series)) != ncol(stock_series), ]
     
     # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
     stock_list[[keys[[i]]]] <- stock_series
@@ -290,7 +288,7 @@ for (i in 1:length(market_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
@@ -312,7 +310,7 @@ for (i in 1:length(stock_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
@@ -462,7 +460,8 @@ for (i in 1:length(market_list)) {
     )
     print(paste("Merging results.", keys[[i]]))
     # Stage results for storage
-    ar_results <- data.frame(merge(ar_para, ar_non_para, by = "date"))
+    ar_results <-
+      data.frame(merge(ar_para, ar_non_para, by = "date"))
     car_results <- dplyr::bind_rows(car_para, car_non_para)
     # Clean up 'ar_results'
     ar_results <- subset(ar_results, select = -c(weekday.y))
@@ -494,8 +493,10 @@ paste("Complete. Time elapsed: ",
 start_time <- Sys.time()
 
 # WRITE RESULTS
-cd_ar <- "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
-cd_car <- "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
+cd_ar <-
+  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
+cd_car <-
+  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
 ar_results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results_filenames <-
