@@ -42,7 +42,7 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
-# 2. Data Loading and basic wrangling #############################################
+# 2. Data Loading #####
 # Get directories of files
 print("Fetching data...")
 start_time <- Sys.time()
@@ -80,6 +80,8 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
+# 3. Basic wrangling of data (slicing data-set out of bulk, reformatting of dtypes) ####
+
 print("Reformatting data.shape...")
 start_time <- Sys.time()
 
@@ -91,7 +93,7 @@ df3$date <- as.Date(df3$date, format = "%Y-%m-%d")
 rownames(df2) <- as.Date(df2$date, format = "%Y-%m-%d")
 rownames(df3) <- as.Date(df3$date, format = "%Y-%m-%d")
 
-# Subset data.frames to the right size of useable data
+# Subset data.frames to the right size of usable data
 df2 <- subset(df2, rownames(df2) > as.Date("2019-03-29"))
 df3 <- subset(df3, rownames(df3) > as.Date("2019-03-29"))
 
@@ -110,13 +112,14 @@ df3 <- subset(df3, select = -date)
 df2 <- df2[rowSums(is.na(df2)) != ncol(df2), ]
 df3 <- df3[rowSums(is.na(df3)) != ncol(df3), ]
 # NOTE: Does not remove all remaining NaNs because of 'date' col
+# have not tested if the above two lines can be removed without effects
 
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 3. I.D. data wrangling (strings) ################################################
+# 4. Wrangling of Identification (strings) data ##################
 cat(
   "Fetching variable identification data.",
   "\n",
@@ -173,7 +176,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 4. Creation of list of market-index data.frames ##############################
+# 5. Creation of list of market-index data.frames ##############################
 
 print("Making list of market data.frame")
 start_time <- Sys.time()
@@ -192,7 +195,7 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
-# 5. data.frame2 Slicing process###################################################
+# 6. Creation of list of stock-index data.frames consisting of constituent-shares ####
 print("Begining 'data.frame 2' (df2) slicing process.")
 start_time <- Sys.time()
 
@@ -224,7 +227,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 6. Recording of problem data for inspection. STATUS = INACTIVE ########
+# 7. Recording of problem data for inspection. STATUS = INACTIVE ########
 # write problem data to csv to view in excel
 # problem_list <-
 #   c(
@@ -260,7 +263,9 @@ paste("Complete. Time elapsed: ",
 #             )
 # }
 
-# 7. Removal of remaining NAs ##################################################
+# 8. Removal of remaining NAs #####
+  # Process first drops rows where all observations are NAs (public holidays, etc.)
+  # Process then drops remaining columns that still include AT LEAST 1 NA 
 cat(
   "Removing NANs for data.frames in lists:",
   "\n",
@@ -373,7 +378,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 8. Application of Estudy2 ########################################################
+# 9. Application of Estudy2 ########################################################
 start_time <- Sys.time()
 # Create data storage lists
 reg_results_list <-
@@ -489,7 +494,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 9. Recording of results in new datafiles #####################################
+# 10. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
 
 # WRITE RESULTS
