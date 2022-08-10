@@ -383,4 +383,11 @@ paste("Complete. Time elapsed: ",
 
 # DATA WRANGLING: REARRANGEMENT ####
 
-# OBJECTIVE: take data that I have an reorganise into the correct format
+# OBJECTIVE: take data that I have an re-organise into the correct format
+# COMPLICATION: 
+  # a. For each share, their relevant market-proxy is their index.
+  #    Therefore, in order to accomplish a sectorised estudy
+  #    I need to fist estimate the securities returns before reorganising.
+# PROPOSED SOLUTION:
+  # a. Run the loop to calc the rates and security return (ols) models,
+  #    Reorganise the results according to sectorisation
