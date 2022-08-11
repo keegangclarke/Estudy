@@ -296,7 +296,7 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 # 0. Cleanup of memory by removing old objects ####
 rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
 
-# 1. Obtaining the right names
+# 1. Obtain the right names
 # Record names of remaining shares
 remainder <- vector(mode="list", length=length(market_list))
 names(remainder) <- keys
@@ -324,7 +324,8 @@ rates_indx_list <- vector(mode = "list", length = length(market_list))
 names(rates_list) <- keys
 names(rates_indx_list) <- keys
 
-# Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
+# Loop estimates estudy ols objects
+# dependency of para and nonpara tests
 for (i in 1:length(market_list))
 {
   tryCatch({
@@ -374,29 +375,55 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 # 3. Wrangle the models so that it is organised according to sector. ####
 # Load Sector Identification data
 cd_sec <- 'C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
-sectors <- as.list(readxl::read_xlsx(cd_sec))
+sector_data <- as.list(readxl::read_xlsx(cd_sec))
 
 # Specify patterns
-pattern_list <- c(" ", "/", "-", "\\*", "&", ",")
+pattern_list <- c(" ", "/", "-", "\\*", "&")
 
 # Remove NAs and fix syntax compatibility
-sectors <- sectors %>%
+sector_data <- sector_data %>%
   lapply(stringr::str_replace_all,
          pattern = paste0(pattern_list,
                           collapse = "|"),
-         replacement = ".") %>% 
+         replacement = ".") %>%
+  lapply(stringr::str_replace_all,
+         pattern = ",",
+         replacement = "") %>%
+  lapply(stringr::str_replace_all,
+         pattern = "NA",
+         replacement = NA_character_) %>% 
   lapply(fix_digit_names, "X")
 
 # Make syntactically compatible
-names(sectors) <- lapply(names(sectors), gsub, pattern = " ", replacement = ".")
+names(sector_data) <- lapply(names(sector_data), gsub, pattern = " ", replacement = ".")
 
 # reformat as data.frame and remove duplicates
-sectors <- as.data.frame(sectors) %>% 
-  dplyr::distinct(Ticker,.keep_all = TRUE)
+sector_data <- as.data.frame(sector_data) %>% 
+  dplyr::distinct(Ticker,.keep_all = TRUE) %>% 
+  na.omit
+
+# Create new storage lists
+industry <- vector(mode="list",
+                   length=length(unique(sector_data$ICB.Industry.Name)))
+names(industry) <- unique(sector_data$ICB.Industry.Name)
+
+supersector <- vector(mode="list",
+                      length=length(unique(sector_data$ICB.Supersector.Name)))
+names(supersector) <- unique(sector_data$ICB.Supersector.Name)
+
+sector <- vector(mode="list",
+                 length=length(unique(sector_data$ICB.Sector.Name)))
+names(sector) <- unique(sector_data$ICB.Sector.Name)
+
+subsector <- vector(mode="list",
+                    length=length(unique(sector_data$ICB.Subsector.Name)))
+names(subsector) <- unique(sector_data$ICB.Subsector.Name)
 
 # Plan for reogranisation process
 # loop with conditional to test if ticker in sectors is in stock_list
 # sectors$Ticker[i] != %in%
+# Perhaps it is best to subset all the stock information of all stocks in 'remainder
+# then reorganise on the basis of the remainder
 
 
 # Lists needed for recording of results later
