@@ -9,36 +9,36 @@ library(magrittr)
 
 fun_insert <- function(x, pos, insert)
 {
-    # Create own function
-    gsub(paste0("^(.{", pos, "})(.*)$"), paste0("\\1", insert, "\\2"), x)
+  # Create own function
+  gsub(paste0("^(.{", pos, "})(.*)$"), paste0("\\1", insert, "\\2"), x)
 }
 
 fix_digit_names <- function(x, insertion, pos_idx = 0)
 {
-    # NOTE: Need to assign it to the x variable e.g. x <- tf_fixer(x, insertion)
-    fun_insert <- function(x, pos, insert)
+  # NOTE: Need to assign it to the x variable e.g. x <- tf_fixer(x, insertion)
+  fun_insert <- function(x, pos, insert)
+  {
+    # Function inserts 'insertion' argument at the 0 position
+    gsub(paste0("^(.{", pos, "})(.*)$"), paste0("\\1", insert, "\\2"), x)
+  }
+  
+  test_vec <- grepl("^[[:digit:]+]", x)
+  for (i in 1:length(x))
+  {
+    if (test_vec[i] == TRUE)
     {
-        # Function inserts 'insertion' argument at the 0 position
-        gsub(paste0("^(.{", pos, "})(.*)$"), paste0("\\1", insert, "\\2"), x)
+      x[i] <- fun_insert(x[i], pos_idx, as.character(insertion))
     }
-
-    test_vec <- grepl("^[[:digit:]+]", x)
-    for (i in 1:length(x))
-    {
-        if (test_vec[i] == TRUE)
-        {
-            x[i] <- fun_insert(x[i], pos_idx, as.character(insertion))
-        }
-    }
-    return(x)
+  }
+  return(x)
 }
 
 name_as_string <- function(x)
 {
-    # Returns the name of whatever you pass as a character string Primary purpose is to get string
-    # representation of function and variable names Added benefit is anything passed as x will come
-    # out as 'x'
-    deparse(substitute(x))
+  # Returns the name of whatever you pass as a character string Primary purpose is to get string
+  # representation of function and variable names Added benefit is anything passed as x will come
+  # out as 'x'
+  deparse(substitute(x))
 }
 
 end_time <- Sys.time()
@@ -56,9 +56,9 @@ cds <- list()
 
 for (i in files)
 {
-    string <- paste(cd, i, sep = "")
-    # print(string)
-    cds <- append(cds, string, )
+  string <- paste(cd, i, sep = "")
+  # print(string)
+  cds <- append(cds, string, )
 }
 
 # Read in data No df1 because that would be the 3rd file containing everything in df2 and df3
@@ -144,13 +144,13 @@ pattern_list <- c(" ", "/", "-", "\\*", "&", ",")
 name_list <- as.list(name_dict)
 for (i in 1:3)
 {
-    name_list <- lapply(name_list, stringr::str_replace_all, pattern = paste0(pattern_list, collapse = "|"),
-        replacement = ".")
-    name_list <- lapply(name_list, na.omit)
-    name_list <- lapply(name_list, fix_digit_names, "X")
-
-    # Make syntactically compatible
-    names(name_list) <- lapply(names(name_list), gsub, pattern = " ", replacement = ".")
+  name_list <- lapply(name_list, stringr::str_replace_all, pattern = paste0(pattern_list, collapse = "|"),
+                      replacement = ".")
+  name_list <- lapply(name_list, na.omit)
+  name_list <- lapply(name_list, fix_digit_names, "X")
+  
+  # Make syntactically compatible
+  names(name_list) <- lapply(names(name_list), gsub, pattern = " ", replacement = ".")
 }
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
@@ -162,13 +162,13 @@ start_time <- Sys.time()
 
 for (i in 1:length(keys))
 {
-    # Select as.data.frame the market index
-    temp_df <- as.data.frame(df3[, keys[[i]], drop = FALSE])
-    temp_df <- cbind(date = dates2, temp_df)
-
-    market_list[[keys[[i]]]] <- temp_df
-
-    rm(temp_df)
+  # Select as.data.frame the market index
+  temp_df <- as.data.frame(df3[, keys[[i]], drop = FALSE])
+  temp_df <- cbind(date = dates2, temp_df)
+  
+  market_list[[keys[[i]]]] <- temp_df
+  
+  rm(temp_df)
 }
 
 end_time <- Sys.time()
@@ -179,34 +179,37 @@ start_time <- Sys.time()
 
 for (i in 1:length(keys))
 {
-    tryCatch({
-        print(i)
-        print(keys[[i]])
-        # gets names corresponding to key: gets constituents of index
-        str_vec <- unlist(name_list[[keys[[i]]]], use.names = FALSE)
-
-        # selects index by their names
-        stock_series <- df2[str_vec]
-        stock_series <- cbind(date = dates2, stock_series)
-        # stock_series <- subset(df2, select=str_vec) #df2 = subset(df2, select = -c(X))
-
-        # remove NA rows from data.frame
-        stock_series <- stock_series[rowSums(is.na(stock_series)) != ncol(stock_series), ]
-
-        # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
-        stock_list[[keys[[i]]]] <- stock_series
-    }, error = function(e)
-    {
-        message(cat("ERROR: ", conditionMessage(e), "\n"))
-    })
+  tryCatch({
+    print(i)
+    print(keys[[i]])
+    # gets names corresponding to key: gets constituents of index
+    str_vec <- unlist(name_list[[keys[[i]]]], use.names = FALSE)
+    
+    # selects index by their names
+    stock_series <- df2[str_vec]
+    stock_series <- cbind(date = dates2, stock_series)
+    # stock_series <- subset(df2, select=str_vec) #df2 = subset(df2, select = -c(X))
+    
+    # remove NA rows from data.frame
+    stock_series <- stock_series[rowSums(is.na(stock_series)) != ncol(stock_series), ]
+    
+    # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
+    stock_list[[keys[[i]]]] <- stock_series
+    
+    # explicit memory clean-up
+    rm(stock_series)
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "\n"))
+  })
 }
 # NOTE: THERE ARE STILL NANs PRESENT IN THE ORGANISED DATASET
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
 # 7. Removal of remaining NAs ##### 
-    # Process first drops rows where all observations are NAs (public holidays, etc.)  
-    # Process then drops remaining columns that still include AT LEAST 1 NA
+# Process first drops rows where all observations are NAs (public holidays, etc.)  
+# Process then drops remaining columns that still include AT LEAST 1 NA
 cat("Removing NANs for data.frames in lists:", "\n", "1. ", name_as_string(stock_list), "\n", "2. ",
     name_as_string(market_list), "\n")
 start_time <- Sys.time()
@@ -218,61 +221,61 @@ stock_list_copy <- stock_list
 # 'NA' CLEANING LOOPS for the MARKET-data
 for (i in 1:length(market_list))
 {
-    # selects data.frame in list that is to be manipulated on this iter INPUT
-    selector <- market_list[[i]]
-    # Make copy of data column in order to handle N*2 data.frames
-    selector$copy = selector[[ncol(selector)]]
-    # drop the 'date' column
-    selector <- subset(selector, select = -c(date))
-    # remove rows where all observations = 'NA'
-    selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
-    # remove columns where at least 1 observation = 'NA'
-    selector <- selector[, colSums(is.na(selector)) == 0]
-    # add back the date column
-    selector <- tibble::rownames_to_column(selector)
-    selector <- dplyr::rename(selector, date = rowname)
-    rownames(selector) <- selector$date
-    # remove the 'copy' column as it is no longer needed
-    selector <- subset(selector, select = -c(copy))
-    # return cleaned data.frame to list of data.frames OUTPUT
-    market_list[[i]] <- selector
-    rm(selector)
+  # selects data.frame in list that is to be manipulated on this iter INPUT
+  selector <- market_list[[i]]
+  # Make copy of data column in order to handle N*2 data.frames
+  selector$copy = selector[[ncol(selector)]]
+  # drop the 'date' column
+  selector <- subset(selector, select = -c(date))
+  # remove rows where all observations = 'NA'
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
+  # remove columns where at least 1 observation = 'NA'
+  selector <- selector[, colSums(is.na(selector)) == 0]
+  # add back the date column
+  selector <- tibble::rownames_to_column(selector)
+  selector <- dplyr::rename(selector, date = rowname)
+  rownames(selector) <- selector$date
+  # remove the 'copy' column as it is no longer needed
+  selector <- subset(selector, select = -c(copy))
+  # return cleaned data.frame to list of data.frames OUTPUT
+  market_list[[i]] <- selector
+  rm(selector)
 }
 # for the STOCKS (market-constituient) data
 for (i in 1:length(stock_list))
 {
-    # selects data.frame in list that is to be manipulated on this iter INPUT
-    selector <- stock_list[[i]]
-    # drop the 'date' column
-    selector <- subset(selector, select = -c(date))
-    # remove rows where all observations = 'NA'
-    selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
-    # remove columns where at least 1 observation = 'NA'
-    selector <- selector[, colSums(is.na(selector)) == 0]
-    # add back the date column
-    selector <- tibble::rownames_to_column(selector)
-    selector <- dplyr::rename(selector, date = rowname)
-    rownames(selector) <- selector$date
-    # return cleaned data.frame to list of data.frames OUTPUT
-    stock_list[[i]] <- selector
-    rm(selector)
+  # selects data.frame in list that is to be manipulated on this iter INPUT
+  selector <- stock_list[[i]]
+  # drop the 'date' column
+  selector <- subset(selector, select = -c(date))
+  # remove rows where all observations = 'NA'
+  selector <- selector[rowSums(is.na(selector)) != ncol(selector), ]
+  # remove columns where at least 1 observation = 'NA'
+  selector <- selector[, colSums(is.na(selector)) == 0]
+  # add back the date column
+  selector <- tibble::rownames_to_column(selector)
+  selector <- dplyr::rename(selector, date = rowname)
+  rownames(selector) <- selector$date
+  # return cleaned data.frame to list of data.frames OUTPUT
+  stock_list[[i]] <- selector
+  rm(selector)
 }
 
 # CHECK CLEANING HAPPENED
 if ((identical(market_list, market_list_copy) == TRUE) & (identical(stock_list, stock_list_copy) == TRUE))
 {
-    message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(market_list)),
-        "\n", "2. ", name_as_string(stock_list))
+  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(market_list)),
+          "\n", "2. ", name_as_string(stock_list))
 } else if (identical(market_list, market_list_copy) == TRUE)
 {
-    message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(market_list)))
+  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(market_list)))
 } else if (identical(stock_list, stock_list_copy) == TRUE)
 {
-    message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(stock_list)))
+  message(cat("WARNING: Attempted NAN removal has resulted in identical lists.", "\n", "1.", name_as_string(stock_list)))
 } else
 {
-    message(cat("NANs have been removed from the following lists", "\n", "1. ", name_as_string(market_list),
-        "\n", "2. ", name_as_string(stock_list)))
+  message(cat("NANs have been removed from the following lists", "\n", "1. ", name_as_string(market_list),
+              "\n", "2. ", name_as_string(stock_list)))
 }
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
@@ -282,15 +285,33 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 
 # OBJECTIVE: take data that I have and re-organise into the correct format 
 # COMPLICATION: a. For each share, their relevant market-proxy is their index.
-  # Therefore, in order to accomplish a sectorised estudy I need to fist estimate
-  # the securities returns before reorganising.
+# Therefore, in order to accomplish a sectorised estudy I need to fist estimate
+# the securities returns before reorganising.
 # PROPOSED SOLUTION: 
-  # a. Run the loop to calc the rates and security return (ols) models, 
-  # Reorganise the models according to sectorisation
-  # feed reorganised models to remainder of estimation loop
-  # record results of tests in '.csv' files 
+# a. Run the loop to calc the rates and security return (ols) models, 
+# Reorganise the models according to sectorisation
+# feed reorganised models to remainder of estimation loop
+# record results of tests in '.csv' files 
 
-# 1. OLS model creation loop that statistics will be run on. ####
+# 0. Cleanup of memory by removing old objects ####
+rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
+
+# 1. Obtaining the right names
+# Record names of remaining shares
+remainder <- vector(mode="list", length=length(market_list))
+names(remainder) <- keys
+
+for (i in 1:length(remainder)) 
+{
+  # Select stock series' names and remove 'date'
+  selector <- names(stock_list[[keys[[i]]]])
+  selector <- selector[! selector %in% 'date']
+  # store remainder in 'remainder' 
+  remainder[[keys[[i]]]] <- selector
+  rm(selector)
+}
+
+# 2. OLS model creation loop that statistics will be run on. ####
 start_time <- Sys.time()
 
 # Create data storage lists 
@@ -306,51 +327,51 @@ names(rates_indx_list) <- keys
 # Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
 for (i in 1:length(market_list))
 {
-    tryCatch({
-        print(paste("Getting rates from prices for", keys[[i]]))
-        rates <- get_rates_from_prices(stock_list[[i]], 
-                                       quote = "Close", 
-                                       multi_day = TRUE, 
-                                       compounding = "continuous")
-
-        rates_indx <- get_rates_from_prices(market_list[[i]], 
-                                            quote = "Close", 
-                                            multi_day = TRUE, 
-                                            compounding = "continuous")
-
-        # FIX DTYPES OF COLUMN PRIOR TO TESTING
-        rates <- transform.data.frame(rates, date = as.Date(date))
-        rates_indx <- transform.data.frame(rates_indx, date = as.Date(date))
-        print("Done. Applying single-index market model.")
-
-        # apply single-index market model to get ARs
-        securities_returns <- apply_market_model(rates = rates,
-                                                 regressor = rates_indx,
-                                                 same_regressor_for_all = TRUE,
-                                                 market_model = "sim",
-                                                 estimation_method = "ols",
-                                                 estimation_start = as.Date("2019-04-01"),
-                                                 estimation_end = as.Date("2020-03-13"))
-
-        print("Done. Storing rates and market-models.")
-        # Store results for later recording
-        rates_list[[keys[[i]]]] <- rates
-        rates_indx_list[[keys[[i]]]] <- rates_indx
-        reg_results_list[[keys[[i]]]] <- securities_returns
-        # Explicit memory cleanup
-        rm(rates)
-        rm(rates_indx)
-        rm(securities_returns)
-    }, error = function(e)
-    {
-        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-    })
+  tryCatch({
+    print(paste("Getting rates from prices for", keys[[i]]))
+    rates <- get_rates_from_prices(stock_list[[i]], 
+                                   quote = "Close", 
+                                   multi_day = TRUE, 
+                                   compounding = "continuous")
+    
+    rates_indx <- get_rates_from_prices(market_list[[i]], 
+                                        quote = "Close", 
+                                        multi_day = TRUE, 
+                                        compounding = "continuous")
+    
+    # FIX DTYPES OF COLUMN PRIOR TO TESTING
+    rates <- transform.data.frame(rates, date = as.Date(date))
+    rates_indx <- transform.data.frame(rates_indx, date = as.Date(date))
+    print("Done. Applying single-index market model.")
+    
+    # apply single-index market model to get ARs
+    securities_returns <- apply_market_model(rates = rates,
+                                             regressor = rates_indx,
+                                             same_regressor_for_all = TRUE,
+                                             market_model = "sim",
+                                             estimation_method = "ols",
+                                             estimation_start = as.Date("2019-04-01"),
+                                             estimation_end = as.Date("2020-03-13"))
+    
+    print("Done. Storing rates and market-models.")
+    # Store results for later recording
+    rates_list[[keys[[i]]]] <- rates
+    rates_indx_list[[keys[[i]]]] <- rates_indx
+    reg_results_list[[keys[[i]]]] <- securities_returns
+    # Explicit memory cleanup
+    rm(rates)
+    rm(rates_indx)
+    rm(securities_returns)
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
 }
 
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
-# 2. Wrangle the models so that it is organised according to sector. ####
+# 3. Wrangle the models so that it is organised according to sector. ####
 # Load Sector Identification data
 cd_sec <- 'C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
 sectors <- as.list(readxl::read_xlsx(cd_sec))
@@ -360,20 +381,23 @@ pattern_list <- c(" ", "/", "-", "\\*", "&", ",")
 
 # Remove NAs and fix syntax compatibility
 sectors <- sectors %>%
-           lapply(stringr::str_replace_all,
-                  pattern = paste0(pattern_list,
-                  collapse = "|"),
-                  replacement = ".") %>% 
-           lapply(fix_digit_names, "X")
+  lapply(stringr::str_replace_all,
+         pattern = paste0(pattern_list,
+                          collapse = "|"),
+         replacement = ".") %>% 
+  lapply(fix_digit_names, "X")
 
 # Make syntactically compatible
 names(sectors) <- lapply(names(sectors), gsub, pattern = " ", replacement = ".")
 
 # reformat as data.frame and remove duplicates
 sectors <- as.data.frame(sectors) %>% 
-           dplyr::distinct(Ticker,.keep_all = TRUE)
+  dplyr::distinct(Ticker,.keep_all = TRUE)
 
-# 
+# Plan for reogranisation process
+# loop with conditional to test if ticker in sectors is in stock_list
+# sectors$Ticker[i] != %in%
+
 
 # Lists needed for recording of results later
 # abnormal return storage list
