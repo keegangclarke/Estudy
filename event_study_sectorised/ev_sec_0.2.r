@@ -48,7 +48,7 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 print("Fetching data...")
 start_time <- Sys.time()
 
-cd <- "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/daily/cleaned/es_format/"
+cd <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/daily/cleaned/es_format/"
 files <- c("stock_data_column-wise.csv", "market-index_data_column-wise.csv")
 
 # Join the strings together (static = simpler in R, but wanted to practice looping over txt)
@@ -117,8 +117,8 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 cat("Fetching variable identification data.", "\n", "Creating variables. Reformatting for r syntax...")
 start_time <- Sys.time()
 
-cd_dict = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/index_member_dict_fixed.xlsx"
-cd_problem_stocks = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/problem_id_s.txt"
+cd_dict = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/index_member_dict_fixed.xlsx"
+cd_problem_stocks = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/problem_id_s.txt"
 name_dict = readxl::read_xlsx(cd_dict)
 # read in fully formatted names of problematic stock series
 problem_names = read.delim(cd_problem_stocks, header = FALSE)
@@ -375,9 +375,8 @@ for (i in 1:length(market_list))
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
-# 3. Wrangle the models so that it is organised according to sector. ####
-# Load Sector Identification data
-cd_sec <- 'C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
+# 3. Load Sector Identification data ####
+cd_sec <- 'C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
 sector_data <- as.list(readxl::read_xlsx(cd_sec))
 
 # Specify patterns
@@ -404,7 +403,7 @@ names(sector_data) <- lapply(names(sector_data), gsub, pattern = " ", replacemen
 sector_data <- as.data.frame(sector_data) %>% 
   dplyr::distinct(Ticker,.keep_all = TRUE) %>% 
   na.omit
-
+# 4. Wrangle the models so that it is organised according to sector. ####
 # Create new storage lists
 sub_list <- function(dataa, llist, focus="") {
   # function takes prespecified lists and replaces NULLs with NULL LISTS of required length
@@ -482,10 +481,10 @@ for (i in 1:nrow(sector_data))
   }
   
   # Allocate data to correct data
-  industry[tick] <- 
-  supersector[tick] <- 
-  sector[tick] <- 
-  subsector[tick] <- 
+  # industry[tick] <-
+  # supersector[tick] <-
+  # sector[tick] <-
+  # subsector[tick] <-
   }
 
 
