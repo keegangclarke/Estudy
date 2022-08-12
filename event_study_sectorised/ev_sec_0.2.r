@@ -486,6 +486,11 @@ for (i in 1:nrow(sector_data)){
 }
 
 # little-big loop finds names of specified string
+# ALLOCATE COUNTERS
+indu_i <- 1
+supe_i <- 1
+sect_i <- 1
+subs_i <- 1
 for (i in 1:nrow(sector_data)){
   # each row of 'sector_data' contains a single stock's ICB information
   # this loop is supposed to go over the 'sector_data' and carve it up line-by-line
@@ -500,36 +505,30 @@ for (i in 1:nrow(sector_data)){
   sect <- sector_data[i,4] # sector
   subs <- sector_data[i,5] # subsector
   
-  # ALLOCATE COUNTERS
-  indu_i <- 1
-  supe_i <- 1
-  sect_i <- 1
-  subs_i <- 1
-  
   # ALLOCATE TICKERS (ID strings) to respective locations
   if (sector_data[i,2] == indu){
     # INDUSTRY
     industry[[indu]][[indu_i]] <- tick
     names(industry[[indu]][[indu_i]]) <- tick
-    indu_i + 1
+    indu_i <- indu_i + 1
   }
   if (sector_data[i,2] == supe){
     # SUPERSECTOR
     supersector[[supe]][[supe_i]] <- tick
     names(supersector[[supe]][[supe_i]]) <- tick
-    supe_i + 1
+    supe_i <- supe_i + 1
   }
   if (sector_data[i,2] == sect){
     # SECTOR
     sector[[sect]][[sect_i]] <- tick
     names(sector[[sect]][[sect_i]]) <- tick
-    sect_i + 1
+    sect_i <- sect_i + 1
   }
   if (sector_data[i,2] == indu){
     # SUBSECTOR
     subsector[[subs]][[subs_i]] <- tick
     names(subsector[[subs]][[subs_i]]) <- tick
-    subs_i + 1
+    subs_i <- subs_i + 1
   }
 }
 
