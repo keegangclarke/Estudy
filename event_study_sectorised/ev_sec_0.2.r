@@ -35,9 +35,9 @@ fix_digit_names <- function(x, insertion, pos_idx = 0)
 
 name_as_string <- function(x)
 {
-  # Returns the name of whatever you pass as a character string Primary purpose is to get string
-  # representation of function and variable names Added benefit is anything passed as x will come
-  # out as 'x'
+  # Returns the name of whatever you pass as a character string 
+  # Primary purpose is to get string representation of function and variable names 
+  # Added benefit is anything passed as x will come out as 'x'
   deparse(substitute(x))
 }
 
@@ -403,7 +403,8 @@ names(sector_data) <- lapply(names(sector_data), gsub, pattern = " ", replacemen
 sector_data <- as.data.frame(sector_data) %>% 
   dplyr::distinct(Ticker,.keep_all = TRUE) %>% 
   na.omit
-# 4. Wrangle the models so that it is organised according to sector. ####
+
+# 4. Pre-allocate objects and variables for sector wrangling ####
 # Create new storage lists
 sub_list <- function(dataa, llist, focus="") {
   # function takes prespecified lists and replaces NULLs with NULL LISTS of required length
@@ -418,6 +419,7 @@ sub_list <- function(dataa, llist, focus="") {
   }
   for (i in iters) {
     vec <- vector(mode="list", length = lens[[names(llist)[i]]])
+    names(vec) <- 
     llist[[names(llist)[i]]] <- vec
     rm(vec)
   }
@@ -426,16 +428,17 @@ sub_list <- function(dataa, llist, focus="") {
 } 
 
 # REDUNDANT BUT LEFT IN FOR POTENTIAL USE IN LATER DEBUGGING
-# # Count the number of occurrences of each industry/supersector/sector/subsector
-# no_indu <- industry
-# for (i in 1:length(no_indu)) {
-#   no_indu[[i]] <- sum(sector_data$ICB.Industry.Name == names(no_indu)[i])
-# }
-# # create Sub-lists that are of the correct length
-# for (i in 1:length(industry)) {
-#   vec <- vector(mode="list", length = no_indu[[names(industry)[i]]])
-#   industry[[names(industry)[i]]] <- vec
-# }
+# Count the number of occurrences of each industry/supersector/sector/subsector
+no_indu <- industry
+for (i in 1:length(no_indu)) {
+  no_indu[[i]] <- sum(sector_data$ICB.Industry.Name == names(no_indu)[i])
+}
+# create Sub-lists that are of the correct length
+for (i in 1:length(industry)) {
+  vec <- vector(mode="list", length = no_indu[[names(industry)[i]]])
+  names(vec) <- sector_data$ICB.Industry.Name
+  industry[[names(industry)[i]]] <- vec
+}
 
 # need to pre-allocate the length of the subcomponents
 industry <- vector(mode = "list",
@@ -458,35 +461,121 @@ subsector <- vector(mode = "list",
 names(subsector) <- unique(sector_data$ICB.Subsector.Name)
 subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 
+# 5. Wrangle the models so that it is organised according to sector. ####
 # Plan for reogranisation process
 # loop with conditional to test if ticker in sectors is in stock_list
 # sectors$Ticker[i] != %in%
-# Perhaps it is best to subset all the stock information of all stocks in 'remainder
+# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
 # then reorganise on the basis of the remainder
 
-# INDUSTRY
-for (i in 1:nrow(sector_data))
-  {
-  # Retrieve Identifiers
+# MINI TEST OF INDUSTRY
+# Creation of mini storage list
+test_list <- vector(mode="list", length=3)
+test_list[[1]] <- subsector$Toys # len = 3
+test_list[[2]] <- subsector$Paper # len = 12
+test_list[[3]] <- subsector$Water # len = 5
+names(test_list) <- c("Toys", "Paper", "Water")
+
+# Little loop finds names of specified string
+for (i in 1:nrow(sector_data)){
+  if (sector_data[i,5]=="Toys"){
+    print(sector_data[i,1])  
+  } else{
+    next
+  }
+}
+
+# little-big loop finds names of specified string
+for (i in 1:nrow(sector_data)){
+  # each row of 'sector_data' contains a single stock's ICB information
+  # this loop is supposed to go over the 'sector_data' and carve it up line-by-line
+  # then check where that stock's name is supposed to go
+  # It then allocates the ticker of that stock in the sub-list as a name
+  # to the pre-specified list of the correct length (see 'sub_list()')
+  
+  # Carve up row into constituents
   tick <- sector_data[i,1] # ticker
   indu <- sector_data[i,2] # industry
   supe <- sector_data[i,3] # supersector
   sect <- sector_data[i,4] # sector
   subs <- sector_data[i,5] # subsector
   
-  # Find data
-  for (i in 1:length(market_list))
-    {
-    
-  }
+  # ALLOCATE COUNTERS
+  indu_i <- 1
+  supe_i <- 1
+  sect_i <- 1
+  subs_i <- 1
   
+  # ALLOCATE TICKERS (ID strings) to respective locations
+  if (sector_data[i,2] == indu){
+    # INDUSTRY
+    industry[[indu]][[indu_i]] <- tick
+    names(industry[[indu]][[indu_i]]) <- tick
+    indu_i + 1
+  }
+  if (sector_data[i,2] == supe){
+    # SUPERSECTOR
+    supersector[[supe]][[supe_i]] <- tick
+    names(supersector[[supe]][[supe_i]]) <- tick
+    supe_i + 1
+  }
+  if (sector_data[i,2] == sect){
+    # SECTOR
+    sector[[sect]][[sect_i]] <- tick
+    names(sector[[sect]][[sect_i]]) <- tick
+    sect_i + 1
+  }
+  if (sector_data[i,2] == indu){
+    # SUBSECTOR
+    subsector[[subs]][[subs_i]] <- tick
+    names(subsector[[subs]][[subs_i]]) <- tick
+    subs_i + 1
+  }
+}
+
+
+
+my_data[ my_data$gender == "male", ]
+  
+# INDUSTRY
+for (i in 1:nrow(sector_data))
+  {
+  
+  # Retrieve 'sector_data' Identifiers
+  tick <- sector_data[i,1] # ticker
+  indu <- sector_data[i,2] # industry
+  supe <- sector_data[i,3] # supersector
+  sect <- sector_data[i,4] # sector
+  subs <- sector_data[i,5] # subsector
+  
+    # Find data
+  for (i in 1:length(stock_list))
+    {
+    # Retrieve 'stock_list' Identifiers
+    
+    # Find 
+    if (sector_data[i,1] == tick){
+      next
+    }
+    if (sector_data[i,5] == indu){
+      next
+    }
+    if (sector_data[i,5] == supe){
+      next
+    }
+    if (sector_data[i,5] == sect){
+      next
+    }
+    if (sector_data[i,5] == subs){
+      next
+    }
   # Allocate data to correct data
   # industry[tick] <-
   # supersector[tick] <-
   # sector[tick] <-
   # subsector[tick] <-
   }
-
+}
 
 # Lists needed for recording of results later
 # abnormal return storage list
