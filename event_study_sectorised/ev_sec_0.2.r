@@ -357,12 +357,14 @@ for (i in 1:length(market_list))
                                              estimation_start = as.Date("2019-04-01"),
                                              estimation_end = as.Date("2020-03-13"))
     
-    print("Done. Storing r8tes and market-models.")
+    print("Done. Storing rates and market-models.")
     # Store results for later recording
     rates_list[[keys[[i]]]] <- r8tes
     rates_indx_list[[keys[[i]]]] <- r8tes_indx
     reg_results_list[[keys[[i]]]] <- reg_model_results
-    names(reg_results_list[[keys[[i]]]]) <- names(r8tes)
+    # Record name data in list for later referencing
+    temp_keys <- names(r8tes)
+    names(reg_results_list[[keys[[i]]]]) <- temp_keys[-1]
     # Explicit memory cleanup
     rm(r8tes)
     rm(r8tes_indx)
