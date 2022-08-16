@@ -447,21 +447,26 @@ sub_list <- function(dataa, llist, focus="") {
 industry <- vector(mode = "list",
                    length = length(unique(sector_data$ICB.Industry.Name)))
 names(industry) <- unique(sector_data$ICB.Industry.Name)
+indu_i <- industry # copy list for later counter
 industry <- sub_list(sector_data, industry, focus = "ICB.Industry.Name")
 
 supersector <- vector(mode = "list",
                       length = length(unique(sector_data$ICB.Supersector.Name)))
 names(supersector) <- unique(sector_data$ICB.Supersector.Name)
+supe_i <- supersector # copy list for later counter
+
 supersector <- sub_list(sector_data, supersector, focus = "ICB.Supersector.Name")
 
 sector <- vector(mode = "list",
                  length = length(unique(sector_data$ICB.Sector.Name)))
 names(sector) <- unique(sector_data$ICB.Sector.Name)
+sect_i <- sector # copy list for later counter
 sector <- sub_list(sector_data, sector, focus = "ICB.Sector.Name")
 
 subsector <- vector(mode = "list",
                     length = length(unique(sector_data$ICB.Subsector.Name)))
 names(subsector) <- unique(sector_data$ICB.Subsector.Name)
+subs_i <- subsector # copy list for later counter
 subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 
 # 5. Wrangle the models so that it is organised according to sector. ####
@@ -479,10 +484,13 @@ test_list[[2]] <- subsector$Paper # len = 12
 test_list[[3]] <- subsector$Water # len = 5
 names(test_list) <- c("Toys", "Paper", "Water")
 
+no_test <- 1
 # Little loop finds names of specified string
 for (i in 1:nrow(sector_data)){
   if (sector_data[i,5]=="Toys"){
     print(sector_data[i,1])  
+    names(test_list[["Toys"]])[[no_test]] <- sector_data[i,1]
+    no_test <- no_test + 1
   } else{
     next
   }
@@ -490,10 +498,14 @@ for (i in 1:nrow(sector_data)){
 
 # little-big loop finds names of specified string
 # ALLOCATE COUNTERS
-indu_i <- 1
-supe_i <- 1
-sect_i <- 1
-subs_i <- 1
+start_counter <- function(counter_list) {
+  # Function replaces each item of list with the number 1
+  for(i in 1:length(counter_list)) {
+    counter_list[[i]] <- 1
+  } 
+  invisible(counter_list)
+} 
+
 for (i in 1:nrow(sector_data)){
   # each row of 'sector_data' contains a single stock's ICB information
   # this loop is supposed to go over the 'sector_data' and carve it up line-by-line
@@ -508,32 +520,39 @@ for (i in 1:nrow(sector_data)){
   sect <- sector_data[i,4] # sector
   subs <- sector_data[i,5] # subsector
   
+  # START COUNTERS AT 1
+  indu_i <- start_counter(indu_i)
+  supe_i <- start_counter(supe_i)
+  sect_i <- start_counter(sect_i)
+  subs_i <- start_counter(subs_i)
+  
   # ALLOCATE TICKERS (ID strings) to respective locations
   if (sector_data[i,2] == indu){
     # INDUSTRY
-    industry[[indu]][[indu_i]] <- tick
-    names(industry[[indu]][[indu_i]]) <- tick
-    indu_i <- indu_i + 1
-  }
-  if (sector_data[i,2] == supe){
+    industry[[indu]][[indu_i[[indu]]]] <- tick
+    names(industry[[indu]])[[indu_i[[indu]]]] <- tick
+    indu_i[[indu]] <- indu_i[[indu]] + 1
+  } else {}
+  if (sector_data[i,3] == supe){
     # SUPERSECTOR
-    supersector[[supe]][[supe_i]] <- tick
-    names(supersector[[supe]][[supe_i]]) <- tick
-    supe_i <- supe_i + 1
-  }
-  if (sector_data[i,2] == sect){
+    supersector[[supe]][[supe_i[[supe]]]] <- tick
+    names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
+    supe_i[[supe]] <- supe_i[[supe]] + 1
+  } else {}
+  if (sector_data[i,4] == sect){
     # SECTOR
-    sector[[sect]][[sect_i]] <- tick
-    names(sector[[sect]][[sect_i]]) <- tick
-    sect_i <- sect_i + 1
-  }
-  if (sector_data[i,2] == indu){
+    sector[[sect]][[sect_i[[sect]]]] <- tick
+    names(sector[[sect]])[[sect_i[[sect]]]] <- tick
+    sect_i[[sect]] <- sect_i[[sect]] + 1
+  } else {}
+  if (sector_data[i,5] == indu){
     # SUBSECTOR
-    subsector[[subs]][[subs_i]] <- tick
-    names(subsector[[subs]][[subs_i]]) <- tick
-    subs_i <- subs_i + 1
+    subsector[[subs]][[subs_i[[subs]]]] <- tick
+    names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
+    subs_i[[subs]] <- subs_i[[subs]] + 1
   }
 }
+print("Reference name allocation complete.")
 
 
 
