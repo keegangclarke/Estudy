@@ -443,7 +443,7 @@ sub_list <- function(dataa, llist, focus="") {
 #   industry[[names(industry)[i]]] <- vec
 # }
 
-# need to pre-allocate the length of the subcomponents
+# need to pre-allocate the length of the subcomponents of the lists
 industry <- vector(mode = "list",
                    length = length(unique(sector_data$ICB.Industry.Name)))
 names(industry) <- unique(sector_data$ICB.Industry.Name)
@@ -476,13 +476,13 @@ subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 # Perhaps it is best to subset all the stock information of all stocks in 'remainder'
 # then reorganise on the basis of the remainder
 
-# MINI TEST OF INDUSTRY
-# Creation of mini storage list
-test_list <- vector(mode="list", length=3)
-test_list[[1]] <- subsector$Toys # len = 3
-test_list[[2]] <- subsector$Paper # len = 12
-test_list[[3]] <- subsector$Water # len = 5
-names(test_list) <- c("Toys", "Paper", "Water")
+# # MINI TEST OF INDUSTRY
+# # Creation of mini storage list
+# test_list <- vector(mode="list", length=3)
+# test_list[[1]] <- subsector$Toys # len = 3
+# test_list[[2]] <- subsector$Paper # len = 12
+# test_list[[3]] <- subsector$Water # len = 5
+# names(test_list) <- c("Toys", "Paper", "Water")
 
 no_test <- 1
 # Little loop finds names of specified string
@@ -496,7 +496,6 @@ for (i in 1:nrow(sector_data)){
   }
 }
 
-# little-big loop finds names of specified string
 # ALLOCATE COUNTERS
 start_counter <- function(counter_list) {
   # Function replaces each item of list with the number 1
@@ -512,40 +511,44 @@ supe_i <- start_counter(supe_i)
 sect_i <- start_counter(sect_i)
 subs_i <- start_counter(subs_i)
 
-for (i in 1:nrow(sector_data)){
+# PRE-ALLOCATION LOOP: CREATION OF NAMED REFERENCES
+for (i in 1:nrow(sector_data)) {
   # each row of 'sector_data' contains a single stock's ICB information
   # this loop is supposed to go over the 'sector_data' and carve it up line-by-line
-  # then check where that stock's name is supposed to go
+  # then checks where that stock's name is supposed to go
   # It then allocates the ticker of that stock in the sub-list as a name
   # to the pre-specified list of the correct length (see 'sub_list()')
   
-  # Carve up row into constituents
-  tick <- sector_data[i,1] # ticker
-  indu <- sector_data[i,2] # industry
-  supe <- sector_data[i,3] # supersector
-  sect <- sector_data[i,4] # sector
-  subs <- sector_data[i,5] # subsector
+  # CARVE UP INTO CONSTITUENTS
+  tick <- sector_data[i, 1] # ticker
+  indu <- sector_data[i, 2] # industry
+  supe <- sector_data[i, 3] # supersector
+  sect <- sector_data[i, 4] # sector
+  subs <- sector_data[i, 5] # subsector
   
   # ALLOCATE TICKERS (ID strings) to respective locations
-  if (sector_data[i,2] == indu){
+  if (sector_data[i, 2] == indu) {
     # INDUSTRY
     industry[[indu]][[indu_i[[indu]]]] <- tick
     names(industry[[indu]])[[indu_i[[indu]]]] <- tick
     indu_i[[indu]] <- indu_i[[indu]] + 1
-  } else {}
-  if (sector_data[i,3] == supe){
+  } else {
+  }
+  if (sector_data[i, 3] == supe) {
     # SUPERSECTOR
     supersector[[supe]][[supe_i[[supe]]]] <- tick
     names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
     supe_i[[supe]] <- supe_i[[supe]] + 1
-  } else {}
-  if (sector_data[i,4] == sect){
+  } else {
+  }
+  if (sector_data[i, 4] == sect) {
     # SECTOR
     sector[[sect]][[sect_i[[sect]]]] <- tick
     names(sector[[sect]])[[sect_i[[sect]]]] <- tick
     sect_i[[sect]] <- sect_i[[sect]] + 1
-  } else {}
-  if (sector_data[i,5] == indu){
+  } else {
+  }
+  if (sector_data[i, 5] == subs) {
     # SUBSECTOR
     subsector[[subs]][[subs_i[[subs]]]] <- tick
     names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
@@ -554,47 +557,79 @@ for (i in 1:nrow(sector_data)){
 }
 print("Reference name allocation complete.")
 
+# my_data[ my_data$gender == "male", ]
 
+# gets down to the 3rd level, and extracts the model list
+reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
 
-my_data[ my_data$gender == "male", ]
-  
-# INDUSTRY
-for (i in 1:nrow(sector_data))
-  {
-  
+names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
+
+#  Idea on how to get the data together
+# 1. iterate over 'sector_data' again
+#    at each iter, carve it up row by row to get common matching information
+# 2. use the carved-up 'sector_data' row to select the correct space, per list of
+# 2.1 industry
+# 2.2 supersector
+# 2.3 sector
+# 2.4 subsector
+# by selecting the higher up hierarchy by the industry / supersector / sector / subsector column
+# then using the ticker column to select the final spot in the list
+# 3. use the 'remainder' list of tickers, organised by market
+#    to iterate over each share in the 'reg_results_list'
+# 3.1 get the market name to select the first level of the 'reg_results_list'
+# 3.2 use the individual ticker-string to select the model in 'reg_results_list'
+# 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
+
+# START COUNTERS AT 1
+indu_i <- start_counter(indu_i)
+supe_i <- start_counter(supe_i)
+sect_i <- start_counter(sect_i)
+subs_i <- start_counter(subs_i)
+
+# REGRESSION MODEL ALLOCATION LOOP
+for (i in 1:nrow(sector_data)) {
   # Retrieve 'sector_data' Identifiers
-  tick <- sector_data[i,1] # ticker
-  indu <- sector_data[i,2] # industry
-  supe <- sector_data[i,3] # supersector
-  sect <- sector_data[i,4] # sector
-  subs <- sector_data[i,5] # subsector
+  tick <- sector_data[i, 1] # ticker
+  indu <- sector_data[i, 2] # industry
+  supe <- sector_data[i, 3] # supersector
+  sect <- sector_data[i, 4] # sector
+  subs <- sector_data[i, 5] # subsector
   
-    # Find data
-  for (i in 1:length(stock_list))
-    {
-    # Retrieve 'stock_list' Identifiers
-    
-    # Find 
-    if (sector_data[i,1] == tick){
-      next
-    }
-    if (sector_data[i,5] == indu){
-      next
-    }
-    if (sector_data[i,5] == supe){
-      next
-    }
-    if (sector_data[i,5] == sect){
-      next
-    }
-    if (sector_data[i,5] == subs){
-      next
-    }
-  # Allocate data to correct data
-  # industry[tick] <-
-  # supersector[tick] <-
-  # sector[tick] <-
-  # subsector[tick] <-
+  # Find data
+  for (j in 1:length(reg_results_list)) {
+    # Retrieve 'remainder' Identifiers
+    mkt <- names(remainder)[[j]]
+    mkt_membs <- remainder[[j]]
+    # checks if ticker is in 
+    (sector_data[,1] %in% remainder[[1]])==TRUE
+      # ALLOCATE DATA (ID strings) to respective locations
+      if (sector_data[i, 2] == indu) {
+        # INDUSTRY
+        industry[[indu]][[indu_i[[indu]]]] <- tick
+        names(industry[[indu]])[[indu_i[[indu]]]] <- tick
+        indu_i[[indu]] <- indu_i[[indu]] + 1
+      } else {
+      }
+      if (sector_data[i, 3] == supe) {
+        # SUPERSECTOR
+        supersector[[supe]][[supe_i[[supe]]]] <- tick
+        names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
+        supe_i[[supe]] <- supe_i[[supe]] + 1
+      } else {
+      }
+      if (sector_data[i, 4] == sect) {
+        # SECTOR
+        sector[[sect]][[sect_i[[sect]]]] <- tick
+        names(sector[[sect]])[[sect_i[[sect]]]] <- tick
+        sect_i[[sect]] <- sect_i[[sect]] + 1
+      } else {
+      }
+      if (sector_data[i, 5] == subs) {
+        # SUBSECTOR
+        subsector[[subs]][[subs_i[[subs]]]] <- tick
+        names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
+        subs_i[[subs]] <- subs_i[[subs]] + 1
+      }
   }
 }
 
