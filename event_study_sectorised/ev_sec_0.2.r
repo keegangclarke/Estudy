@@ -506,6 +506,12 @@ start_counter <- function(counter_list) {
   invisible(counter_list)
 } 
 
+# START COUNTERS AT 1
+indu_i <- start_counter(indu_i)
+supe_i <- start_counter(supe_i)
+sect_i <- start_counter(sect_i)
+subs_i <- start_counter(subs_i)
+
 for (i in 1:nrow(sector_data)){
   # each row of 'sector_data' contains a single stock's ICB information
   # this loop is supposed to go over the 'sector_data' and carve it up line-by-line
@@ -519,12 +525,6 @@ for (i in 1:nrow(sector_data)){
   supe <- sector_data[i,3] # supersector
   sect <- sector_data[i,4] # sector
   subs <- sector_data[i,5] # subsector
-  
-  # START COUNTERS AT 1
-  indu_i <- start_counter(indu_i)
-  supe_i <- start_counter(supe_i)
-  sect_i <- start_counter(sect_i)
-  subs_i <- start_counter(subs_i)
   
   # ALLOCATE TICKERS (ID strings) to respective locations
   if (sector_data[i,2] == indu){
