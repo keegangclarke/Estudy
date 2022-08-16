@@ -429,16 +429,16 @@ sub_list <- function(dataa, llist, focus="") {
 
 # REDUNDANT BUT LEFT IN FOR POTENTIAL USE IN LATER DEBUGGING
 # Count the number of occurrences of each industry/supersector/sector/subsector
-no_indu <- industry
-for (i in 1:length(no_indu)) {
-  no_indu[[i]] <- sum(sector_data$ICB.Industry.Name == names(no_indu)[i])
-}
-# create Sub-lists that are of the correct length
-for (i in 1:length(industry)) {
-  vec <- vector(mode="list", length = no_indu[[names(industry)[i]]])
-  names(vec) <- sector_data$ICB.Industry.Name
-  industry[[names(industry)[i]]] <- vec
-}
+# no_indu <- industry
+# for (i in 1:length(no_indu)) {
+#   no_indu[[i]] <- sum(sector_data$ICB.Industry.Name == names(no_indu)[i])
+# }
+# # create Sub-lists that are of the correct length
+# for (i in 1:length(industry)) {
+#   vec <- vector(mode="list", length = no_indu[[names(industry)[i]]])
+#   names(vec) <- sector_data$ICB.Industry.Name
+#   industry[[names(industry)[i]]] <- vec
+# }
 
 # need to pre-allocate the length of the subcomponents
 industry <- vector(mode = "list",
