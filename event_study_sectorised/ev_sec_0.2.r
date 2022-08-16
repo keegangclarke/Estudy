@@ -324,8 +324,8 @@ names(reg_results_list) <- keys
 # Rates storage lists
 rates_list <- vector(mode = "list", length = length(market_list))
 rates_indx_list <- vector(mode = "list", length = length(market_list))
-names(rates_list) <- keys
-names(rates_indx_list) <- keys
+names(r8tes_list) <- keys
+names(r8tes_indx_list) <- keys
 
 # Loop estimates estudy ols objects
 # dependency of para and nonpara tests
@@ -333,39 +333,40 @@ for (i in 1:length(market_list))
 {
   tryCatch({
     print(paste("Getting rates from prices for", keys[[i]]))
-    rates <- get_rates_from_prices(stock_list[[i]], 
+    r8tes <- get_rates_from_prices(stock_list[[i]], 
                                    quote = "Close", 
                                    multi_day = TRUE, 
                                    compounding = "continuous")
     
-    rates_indx <- get_rates_from_prices(market_list[[i]], 
+    r8tes_indx <- get_rates_from_prices(market_list[[i]], 
                                         quote = "Close", 
                                         multi_day = TRUE, 
                                         compounding = "continuous")
     
     # FIX DTYPES OF COLUMN PRIOR TO TESTING
-    rates <- transform.data.frame(rates, date = as.Date(date))
-    rates_indx <- transform.data.frame(rates_indx, date = as.Date(date))
+    r8tes <- transform.data.frame(r8tes, date = as.Date(date))
+    r8tes_indx <- transform.data.frame(r8tes_indx, date = as.Date(date))
     print("Done. Applying single-index market model.")
     
     # apply single-index market model to get ARs
-    securities_returns <- apply_market_model(rates = rates,
-                                             regressor = rates_indx,
+    reg_model_results <- apply_market_model(rates = r8tes,
+                                             regressor = r8tes_indx,
                                              same_regressor_for_all = TRUE,
                                              market_model = "sim",
                                              estimation_method = "ols",
                                              estimation_start = as.Date("2019-04-01"),
                                              estimation_end = as.Date("2020-03-13"))
     
-    print("Done. Storing rates and market-models.")
+    print("Done. Storing r8tes and market-models.")
     # Store results for later recording
-    rates_list[[keys[[i]]]] <- rates
-    rates_indx_list[[keys[[i]]]] <- rates_indx
-    reg_results_list[[keys[[i]]]] <- securities_returns
+    rates_list[[keys[[i]]]] <- r8tes
+    rates_indx_list[[keys[[i]]]] <- r8tes_indx
+    reg_results_list[[keys[[i]]]] <- reg_model_results
+    names(reg_results_list[[keys[[i]]]]) <- names(r8tes)
     # Explicit memory cleanup
-    rm(rates)
-    rm(rates_indx)
-    rm(securities_returns)
+    rm(r8tes)
+    rm(r8tes_indx)
+    rm(reg_model_results)
   }, error = function(e)
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
