@@ -588,16 +588,43 @@ fixed_names <- cat_names %>%
 # Rename items in list
 names(lol) <- fixed_names
 
+# Get reference names
+usable_ticks <- unlist(sector_data[["Ticker"]])
+unusable_ticks <- setdiff(usable_ticks, fixed_names)
+# Remove irrelevant names
+
+lol <- lol[usable_ticks %in% names(lol)]
+
 for (i in 1:length(lol)) {
   # Get ID and classification for matching purposes
   nam <- names(lol)[[i]]
-  row_slice <- sector_data[sector_data[, 1] == nam, ] %>% unlist
+  # Remove old objects
+  if (exists("row_slice")==TRUE) {
+    rm(row_slice)
+  }
+  if (exists("tick")==TRUE) {
+    rm(tick)
+  }
+  if (exists("indu")==TRUE) {
+    rm(indu)
+  }
+  if (exists("supe")==TRUE) {
+    rm(supe)
+  }
+  if (exists("sect")==TRUE) {
+    rm(sect)
+  }
+  if (exists("subs")==TRUE) {
+    rm(subs)
+  }
+  # Slice sector info for matching
+  row_slice <- sector_data[sector_data[, 1] == nam, ]
   tick <- row_slice[["Ticker"]]
   indu <- row_slice[["ICB.Industry.Name"]]
   supe <- row_slice[["ICB.Supersector.Name"]]
   sect <- row_slice[["ICB.Sector.Name"]]
   subs <- row_slice[["ICB.Subsector.Name"]]
-  
+  print(i)
   # ALLOCATE MODELS VIA REFERENCING
   industry[[indu]][[tick]] <- lol[[tick]]
   supersector[[supe]][[tick]] <- lol[[tick]]
@@ -608,7 +635,20 @@ for (i in 1:length(lol)) {
 # ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
 for (i in 1:length(lol)) {
   tryCatch({
-
+    # Get ID and classification for matching purposes
+    nam <- names(lol)[[i]]
+    row_slice <- sector_data[sector_data[, 1] == nam, ] %>% unlist
+    tick <- row_slice[["Ticker"]]
+    indu <- row_slice[["ICB.Industry.Name"]]
+    supe <- row_slice[["ICB.Supersector.Name"]]
+    sect <- row_slice[["ICB.Sector.Name"]]
+    subs <- row_slice[["ICB.Subsector.Name"]]
+    
+    # ALLOCATE MODELS VIA REFERENCING
+    industry[[indu]][[tick]] <- lol[[tick]]
+    supersector[[supe]][[tick]] <- lol[[tick]]
+    sector[[sect]][[tick]] <- lol[[tick]]
+    subsector[[subs]][[tick]] <- lol[[tick]]
   }, error = function(e)
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
