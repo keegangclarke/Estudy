@@ -324,8 +324,8 @@ names(reg_results_list) <- keys
 # Rates storage lists
 rates_list <- vector(mode = "list", length = length(market_list))
 rates_indx_list <- vector(mode = "list", length = length(market_list))
-names(r8tes_list) <- keys
-names(r8tes_indx_list) <- keys
+names(rates_list) <- keys
+names(rates_indx_list) <- keys
 
 # Loop estimates estudy ols objects
 # dependency of para and nonpara tests
@@ -476,26 +476,6 @@ subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 # Perhaps it is best to subset all the stock information of all stocks in 'remainder'
 # then reorganise on the basis of the remainder
 
-# # MINI TEST OF INDUSTRY
-# # Creation of mini storage list
-# test_list <- vector(mode="list", length=3)
-# test_list[[1]] <- subsector$Toys # len = 3
-# test_list[[2]] <- subsector$Paper # len = 12
-# test_list[[3]] <- subsector$Water # len = 5
-# names(test_list) <- c("Toys", "Paper", "Water")
-
-no_test <- 1
-# Little loop finds names of specified string
-for (i in 1:nrow(sector_data)){
-  if (sector_data[i,5]=="Toys"){
-    print(sector_data[i,1])  
-    names(test_list[["Toys"]])[[no_test]] <- sector_data[i,1]
-    no_test <- no_test + 1
-  } else{
-    next
-  }
-}
-
 # ALLOCATE COUNTERS
 start_counter <- function(counter_list) {
   # Function replaces each item of list with the number 1
@@ -555,7 +535,7 @@ for (i in 1:nrow(sector_data)) {
     subs_i[[subs]] <- subs_i[[subs]] + 1
   }
 }
-print("Reference name allocation complete.")
+print("Reference-name allocation complete.")
 
 # my_data[ my_data$gender == "male", ]
 
@@ -580,11 +560,55 @@ names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
 # 3.2 use the individual ticker-string to select the model in 'reg_results_list'
 # 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
 
+# # MINI TEST OF INDUSTRY
+# # Creation of mini storage list
+# test_list <- vector(mode="list", length=3)
+# test_list[[1]] <- subsector$Toys # len = 3
+# test_list[[2]] <- subsector$Paper # len = 12
+# test_list[[3]] <- subsector$Water # len = 5
+# names(test_list) <- c("Toys", "Paper", "Water")
+
 # START COUNTERS AT 1
 indu_i <- start_counter(indu_i)
 supe_i <- start_counter(supe_i)
 sect_i <- start_counter(sect_i)
 subs_i <- start_counter(subs_i)
+
+allocate_models <- function(list_of_lists, sec_class_data, counter) {
+  counter <- start_counter(counter_list = counter)
+  # Construct regex patterns for later
+  pat <- names(list_of_lists)
+  pat <- pat %>% 
+    lapply(stringr::str_remove_all,
+           "\\.Index\\.?") %>% 
+    unlist
+  
+  for (i in 1:length(pat)) {
+    pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
+  }
+  
+  # Unlist the 'list of lists of lists' into a 'list of lists'
+  lol <- unlist(list_of_lists)
+  # get concatenated names (first and second order of hierarchy)
+  cat_names <- names(lol)
+    # Fix names using regex, whilst maintaining order
+  fixed_names <- cat_names %>%
+    lapply(stringr::str_remove_all,
+           pattern = paste0(pat,
+                            collapse = "|")) %>%
+    unlist
+  # Rename items in list
+  names(lol) <- fixed_names
+  
+  # Allocate Reg data to right spot
+  for (i in 1:length(lol)) {
+    # Get ticker for matching purposes
+    nam <- names(lol)[[i]]
+    
+    
+  }
+}
+
 
 # REGRESSION MODEL ALLOCATION LOOP
 for (i in 1:nrow(sector_data)) {
