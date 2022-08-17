@@ -560,102 +560,115 @@ names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
 # 3.2 use the individual ticker-string to select the model in 'reg_results_list'
 # 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
 
-# # MINI TEST OF INDUSTRY
-# # Creation of mini storage list
-# test_list <- vector(mode="list", length=3)
-# test_list[[1]] <- subsector$Toys # len = 3
-# test_list[[2]] <- subsector$Paper # len = 12
-# test_list[[3]] <- subsector$Water # len = 5
-# names(test_list) <- c("Toys", "Paper", "Water")
+# REFERENCE REGEX SPECIFICATION FOR NAME-STRING CLEANING
+# Construct regex patterns for later
+pat <- names(reg_results_list)
+pat <- pat %>%
+  lapply(stringr::str_remove_all,
+         "\\.Index\\.?") %>%
+  unlist
+
+for (i in 1:length(pat)) {
+  pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
+}
+
+# Unlist the 'list of lists of lists' into a 'list of lists'
+lol <- unlist(reg_results_list, recursive = FALSE)
+
+# get concatenated names (first and second order of hierarchy)
+cat_names <- names(lol)
+
+# Fix names using regex, whilst maintaining order
+fixed_names <- cat_names %>%
+  lapply(stringr::str_remove_all,
+         pattern = paste0(pat,
+                          collapse = "|")) %>%
+  unlist
+
+# Rename items in list
+names(lol) <- fixed_names
+
+for (i in 1:length(lol)) {
+  # Get ID and classification for matching purposes
+  nam <- names(lol)[[i]]
+  row_slice <- sector_data[sector_data[, 1] == nam, ] %>% unlist
+  tick <- row_slice[["Ticker"]]
+  indu <- row_slice[["ICB.Industry.Name"]]
+  supe <- row_slice[["ICB.Supersector.Name"]]
+  sect <- row_slice[["ICB.Sector.Name"]]
+  subs <- row_slice[["ICB.Subsector.Name"]]
+  
+  # ALLOCATE MODELS VIA REFERENCING
+  industry[[indu]][[tick]] <- lol[[tick]]
+  supersector[[supe]][[tick]] <- lol[[tick]]
+  sector[[sect]][[tick]] <- lol[[tick]]
+  subsector[[subs]][[tick]] <- lol[[tick]]
+}
+
+# ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
+for (i in 1:length(lol)) {
+  tryCatch({
+
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+
+
+# OLD APPROACH TO ALLOCATION
 
 # START COUNTERS AT 1
-indu_i <- start_counter(indu_i)
-supe_i <- start_counter(supe_i)
-sect_i <- start_counter(sect_i)
-subs_i <- start_counter(subs_i)
-
-allocate_models <- function(list_of_lists, sec_class_data, counter) {
-  counter <- start_counter(counter_list = counter)
-  # Construct regex patterns for later
-  pat <- names(list_of_lists)
-  pat <- pat %>% 
-    lapply(stringr::str_remove_all,
-           "\\.Index\\.?") %>% 
-    unlist
-  
-  for (i in 1:length(pat)) {
-    pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
-  }
-  
-  # Unlist the 'list of lists of lists' into a 'list of lists'
-  lol <- unlist(list_of_lists)
-  # get concatenated names (first and second order of hierarchy)
-  cat_names <- names(lol)
-    # Fix names using regex, whilst maintaining order
-  fixed_names <- cat_names %>%
-    lapply(stringr::str_remove_all,
-           pattern = paste0(pat,
-                            collapse = "|")) %>%
-    unlist
-  # Rename items in list
-  names(lol) <- fixed_names
-  
-  # Allocate Reg data to right spot
-  for (i in 1:length(lol)) {
-    # Get ticker for matching purposes
-    nam <- names(lol)[[i]]
-    
-    
-  }
-}
-
-
-# REGRESSION MODEL ALLOCATION LOOP
-for (i in 1:nrow(sector_data)) {
-  # Retrieve 'sector_data' Identifiers
-  tick <- sector_data[i, 1] # ticker
-  indu <- sector_data[i, 2] # industry
-  supe <- sector_data[i, 3] # supersector
-  sect <- sector_data[i, 4] # sector
-  subs <- sector_data[i, 5] # subsector
-  
-  # Find data
-  for (j in 1:length(reg_results_list)) {
-    # Retrieve 'remainder' Identifiers
-    mkt <- names(remainder)[[j]]
-    mkt_membs <- remainder[[j]]
-    # checks if ticker is in 
-    (sector_data[,1] %in% remainder[[1]])==TRUE
-      # ALLOCATE DATA (ID strings) to respective locations
-      if (sector_data[i, 2] == indu) {
-        # INDUSTRY
-        industry[[indu]][[indu_i[[indu]]]] <- tick
-        names(industry[[indu]])[[indu_i[[indu]]]] <- tick
-        indu_i[[indu]] <- indu_i[[indu]] + 1
-      } else {
-      }
-      if (sector_data[i, 3] == supe) {
-        # SUPERSECTOR
-        supersector[[supe]][[supe_i[[supe]]]] <- tick
-        names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
-        supe_i[[supe]] <- supe_i[[supe]] + 1
-      } else {
-      }
-      if (sector_data[i, 4] == sect) {
-        # SECTOR
-        sector[[sect]][[sect_i[[sect]]]] <- tick
-        names(sector[[sect]])[[sect_i[[sect]]]] <- tick
-        sect_i[[sect]] <- sect_i[[sect]] + 1
-      } else {
-      }
-      if (sector_data[i, 5] == subs) {
-        # SUBSECTOR
-        subsector[[subs]][[subs_i[[subs]]]] <- tick
-        names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
-        subs_i[[subs]] <- subs_i[[subs]] + 1
-      }
-  }
-}
+# indu_i <- start_counter(indu_i)
+# supe_i <- start_counter(supe_i)
+# sect_i <- start_counter(sect_i)
+# subs_i <- start_counter(subs_i)
+# # REGRESSION MODEL ALLOCATION LOOP
+# for (i in 1:nrow(sector_data)) {
+#   # Retrieve 'sector_data' Identifiers
+#   tick <- sector_data[i, 1] # ticker
+#   indu <- sector_data[i, 2] # industry
+#   supe <- sector_data[i, 3] # supersector
+#   sect <- sector_data[i, 4] # sector
+#   subs <- sector_data[i, 5] # subsector
+#   
+#   # Find data
+#   for (j in 1:length(reg_results_list)) {
+#     # Retrieve 'remainder' Identifiers
+#     mkt <- names(remainder)[[j]]
+#     mkt_membs <- remainder[[j]]
+#     # checks if ticker is in 
+#     (sector_data[,1] %in% remainder[[1]])==TRUE
+#       # ALLOCATE DATA (ID strings) to respective locations
+#       if (sector_data[i, 2] == indu) {
+#         # INDUSTRY
+#         industry[[indu]][[indu_i[[indu]]]] <- tick
+#         names(industry[[indu]])[[indu_i[[indu]]]] <- tick
+#         indu_i[[indu]] <- indu_i[[indu]] + 1
+#       } else {
+#       }
+#       if (sector_data[i, 3] == supe) {
+#         # SUPERSECTOR
+#         supersector[[supe]][[supe_i[[supe]]]] <- tick
+#         names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
+#         supe_i[[supe]] <- supe_i[[supe]] + 1
+#       } else {
+#       }
+#       if (sector_data[i, 4] == sect) {
+#         # SECTOR
+#         sector[[sect]][[sect_i[[sect]]]] <- tick
+#         names(sector[[sect]])[[sect_i[[sect]]]] <- tick
+#         sect_i[[sect]] <- sect_i[[sect]] + 1
+#       } else {
+#       }
+#       if (sector_data[i, 5] == subs) {
+#         # SUBSECTOR
+#         subsector[[subs]][[subs_i[[subs]]]] <- tick
+#         names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
+#         subs_i[[subs]] <- subs_i[[subs]] + 1
+#       }
+#   }
+# }
 
 # Lists needed for recording of results later
 # abnormal return storage list
