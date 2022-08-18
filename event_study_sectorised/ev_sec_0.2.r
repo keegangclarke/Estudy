@@ -155,24 +155,24 @@ for (i in 1:3)
 
 original_number_of_stocks <- length(unlist(name_list))
 long_name_list <- unlist(name_list)
+long_name_list_mindu <- name_list[(names(name_list) != "INDU.Index") & (names(name_list) !="CAC.Index")] %>% unlist
 
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
 # Check for duplicates
-if (anyDuplicated(long_name_list) != 0) {
-  dupe_vec <- long_name_list %>% duplicated 
-  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
+if (anyDuplicated(long_name_list_mindu) != 0) {
+  dupe_vec <- long_name_list_mindu %>% duplicated 
+  cat("There are", sum(as.numeric(dupe_vec)), "duplicate names.")
   dupe_locs <- which(dupe_vec == TRUE)
-  ori_vec <- long_name_list %>% duplicated(fromLast = TRUE)
+  ori_vec <- long_name_list_mindu %>% duplicated(fromLast = TRUE)
   ori_locs <- which(ori_vec == TRUE)
-  cat("\n",dupe_locs)
+  cat("\n", dupe_locs)
 } else {
-  cat("No duplicates found in", length(long_name_list), "items")
+  cat("No duplicates found in", length(long_name_list_mindu), "items")
 }
-
-
-
+long_name_list[dupe_locs]
+long_name_list[ori_locs]
 # 5. Creation of list of market-index data.frames ##############################
 
 print("Making list of market data.frame")
