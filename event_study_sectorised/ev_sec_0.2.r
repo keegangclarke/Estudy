@@ -430,6 +430,15 @@ sub_list <- function(dataa, llist, focus="") {
   invisible(llist)
 } 
 
+# COUNTER FUNCTION FOR OPERATION OF LOOPS
+start_counter <- function(counter_list) {
+  # Function replaces each item of list with the number 1
+  for(i in 1:length(counter_list)) {
+    counter_list[[i]] <- 1
+  } 
+  invisible(counter_list)
+} 
+
 # REDUNDANT BUT LEFT IN FOR POTENTIAL USE IN LATER DEBUGGING
 # Count the number of occurrences of each industry/supersector/sector/subsector
 # no_indu <- industry
@@ -469,21 +478,7 @@ names(subsector) <- unique(sector_data$ICB.Subsector.Name)
 subs_i <- subsector # copy list for later counter
 subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 
-# 5. Wrangle the models so that it is organised according to sector. ####
-# Plan for reogranisation process
-# loop with conditional to test if ticker in sectors is in stock_list
-# sectors$Ticker[i] != %in%
-# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
-# then reorganise on the basis of the remainder
-
-# ALLOCATE COUNTERS
-start_counter <- function(counter_list) {
-  # Function replaces each item of list with the number 1
-  for(i in 1:length(counter_list)) {
-    counter_list[[i]] <- 1
-  } 
-  invisible(counter_list)
-} 
+print("Creation of Storage Objects complete.")
 
 # START COUNTERS AT 1
 indu_i <- start_counter(indu_i)
@@ -535,14 +530,19 @@ for (i in 1:nrow(sector_data)) {
     subs_i[[subs]] <- subs_i[[subs]] + 1
   }
 }
-print("Reference-name allocation complete.")
+print("Named-reference reconfiguration of storage objects complete.")
 
-# my_data[ my_data$gender == "male", ]
+# 5. Wrangle the models so that it is organised according to sector. ####
+# Plan for reogranisation process
+# loop with conditional to test if ticker in sectors is in stock_list
+# sectors$Ticker[i] != %in%
+# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
+# then reorganise on the basis of the remainder
 
 # gets down to the 3rd level, and extracts the model list
-reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
-
-names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
+# reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
+# 
+# names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
 
 #  Idea on how to get the data together
 # 1. iterate over 'sector_data' again
