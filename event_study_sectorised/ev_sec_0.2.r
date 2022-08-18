@@ -350,12 +350,12 @@ for (i in 1:length(market_list))
     
     # apply single-index market model to get ARs
     reg_model_results <- apply_market_model(rates = r8tes,
-                                             regressor = r8tes_indx,
-                                             same_regressor_for_all = TRUE,
-                                             market_model = "sim",
-                                             estimation_method = "ols",
-                                             estimation_start = as.Date("2019-04-01"),
-                                             estimation_end = as.Date("2020-03-13"))
+                                            regressor = r8tes_indx,
+                                            same_regressor_for_all = TRUE,
+                                            market_model = "sim",
+                                            estimation_method = "ols",
+                                            estimation_start = as.Date("2019-04-01"),
+                                            estimation_end = as.Date("2020-03-13"))
     
     print("Done. Storing rates and market-models.")
     # Store results for later recording
@@ -373,6 +373,19 @@ for (i in 1:length(market_list))
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
+}
+
+# Check for duplicates
+for (i in 1:length(reg_results_list)) {
+  check_dupes <- reg_results_list[[i]] %>% names %>% anyDuplicated
+  if (check_dupes != 0) {
+    cat("There are duplicates in market-index: ",
+        names(reg_results_list)[[i]], "\n",
+        "N = ", i)
+  } 
+  if ((i == length(reg_results_list)) == TRUE) {
+    cat("No duplicates found for", length(unlist(reg_results_list, recursive = FALSE)), "items")
+  }
 }
 
 end_time <- Sys.time()
@@ -548,15 +561,20 @@ for (i in 1:length(pat)) {
 # Unlist the 'list of lists of lists' into a 'list of lists'
 lol <- unlist(reg_results_list, recursive = FALSE)
 
-# get concatenated names (first and second order of hierarchy)
-cat_names <- names(lol)
-
 # Fix names using regex, whilst maintaining order
-fixed_names <- cat_names %>%
+fixed_names <- names(lol) %>%
   lapply(stringr::str_remove_all,
          pattern = paste0(pat,
                           collapse = "|")) %>%
   unlist
+
+# Check for duplicates
+if (anyDuplicated(fixed_names) != 0) {
+  dupe_vec <- fixed_names %>% duplicated 
+  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
+  dupe_locs <- which(dupe_vec == TRUE)
+  cat("\n",dupe_locs)
+}
 
 # Rename items in list
 names(lol) <- fixed_names
