@@ -171,8 +171,8 @@ if (anyDuplicated(long_name_list_mindu) != 0) {
 } else {
   cat("No duplicates found in", length(long_name_list_mindu), "items")
 }
-long_name_list[dupe_locs]
-long_name_list[ori_locs]
+# long_name_list[dupe_locs]
+# long_name_list[ori_locs]
 # 5. Creation of list of market-index data.frames ##############################
 
 print("Making list of market data.frame")
@@ -311,8 +311,23 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 # feed reorganised models to remainder of estimation loop
 # record results of tests in '.csv' files 
 
-# 0. Cleanup of memory by removing old objects ####
+# 0. Remove unused objects, Removal of duplicates ####
 rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
+
+# REMOVE MARKETS WHERE DUPLICATES RESIDE
+keys <- keys[(keys != "INDU.Index") & (keys !="CAC.Index")]
+market_list <- market_list[(names(market_list) != "INDU.Index") & (names(market_list) !="CAC.Index")]
+stock_list <- stock_list[(names(stock_list) != "INDU.Index") & (names(stock_list) !="CAC.Index")]
+
+cat(
+  "The following market's data was removed due to duplicates in other indices: ",
+  "\n",
+  1,
+  "INDU.Index",
+  "\n",
+  2,
+  "CAC.Index"
+)
 
 # 1. Obtain the right names ####
 # Record names of remaining shares
@@ -347,6 +362,8 @@ names(rates_indx_list) <- keys
 
 # Loop estimates estudy ols objects
 # dependency of para and nonpara tests
+
+
 for (i in 1:length(market_list))
 {
   tryCatch({
@@ -399,11 +416,13 @@ for (i in 1:length(reg_results_list)) {
   check_dupes <- reg_results_list[[i]] %>% names %>% anyDuplicated
   if (check_dupes != 0) {
     cat("There are duplicates in market-index: ",
-        names(reg_results_list)[[i]], "\n",
-        "N = ", i)
+        names(reg_results_list)[[i]],
+        "\n", "N = ", i)
   }
   if ((i == length(reg_results_list)) == TRUE) {
-    cat("No duplicates found for", length(unlist(reg_results_list, recursive = FALSE)), "items")
+    cat("No duplicates found for", 
+        length(unlist(reg_results_list, recursive = FALSE)),
+        "items","\n")
   }
 }
 if (dupe_yesno == 1) {
@@ -606,8 +625,8 @@ if (anyDuplicated(fixed_names) != 0) {
 }
 
 # print duplicated names
-fixed_names[dupe_locs]
-fixed_names[ori_locs]
+# fixed_names[dupe_locs]
+# fixed_names[ori_locs]
 
 # Rename items in list
 names(lol) <- fixed_names
@@ -622,6 +641,9 @@ lol <- lol[usable_ticks %in% names(lol)]
 for (i in 1:length(lol)) {
   # Get ID and classification for matching purposes
   nam <- names(lol)[[i]]
+  if (i==208){
+    break
+  }
   # Remove old objects
   if (exists("row_slice")==TRUE) {
     rm(row_slice)
