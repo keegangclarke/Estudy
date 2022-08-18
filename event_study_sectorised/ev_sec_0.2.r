@@ -532,35 +532,7 @@ for (i in 1:nrow(sector_data)) {
 }
 print("Named-reference reconfiguration of storage objects complete.")
 
-# 5. Wrangle the models so that it is organised according to sector. ####
-# Plan for reogranisation process
-# loop with conditional to test if ticker in sectors is in stock_list
-# sectors$Ticker[i] != %in%
-# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
-# then reorganise on the basis of the remainder
-
-# gets down to the 3rd level, and extracts the model list
-# reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
-# 
-# names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
-
-#  Idea on how to get the data together
-# 1. iterate over 'sector_data' again
-#    at each iter, carve it up row by row to get common matching information
-# 2. use the carved-up 'sector_data' row to select the correct space, per list of
-# 2.1 industry
-# 2.2 supersector
-# 2.3 sector
-# 2.4 subsector
-# by selecting the higher up hierarchy by the industry / supersector / sector / subsector column
-# then using the ticker column to select the final spot in the list
-# 3. use the 'remainder' list of tickers, organised by market
-#    to iterate over each share in the 'reg_results_list'
-# 3.1 get the market name to select the first level of the 'reg_results_list'
-# 3.2 use the individual ticker-string to select the model in 'reg_results_list'
-# 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
-
-# REFERENCE REGEX SPECIFICATION FOR NAME-STRING CLEANING
+# 5. Reference REGEX specification for name-string cleaning ####
 # Construct regex patterns for later
 pat <- names(reg_results_list)
 pat <- pat %>%
@@ -572,6 +544,7 @@ for (i in 1:length(pat)) {
   pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
 }
 
+# 6. Wrangle the data into shape ####
 # Unlist the 'list of lists of lists' into a 'list of lists'
 lol <- unlist(reg_results_list, recursive = FALSE)
 
@@ -591,8 +564,8 @@ names(lol) <- fixed_names
 # Get reference names
 usable_ticks <- unlist(sector_data[["Ticker"]])
 unusable_ticks <- setdiff(usable_ticks, fixed_names)
-# Remove irrelevant names
 
+# Remove irrelevant names
 lol <- lol[usable_ticks %in% names(lol)]
 
 for (i in 1:length(lol)) {
@@ -657,6 +630,33 @@ for (i in 1:length(lol)) {
 
 
 # OLD APPROACH TO ALLOCATION
+# 5. Wrangle the models so that it is organised according to sector. ####
+# Plan for reogranisation process
+# loop with conditional to test if ticker in sectors is in stock_list
+# sectors$Ticker[i] != %in%
+# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
+# then reorganise on the basis of the remainder
+
+# gets down to the 3rd level, and extracts the model list
+# reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
+# 
+# names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
+
+#  Idea on how to get the data together
+# 1. iterate over 'sector_data' again
+#    at each iter, carve it up row by row to get common matching information
+# 2. use the carved-up 'sector_data' row to select the correct space, per list of
+# 2.1 industry
+# 2.2 supersector
+# 2.3 sector
+# 2.4 subsector
+# by selecting the higher up hierarchy by the industry / supersector / sector / subsector column
+# then using the ticker column to select the final spot in the list
+# 3. use the 'remainder' list of tickers, organised by market
+#    to iterate over each share in the 'reg_results_list'
+# 3.1 get the market name to select the first level of the 'reg_results_list'
+# 3.2 use the individual ticker-string to select the model in 'reg_results_list'
+# 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
 
 # START COUNTERS AT 1
 # indu_i <- start_counter(indu_i)
