@@ -152,8 +152,26 @@ for (i in 1:3)
   # Make syntactically compatible
   names(name_list) <- lapply(names(name_list), gsub, pattern = " ", replacement = ".")
 }
+
+original_number_of_stocks <- length(unlist(name_list))
+long_name_list <- unlist(name_list)
+
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
+
+# Check for duplicates
+if (anyDuplicated(long_name_list) != 0) {
+  dupe_vec <- long_name_list %>% duplicated 
+  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
+  dupe_locs <- which(dupe_vec == TRUE)
+  ori_vec <- long_name_list %>% duplicated(fromLast = TRUE)
+  ori_locs <- which(ori_vec == TRUE)
+  cat("\n",dupe_locs)
+} else {
+  cat("No duplicates found in", length(long_name_list), "items")
+}
+
+
 
 # 5. Creation of list of market-index data.frames ##############################
 
@@ -375,17 +393,26 @@ for (i in 1:length(market_list))
   })
 }
 
-# Check for duplicates
+dupe_yesno <- 0
+# Check for duplicates, piecewise within geographies
 for (i in 1:length(reg_results_list)) {
   check_dupes <- reg_results_list[[i]] %>% names %>% anyDuplicated
   if (check_dupes != 0) {
     cat("There are duplicates in market-index: ",
         names(reg_results_list)[[i]], "\n",
         "N = ", i)
-  } 
+  }
   if ((i == length(reg_results_list)) == TRUE) {
     cat("No duplicates found for", length(unlist(reg_results_list, recursive = FALSE)), "items")
   }
+}
+if (dupe_yesno == 1) {
+  dupe_vec <- reg_results_list[[i]] %>% names %>% duplicated
+  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
+  dupe_locs <- which(dupe_vec == TRUE)
+  ori_vec <- long_name_list %>% duplicated(fromLast = TRUE)
+  ori_locs <- which(ori_vec == TRUE)
+  cat("\n", dupe_locs)
 }
 
 end_time <- Sys.time()
@@ -573,8 +600,14 @@ if (anyDuplicated(fixed_names) != 0) {
   dupe_vec <- fixed_names %>% duplicated 
   cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
   dupe_locs <- which(dupe_vec == TRUE)
+  ori_vec <- fixed_names %>% duplicated(fromLast = TRUE)
+  ori_locs <- which(ori_vec == TRUE)
   cat("\n",dupe_locs)
 }
+
+# print duplicated names
+fixed_names[dupe_locs]
+fixed_names[ori_locs]
 
 # Rename items in list
 names(lol) <- fixed_names
