@@ -754,46 +754,187 @@ for (i in 1:length(lol)) {
 }
 print("Model allocation complete.")
 
+# 9. Calculation of test results ####
+# PREALLOCATE STORAGE LIST
+# abnormal return
+ar_industry <- vector(mode = "list", length = length(industry))
+names(ar_industry) <- names(industry)
+ar_supersector <- vector(mode = "list", length = length(supersector))
+names(ar_supersector) <- names(supersector)
+ar_sector <- vector(mode = "list", length = length(sector))
+names(ar_sector) <- names(sector)
+ar_subsector <- vector(mode = "list", length = length(subsector))
+names(ar_subsector) <- names(subsector)
 
-# rem_sec <- lol[names(lol) %in% sector_data[,1]]
-# not_sec <- lol[!(names(lol) %in% sector_data[,1])]
-# 
-# cd_bug <- "C:/Users/Keegan/Desktop/staging/sector_string_debugging/"
-# 
-# rem_sec %>% names %>% write.csv(paste0(cd_bug,"rem_sec.csv"))
-# not_sec %>% names %>% write.csv(paste0(cd_bug,"not_sec.csv"))
+# cumulative abnormal return
+car_industry <- vector(mode = "list", length = length(industry))
+names(car_industry) <- names(industry)
+car_supersector <- vector(mode = "list", length = length(supersector))
+names(car_supersector) <- names(supersector)
+car_sector <- vector(mode = "list", length = length(sector))
+names(car_sector) <- names(sector)
+car_subsector <- vector(mode = "list", length = length(subsector))
+names(car_subsector) <- names(subsector)
 
-# df_model_names <- vector(mode = "list", length=length(unlist(reg_results_list, recursive = FALSE)))
-# for (i in 1:length(reg_results_list)) {
-#   reg_results_list[[i]] %>% names
+run_estudy <- function(models,
+                       ar_storage_list,
+                       car_storage_list) {
+  # Large loop that applies Estudy process over the large dataset for SECTOR regions
+  for (i in 1:length(models)) {
+    tryCatch({
+      print("Applying parametric and non-parametric tests to abnormal returns.")
+      
+      keyss <- names(models)
+      
+      securities_returns <- models[[i]]
+      
+      # ABNORMAL RETURN TESTS
+      # Parametric tests
+      ar_para <- data.frame(
+        parametric_tests(
+          list_of_returns = securities_returns,
+          event_start = as.Date("2020-03-16"),
+          event_end = as.Date("2020-03-20")
+        )
+      )
+      # Non-parametric tests
+      ar_non_para <- data.frame(
+        nonparametric_tests(
+          list_of_returns = securities_returns,
+          event_start = as.Date("2020-03-16"),
+          event_end = as.Date("2020-03-20")
+        )
+      )
+      # CUMULATIVE ABNORMAL RETURN TESTS
+      # Parametric tests
+      car_para <- data.frame(
+        car_parametric_tests(
+          list_of_returns = securities_returns,
+          car_start = as.Date("2020-03-16"),
+          car_end = as.Date("2020-03-20")
+        )
+      )
+      # Non-parametric tests
+      car_non_para <- data.frame(
+        car_nonparametric_tests(
+          list_of_returns = securities_returns,
+          car_start = as.Date("2020-03-16"),
+          car_end = as.Date("2020-03-20")
+        )
+      )
+      print(paste("Merging results.", keyss[[i]]))
+      # Stage results for storage
+      ar_results <-
+        data.frame(merge(ar_para, ar_non_para, by = "date"))
+      car_results <- dplyr::bind_rows(car_para, car_non_para)
+      # Clean up 'ar_results'
+      ar_results <- subset(ar_results, select = -c(weekday.y))
+      ar_results <-
+        dplyr::rename(
+          ar_results,
+          weekday = weekday.x,
+          pct.para = percentage.x,
+          pct.nonpara = percentage.y
+        )
+      # Store results for later recording
+      ar_storage_list[[keyss[[i]]]] <- ar_results
+      car_storage_list[[keyss[[i]]]] <- car_results
+      # Explicit memory cleanup
+      rm(c(
+        ar_results,
+        car_results,
+        ar_para,
+        ar_non_para,
+        car_para,
+        car_non_para
+      ))
+    }, error = function(e) {
+      message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+    })
+  }
+} 
+
+run_estudy(
+  models = industry,
+  ar_storage_list = ar_industry,
+  car_storage_list = car_industry
+)
+run_estudy(
+  models = supersector,
+  ar_storage_list = ar_supersector,
+  car_storage_list = car_supersector
+)
+run_estudy(
+  models = sector,
+  ar_storage_list = ar_sector,
+  car_storage_list = car_sector
+)
+run_estudy(
+  models = subsector,
+  ar_storage_list = ar_subsector,
+  car_storage_list = car_subsector
+)
+
+# FOR DELETION ####
+# for (i in 1:length(market_list))
+# {
+#   tryCatch({
+#     print(paste("Getting rates from prices for", keys[[i]]))
+#     r8tes <- get_rates_from_prices(stock_list[[i]], 
+#                                    quote = "Close", 
+#                                    multi_day = TRUE, 
+#                                    compounding = "continuous")
+#     
+#     r8tes_indx <- get_rates_from_prices(market_list[[i]], 
+#                                         quote = "Close", 
+#                                         multi_day = TRUE, 
+#                                         compounding = "continuous")
+#     
+#     # FIX DTYPES OF COLUMN PRIOR TO TESTING
+#     r8tes <- transform.data.frame(r8tes, date = as.Date(date))
+#     r8tes_indx <- transform.data.frame(r8tes_indx, date = as.Date(date))
+#     print("Done. Applying single-index market model.")
+#     
+#     # apply single-index market model to get ARs
+#     reg_model_results <- apply_market_model(rates = r8tes,
+#                                             regressor = r8tes_indx,
+#                                             same_regressor_for_all = TRUE,
+#                                             market_model = "sim",
+#                                             estimation_method = "ols",
+#                                             estimation_start = as.Date("2019-04-01"),
+#                                             estimation_end = as.Date("2020-03-13"))
+#     
+#     print("Done. Storing rates and market-models.")
+#     # Store results for later recording
+#     rates_list[[keys[[i]]]] <- r8tes
+#     rates_indx_list[[keys[[i]]]] <- r8tes_indx
+#     reg_results_list[[keys[[i]]]] <- reg_model_results
+#     # Record name data in list for later referencing
+#     temp_keys <- names(r8tes)
+#     names(reg_results_list[[keys[[i]]]]) <- temp_keys[-1]
+#     removed <- removed + 1
+#     # Explicit memory cleanup
+#     rm(r8tes)
+#     rm(r8tes_indx)
+#     rm(reg_model_results)
+#     rm(temp_keys)
+#   }, error = function(e)
+#   {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+#   })
 # }
- # %>% write.csv(paste0(cd_bug,"models.csv"))
-
-# which(!(names(lol) %in% sector_data[,1]))
-
-# Debugging the strings
-# for (i in 1:length(reg_results_list)) {
-#   names(reg_results_list)[[i]] %>% print
-# }
-# for (i in 1:length(reg_results_list)) {
-#   reg_results_list[[i]] %>% names %>% length %>% print
-# }
-# for (i in 1:length(reg_results_list)) {
-#   reg_results_list[[i]] %>% names %>% head(n=1) %>% print
-# }
-
-# Lists needed for recording of results later
-# abnormal return storage list
-ar_test_results_list <- vector(mode = "list", length = length(market_list))
-names(ar_test_results_list) <- keys
-# cumulative abnormal return storage list
-car_test_results_list <- vector(mode = "list", length = length(market_list))
-names(car_test_results_list) <- keys
 
 # 10. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
 
 # WRITE RESULTS
+cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
+icb_levels <- c("industry", "supersector", "supersector", "subsector")
+cd_icb_levels <- vector(mode = "character", length = length(icb_levels))
+for (i in 1:length(icb_levels)) {
+  cd_icb_levels[[i]] <- paste0(cd_base, icb_levels[[i]], "/")
+}
+
 cd_ar <-
   "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
 cd_car <-
@@ -802,6 +943,7 @@ ar_results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results_filenames <-
   vector(mode = "character", length = length(car_test_results_list))
+
 # Create file-directory strings
 # AR DIRECTORIES
 for (i in 1:length(ar_test_results_list)) {
