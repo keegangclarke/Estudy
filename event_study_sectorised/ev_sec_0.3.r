@@ -790,4 +790,44 @@ names(ar_test_results_list) <- keys
 car_test_results_list <- vector(mode = "list", length = length(market_list))
 names(car_test_results_list) <- keys
 
-# Testing if this repo is still pushing
+# 10. Recording of results in new '.csv' data-files #####
+start_time <- Sys.time()
+
+# WRITE RESULTS
+cd_ar <-
+  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
+cd_car <-
+  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
+ar_results_filenames <-
+  vector(mode = "character", length = length(ar_test_results_list))
+car_results_filenames <-
+  vector(mode = "character", length = length(car_test_results_list))
+# Create file-directory strings
+# AR DIRECTORIES
+for (i in 1:length(ar_test_results_list)) {
+  directory <- paste0(cd_ar, paste0(keys[[i]], ".csv"))
+  ar_results_filenames[[i]] = directory
+  rm(directory)
+}
+# CAR DIRECTORIES
+for (i in 1:length(car_test_results_list)) {
+  directory <- paste0(cd_car, paste0(keys[[i]], ".csv"))
+  car_results_filenames[[i]] = directory
+  rm(directory)
+}
+# Writes results data in specified place
+# AR RESULTS
+for (i in 1:length(ar_test_results_list)) {
+  write.csv(ar_test_results_list[[i]],
+            file = ar_results_filenames[[i]])
+}
+# CAR RESULTS
+for (i in 1:length(car_test_results_list)) {
+  write.csv(car_test_results_list[[i]],
+            file = car_results_filenames[[i]])
+}
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+print("Terminating script...")
