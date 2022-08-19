@@ -311,13 +311,99 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 # feed reorganised models to remainder of estimation loop
 # record results of tests in '.csv' files 
 
-# 0. Remove unused objects, Removal of duplicates ####
+# 0. Remove unused objects, Removal of duplicates, user defined functions ####
 rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
 
+# checks the lengths of objects in order to ensure information preservation
+length_checker <- function(obj1, obj2, expected_diff = 0, side = "none", mode = "objects") {
+  
+  len_a <- 0
+  len_b <- 0
+  
+  if ((mode == "objects") == TRUE) {
+    print("evals")
+    len_a = length(obj1)
+    len_b = length(obj2)
+  } else if ((mode == "lengths") == TRUE) {
+    len_a = obj1
+    len_b = obj2
+  }
+  if ((side == "none") == TRUE) {
+    if (len_a != len_b) {
+      len_diff <- len_a - len_b
+      warn1 <- "UNEXPECTED DIFFERENCE IN OBJECT LENGTHS! \n "
+      warn2 <-
+        as.character(paste("OBJECT 1 IS",
+                           len_diff,
+                           "LONGER THAN OBJECT 2. "))
+      warning(warn1, warn2)
+    } else if ((side == "right") == TRUE) {
+      if (len_a != (len_b + expected_diff)) {
+        len_diff <- len_a - len_b
+        warn1 <- "UNEXPECTED DIFFERENCE IN OBJECT LENGTHS! \n "
+        warn2 <-
+          as.character(paste("OBJECT 1 IS",
+                             len_diff,
+                             "LONGER THAN OBJECT 2. "))
+        warning(warn1, warn2)
+      }
+    } else if ((side == "left") == TRUE) {
+      if ((len_a + expected_diff) != len_b) {
+        len_diff <- len_a - len_b
+        warn1 <- "UNEXPECTED DIFFERENCE IN OBJECT LENGTHS! \n "
+        warn2 <-
+          as.character(paste("OBJECT 1 IS",
+                             len_diff,
+                             "LONGER THAN OBJECT 2. "))
+        warning(warn1, warn2)
+      }
+    }
+  }
+}
+
+# COUNTER FUNCTION FOR OPERATION OF LOOPS
+start_counter <- function(counter_list) {
+  # Function replaces each item of list with the number 1
+  for(i in 1:length(counter_list)) {
+    counter_list[[i]] <- 1
+  } 
+  invisible(counter_list)
+} 
+
+# SUB-LIST CREATION FUNCTION
+sub_list <- function(dataa, llist, focus="") {
+  # function takes prespecified lists and replaces NULLs with NULL LISTS of required length
+  # i.e. makes NULL list of specified length in to list of NULL lists
+  # dataa == data.frame of string identification data
+  # llist == prespecified list of length required
+  # focus == string that is the name of the column selected from the data
+  iters <- 1:length(llist)
+  lens <- llist
+  for (i in iters) {
+    lens[[i]] <- sum(dataa[[focus]] == names(lens)[i])
+  }
+  for (i in iters) {
+    vec <- vector(mode="list", length = lens[[names(llist)[i]]])
+    names(vec) <- 
+      llist[[names(llist)[i]]] <- vec
+    rm(vec)
+  }
+  rm(lens)
+  invisible(llist)
+} 
+
 # REMOVE MARKETS WHERE DUPLICATES RESIDE
-keys <- keys[(keys != "INDU.Index") & (keys !="CAC.Index")]
-market_list <- market_list[(names(market_list) != "INDU.Index") & (names(market_list) !="CAC.Index")]
-stock_list <- stock_list[(names(stock_list) != "INDU.Index") & (names(stock_list) !="CAC.Index")]
+len1 <- length(unlist(stock_list, recursive = FALSE))
+dupes_num <- length(stock_list[(names(stock_list) != "INDU.Index")]) + 
+  length(stock_list[(names(stock_list) != "CAC.Index")])
+keys <- keys[(keys != "INDU.Index") & (keys != "CAC.Index")]
+market_list <-
+  market_list[(names(market_list) != "INDU.Index") &
+                (names(market_list) != "CAC.Index")]
+stock_list <-
+  stock_list[(names(stock_list) != "INDU.Index") &
+               (names(stock_list) != "CAC.Index")]
+len2 <- length(unlist(stock_list, recursive = FALSE))
 
 cat(
   "The following market's data was removed due to duplicates in other indices: ",
@@ -326,8 +412,14 @@ cat(
   "INDU.Index",
   "\n",
   2,
-  "CAC.Index"
+  "CAC.Index",
+  "\n\n",
+  "A total of",
+  len1 - len2,
+  "stocks were removed."
 )
+
+length_checker(len1, len2, expected_diff = dupes_num, side = "right", mode = "length")
 
 # 1. Obtain the right names ####
 # Record names of remaining shares
@@ -363,7 +455,7 @@ names(rates_indx_list) <- keys
 # Loop estimates estudy ols objects
 # dependency of para and nonpara tests
 
-
+removed <- 0
 for (i in 1:length(market_list))
 {
   tryCatch({
@@ -400,15 +492,24 @@ for (i in 1:length(market_list))
     # Record name data in list for later referencing
     temp_keys <- names(r8tes)
     names(reg_results_list[[keys[[i]]]]) <- temp_keys[-1]
+    removed <- removed + 1
     # Explicit memory cleanup
     rm(r8tes)
     rm(r8tes_indx)
     rm(reg_model_results)
+    rm(temp_keys)
   }, error = function(e)
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
+# check lengths
+length_checker(
+  unlist(stock_list, recursive = FALSE),
+  names(unlist(reg_results_list, recursive = FALSE)),
+  expected_diff = removed,
+  side = "right"
+)
 
 dupe_yesno <- 0
 # Check for duplicates, piecewise within geographies
@@ -466,51 +567,64 @@ sector_data <- as.data.frame(sector_data) %>%
   dplyr::distinct(Ticker,.keep_all = TRUE) %>% 
   na.omit
 
-# 4. Pre-allocate objects and variables for sector wrangling ####
+# 4. Reference REGEX specification for name-string cleaning ####
+# Construct regex patterns for later
+pat <- names(reg_results_list)
+pat <- pat %>%
+  lapply(stringr::str_remove_all,
+         "\\.Index\\.?") %>%
+  unlist
+
+for (i in 1:length(pat)) {
+  pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
+}
+print("REGEX patterns constructed for name (string) cleaning")
+
+# Unlist the 'list of lists of lists' into a 'list of lists'
+lol <- unlist(reg_results_list, recursive = FALSE)
+
+# 5. Fix names using regex ####
+# Fix names using regex, whilst maintaining order
+fixed_names <- names(lol) %>%
+  lapply(stringr::str_remove_all,
+         pattern = paste0(pat,
+                          collapse = "|")) %>%
+  unlist
+
+# check lengths
+length_checker(names(unlist(reg_results_list, recursive = FALSE)), lol, side = "right")
+length_checker(names(lol), fixed_names)
+
+# Check for duplicates
+if (anyDuplicated(fixed_names) != 0) {
+  dupe_vec <- fixed_names %>% duplicated
+  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
+  dupe_locs <- which(dupe_vec == TRUE)
+  ori_vec <- fixed_names %>% duplicated(fromLast = TRUE)
+  ori_locs <- which(ori_vec == TRUE)
+  cat("\n", dupe_locs)
+}
+
+# Rename items in list
+names(lol) <- fixed_names
+
+# 6. subset ID and Model data in order for inner join match ####
+# Get reference names
+usable_ticks <- intersect(sector_data[["Ticker"]], fixed_names) #unlist(sector_data[["Ticker"]])
+
+len3 <- nrow(sector_data)
+# Remove irrelevant names
+# For Models
+lol <- lol[usable_ticks %in% names(lol)]
+# For sector classification data
+sec_idx <- which(usable_ticks %in% sector_data[,1])
+secs <- sector_data[sec_idx,]
+sector_data <- sector_data[sec_idx,]
+
+length_checker(len3, nrow(sector_data), mode = "lengths")
+
+# 7. Pre-allocate objects and variables for sector wrangling ####
 # Create new storage lists
-sub_list <- function(dataa, llist, focus="") {
-  # function takes prespecified lists and replaces NULLs with NULL LISTS of required length
-  # i.e. makes NULL list of specified length in to list of NULL lists
-  # dataa == data.frame of string identification data
-  # llist == prespecified list of length required
-  # focus == string that is the name of the column selected from the data
-  iters <- 1:length(llist)
-  lens <- llist
-  for (i in iters) {
-    lens[[i]] <- sum(dataa[[focus]] == names(lens)[i])
-  }
-  for (i in iters) {
-    vec <- vector(mode="list", length = lens[[names(llist)[i]]])
-    names(vec) <- 
-    llist[[names(llist)[i]]] <- vec
-    rm(vec)
-  }
-  rm(lens)
-  invisible(llist)
-} 
-
-# COUNTER FUNCTION FOR OPERATION OF LOOPS
-start_counter <- function(counter_list) {
-  # Function replaces each item of list with the number 1
-  for(i in 1:length(counter_list)) {
-    counter_list[[i]] <- 1
-  } 
-  invisible(counter_list)
-} 
-
-# REDUNDANT BUT LEFT IN FOR POTENTIAL USE IN LATER DEBUGGING
-# Count the number of occurrences of each industry/supersector/sector/subsector
-# no_indu <- industry
-# for (i in 1:length(no_indu)) {
-#   no_indu[[i]] <- sum(sector_data$ICB.Industry.Name == names(no_indu)[i])
-# }
-# # create Sub-lists that are of the correct length
-# for (i in 1:length(industry)) {
-#   vec <- vector(mode="list", length = no_indu[[names(industry)[i]]])
-#   names(vec) <- sector_data$ICB.Industry.Name
-#   industry[[names(industry)[i]]] <- vec
-# }
-
 # need to pre-allocate the length of the subcomponents of the lists
 industry <- vector(mode = "list",
                    length = length(unique(sector_data$ICB.Industry.Name)))
@@ -591,196 +705,81 @@ for (i in 1:nrow(sector_data)) {
 }
 print("Named-reference reconfiguration of storage objects complete.")
 
-# 5. Reference REGEX specification for name-string cleaning ####
-# Construct regex patterns for later
-pat <- names(reg_results_list)
-pat <- pat %>%
-  lapply(stringr::str_remove_all,
-         "\\.Index\\.?") %>%
-  unlist
-
-for (i in 1:length(pat)) {
-  pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
-}
-
-# 6. Wrangle the data into shape ####
-# Unlist the 'list of lists of lists' into a 'list of lists'
-lol <- unlist(reg_results_list, recursive = FALSE)
-
-# Fix names using regex, whilst maintaining order
-fixed_names <- names(lol) %>%
-  lapply(stringr::str_remove_all,
-         pattern = paste0(pat,
-                          collapse = "|")) %>%
-  unlist
-
-# Check for duplicates
-if (anyDuplicated(fixed_names) != 0) {
-  dupe_vec <- fixed_names %>% duplicated 
-  cat("There are ", sum(as.numeric(dupe_vec)), "duplicate names.")
-  dupe_locs <- which(dupe_vec == TRUE)
-  ori_vec <- fixed_names %>% duplicated(fromLast = TRUE)
-  ori_locs <- which(ori_vec == TRUE)
-  cat("\n",dupe_locs)
-}
-
-# print duplicated names
-# fixed_names[dupe_locs]
-# fixed_names[ori_locs]
-
-# Rename items in list
-names(lol) <- fixed_names
-
-# Get reference names
-usable_ticks <- unlist(sector_data[["Ticker"]])
-unusable_ticks <- setdiff(usable_ticks, fixed_names)
-
-# Remove irrelevant names
-lol <- lol[usable_ticks %in% names(lol)]
-
-for (i in 1:length(lol)) {
-  # Get ID and classification for matching purposes
-  nam <- names(lol)[[i]]
-  if (i==208){
-    break
-  }
-  # Remove old objects
-  if (exists("row_slice")==TRUE) {
-    rm(row_slice)
-  }
-  if (exists("tick")==TRUE) {
-    rm(tick)
-  }
-  if (exists("indu")==TRUE) {
-    rm(indu)
-  }
-  if (exists("supe")==TRUE) {
-    rm(supe)
-  }
-  if (exists("sect")==TRUE) {
-    rm(sect)
-  }
-  if (exists("subs")==TRUE) {
-    rm(subs)
-  }
-  # Slice sector info for matching
-  row_slice <- sector_data[sector_data[, 1] == nam, ]
-  tick <- row_slice[["Ticker"]]
-  indu <- row_slice[["ICB.Industry.Name"]]
-  supe <- row_slice[["ICB.Supersector.Name"]]
-  sect <- row_slice[["ICB.Sector.Name"]]
-  subs <- row_slice[["ICB.Subsector.Name"]]
-  print(i)
-  # ALLOCATE MODELS VIA REFERENCING
-  industry[[indu]][[tick]] <- lol[[tick]]
-  supersector[[supe]][[tick]] <- lol[[tick]]
-  sector[[sect]][[tick]] <- lol[[tick]]
-  subsector[[subs]][[tick]] <- lol[[tick]]
-}
-
+# 8. Allocate data to pre-allocated storage objects ####
 # ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
 for (i in 1:length(lol)) {
   tryCatch({
     # Get ID and classification for matching purposes
     nam <- names(lol)[[i]]
-    row_slice <- sector_data[sector_data[, 1] == nam, ] %>% unlist
+    if ((nam %in% sector_data[, 1]) == FALSE) {
+      next
+    }
+    # Remove old objects
+    if (exists("row_slice") == TRUE) {
+      rm(row_slice)
+    }
+    if (exists("tick") == TRUE) {
+      rm(tick)
+    }
+    if (exists("indu") == TRUE) {
+      rm(indu)
+    }
+    if (exists("supe") == TRUE) {
+      rm(supe)
+    }
+    if (exists("sect") == TRUE) {
+      rm(sect)
+    }
+    if (exists("subs") == TRUE) {
+      rm(subs)
+    }
+    # Slice sector info for matching
+    row_slice <- sector_data[sector_data[, 1] == nam,]
     tick <- row_slice[["Ticker"]]
     indu <- row_slice[["ICB.Industry.Name"]]
     supe <- row_slice[["ICB.Supersector.Name"]]
     sect <- row_slice[["ICB.Sector.Name"]]
     subs <- row_slice[["ICB.Subsector.Name"]]
-    
+    # print(i)
     # ALLOCATE MODELS VIA REFERENCING
     industry[[indu]][[tick]] <- lol[[tick]]
     supersector[[supe]][[tick]] <- lol[[tick]]
     sector[[sect]][[tick]] <- lol[[tick]]
     subsector[[subs]][[tick]] <- lol[[tick]]
+    
   }, error = function(e)
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
+print("Model allocation complete.")
 
 
-# OLD APPROACH TO ALLOCATION
-# 5. Wrangle the models so that it is organised according to sector. ####
-# Plan for reogranisation process
-# loop with conditional to test if ticker in sectors is in stock_list
-# sectors$Ticker[i] != %in%
-# Perhaps it is best to subset all the stock information of all stocks in 'remainder'
-# then reorganise on the basis of the remainder
-
-# gets down to the 3rd level, and extracts the model list
-# reg_results_list[["MERVAL.Index"]][["ALUA.AR.Equity"]]
+# rem_sec <- lol[names(lol) %in% sector_data[,1]]
+# not_sec <- lol[!(names(lol) %in% sector_data[,1])]
 # 
-# names(reg_results_list[["MERVAL.Index"]]) [[1]] == "ALUA.AR.Equity"
+# cd_bug <- "C:/Users/Keegan/Desktop/staging/sector_string_debugging/"
+# 
+# rem_sec %>% names %>% write.csv(paste0(cd_bug,"rem_sec.csv"))
+# not_sec %>% names %>% write.csv(paste0(cd_bug,"not_sec.csv"))
 
-#  Idea on how to get the data together
-# 1. iterate over 'sector_data' again
-#    at each iter, carve it up row by row to get common matching information
-# 2. use the carved-up 'sector_data' row to select the correct space, per list of
-# 2.1 industry
-# 2.2 supersector
-# 2.3 sector
-# 2.4 subsector
-# by selecting the higher up hierarchy by the industry / supersector / sector / subsector column
-# then using the ticker column to select the final spot in the list
-# 3. use the 'remainder' list of tickers, organised by market
-#    to iterate over each share in the 'reg_results_list'
-# 3.1 get the market name to select the first level of the 'reg_results_list'
-# 3.2 use the individual ticker-string to select the model in 'reg_results_list'
-# 4. store copies of the selected model-list in the industry / supersector / sector / subsector lists
+# df_model_names <- vector(mode = "list", length=length(unlist(reg_results_list, recursive = FALSE)))
+# for (i in 1:length(reg_results_list)) {
+#   reg_results_list[[i]] %>% names
+# }
+ # %>% write.csv(paste0(cd_bug,"models.csv"))
 
-# START COUNTERS AT 1
-# indu_i <- start_counter(indu_i)
-# supe_i <- start_counter(supe_i)
-# sect_i <- start_counter(sect_i)
-# subs_i <- start_counter(subs_i)
-# # REGRESSION MODEL ALLOCATION LOOP
-# for (i in 1:nrow(sector_data)) {
-#   # Retrieve 'sector_data' Identifiers
-#   tick <- sector_data[i, 1] # ticker
-#   indu <- sector_data[i, 2] # industry
-#   supe <- sector_data[i, 3] # supersector
-#   sect <- sector_data[i, 4] # sector
-#   subs <- sector_data[i, 5] # subsector
-#   
-#   # Find data
-#   for (j in 1:length(reg_results_list)) {
-#     # Retrieve 'remainder' Identifiers
-#     mkt <- names(remainder)[[j]]
-#     mkt_membs <- remainder[[j]]
-#     # checks if ticker is in 
-#     (sector_data[,1] %in% remainder[[1]])==TRUE
-#       # ALLOCATE DATA (ID strings) to respective locations
-#       if (sector_data[i, 2] == indu) {
-#         # INDUSTRY
-#         industry[[indu]][[indu_i[[indu]]]] <- tick
-#         names(industry[[indu]])[[indu_i[[indu]]]] <- tick
-#         indu_i[[indu]] <- indu_i[[indu]] + 1
-#       } else {
-#       }
-#       if (sector_data[i, 3] == supe) {
-#         # SUPERSECTOR
-#         supersector[[supe]][[supe_i[[supe]]]] <- tick
-#         names(supersector[[supe]])[[supe_i[[supe]]]] <- tick
-#         supe_i[[supe]] <- supe_i[[supe]] + 1
-#       } else {
-#       }
-#       if (sector_data[i, 4] == sect) {
-#         # SECTOR
-#         sector[[sect]][[sect_i[[sect]]]] <- tick
-#         names(sector[[sect]])[[sect_i[[sect]]]] <- tick
-#         sect_i[[sect]] <- sect_i[[sect]] + 1
-#       } else {
-#       }
-#       if (sector_data[i, 5] == subs) {
-#         # SUBSECTOR
-#         subsector[[subs]][[subs_i[[subs]]]] <- tick
-#         names(subsector[[subs]])[[subs_i[[subs]]]] <- tick
-#         subs_i[[subs]] <- subs_i[[subs]] + 1
-#       }
-#   }
+# which(!(names(lol) %in% sector_data[,1]))
+
+# Debugging the strings
+# for (i in 1:length(reg_results_list)) {
+#   names(reg_results_list)[[i]] %>% print
+# }
+# for (i in 1:length(reg_results_list)) {
+#   reg_results_list[[i]] %>% names %>% length %>% print
+# }
+# for (i in 1:length(reg_results_list)) {
+#   reg_results_list[[i]] %>% names %>% head(n=1) %>% print
 # }
 
 # Lists needed for recording of results later
