@@ -323,7 +323,6 @@ length_checker <- function(obj1, obj2, expected_diff = 0, side = "none", mode = 
   len_b <- 0
   
   if ((mode == "objects") == TRUE) {
-    print("evals")
     len_a = length(obj1)
     len_b = length(obj2)
   } else if ((mode == "lengths") == TRUE) {
@@ -392,6 +391,13 @@ sub_list <- function(dataa, llist, focus="") {
   }
   rm(lens)
   invisible(llist)
+} 
+
+# CHECK TYPES OF OBJECT
+check_types <- function(object) {
+  cat("typeof:", typeof(object), "\n")
+  cat("class:", class(object), "\n")
+  cat("mode:", mode(object), "\n")
 } 
 
 print("Complete. Removing duplicate stocks from stock-data.")
@@ -641,11 +647,11 @@ usable_ticks <- intersect(sector_data[["Ticker"]], fixed_names)
 
 len3 <- nrow(sector_data)
 # Remove irrelevant names
-# For Models
-lol <- lol[usable_ticks %in% names(lol)]
+# For Models # is.element(names(lol),usable_ticks)
+lol_idx <- which(names(lol) %in% usable_ticks)
+lol <- lol[lol_idx]
 # For sector classification data
-sec_idx <- which(usable_ticks %in% sector_data[,1])
-secs <- sector_data[sec_idx,]
+sec_idx <- which(sector_data[,1] %in% usable_ticks)
 sector_data <- sector_data[sec_idx,]
 
 length_checker(len3, nrow(sector_data), mode = "lengths")
@@ -800,6 +806,7 @@ for (i in 1:length(lol)) {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
+end_time <- Sys.time()
 paste("Model allocation complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
@@ -892,14 +899,14 @@ run_estudy <- function(models,
       ar_storage_list[[keyss[[i]]]] <- ar_results
       car_storage_list[[keyss[[i]]]] <- car_results
       # Explicit memory cleanup
-      rm(c(
+      rm(
         ar_results,
         car_results,
         ar_para,
         ar_non_para,
         car_para,
         car_non_para
-      ))
+      )
     }, error = function(e) {
       message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
     })
@@ -932,53 +939,84 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# FOR DELETION ####
-# for (i in 1:length(market_list))
-# {
-#   tryCatch({
-#     print(paste("Getting rates from prices for", keys[[i]]))
-#     r8tes <- get_rates_from_prices(stock_list[[i]], 
-#                                    quote = "Close", 
-#                                    multi_day = TRUE, 
-#                                    compounding = "continuous")
-#     
-#     r8tes_indx <- get_rates_from_prices(market_list[[i]], 
-#                                         quote = "Close", 
-#                                         multi_day = TRUE, 
-#                                         compounding = "continuous")
-#     
-#     # FIX DTYPES OF COLUMN PRIOR TO TESTING
-#     r8tes <- transform.data.frame(r8tes, date = as.Date(date))
-#     r8tes_indx <- transform.data.frame(r8tes_indx, date = as.Date(date))
-#     print("Done. Applying single-index market model.")
-#     
-#     # apply single-index market model to get ARs
-#     reg_model_results <- apply_market_model(rates = r8tes,
-#                                             regressor = r8tes_indx,
-#                                             same_regressor_for_all = TRUE,
-#                                             market_model = "sim",
-#                                             estimation_method = "ols",
-#                                             estimation_start = as.Date("2019-04-01"),
-#                                             estimation_end = as.Date("2020-03-13"))
-#     
-#     print("Done. Storing rates and market-models.")
-#     # Store results for later recording
-#     rates_list[[keys[[i]]]] <- r8tes
-#     rates_indx_list[[keys[[i]]]] <- r8tes_indx
-#     reg_results_list[[keys[[i]]]] <- reg_model_results
-#     # Record name data in list for later referencing
-#     temp_keys <- names(r8tes)
-#     names(reg_results_list[[keys[[i]]]]) <- temp_keys[-1]
-#     removed <- removed + 1
-#     # Explicit memory cleanup
-#     rm(r8tes)
-#     rm(r8tes_indx)
-#     rm(reg_model_results)
-#     rm(temp_keys)
-#   }, error = function(e)
-#   {
-#     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-#   })
+# DEBUG TIME
+# all_possible <- lapply(reg_results_list, names)
+# summary(securities_returns)
+# for (i in 1:length(all_possible)) {
+#   test_piece <- all_possible[[i]]
+#   if (("JAZTAKAF.AB.Equity" %in% test_piece)==TRUE) {
+#     cat("It is here: ", i, names(all_possible)[[i]], "\n")
+#   } else {
+#     cat("It is not here: ", i, names(all_possible)[[i]], "\n")
+#   }
+# }
+# 
+# print("Applying parametric and non-parametric tests to abnormal returns.")
+# for (i in 1:length(industry)) {
+#   keyss <- names(industry)
+#   
+#   securities_returns <- industry[[i]]
+#   
+#   # ABNORMAL RETURN TESTS
+#   # Parametric tests
+#   ar_para <- data.frame(
+#     parametric_tests(
+#       list_of_returns = securities_returns,
+#       event_start = as.Date("2020-03-16"),
+#       event_end = as.Date("2020-03-20")
+#     )
+#   )
+#   # Non-parametric tests
+#   ar_non_para <- data.frame(
+#     nonparametric_tests(
+#       list_of_returns = securities_returns,
+#       event_start = as.Date("2020-03-16"),
+#       event_end = as.Date("2020-03-20")
+#     )
+#   )
+#   # CUMULATIVE ABNORMAL RETURN TESTS
+#   # Parametric tests
+#   car_para <- data.frame(
+#     car_parametric_tests(
+#       list_of_returns = securities_returns,
+#       car_start = as.Date("2020-03-16"),
+#       car_end = as.Date("2020-03-20")
+#     )
+#   )
+#   # Non-parametric tests
+#   car_non_para <- data.frame(
+#     car_nonparametric_tests(
+#       list_of_returns = securities_returns,
+#       car_start = as.Date("2020-03-16"),
+#       car_end = as.Date("2020-03-20")
+#     )
+#   )
+#   print(paste("Merging results for", keyss[[i]]))
+#   # Stage results for storage
+#   ar_results <-
+#     data.frame(merge(ar_para, ar_non_para, by = "date"))
+#   car_results <- dplyr::bind_rows(car_para, car_non_para)
+#   # Clean up 'ar_results'
+#   ar_results <- subset(ar_results, select = -c(weekday.y))
+#   ar_results <-
+#     dplyr::rename(
+#       ar_results,
+#       weekday = weekday.x,
+#       pct.para = percentage.x,
+#       pct.nonpara = percentage.y
+#     )
+#   # Store results for later recording
+#   ar_industry[[keyss[[i]]]] <- ar_results
+#   car_industry[[keyss[[i]]]] <- car_results
+#   # Explicit memory cleanup
+#   rm(c(
+#     ar_results,
+#     car_results,
+#     ar_para,
+#     ar_non_para,
+#     car_para,
+#     car_non_para
+#   ))
 # }
 
 # 10. Recording of results in new '.csv' data-files #####
@@ -987,12 +1025,51 @@ print("Recording results in prespecified directories.")
 
 # WRITE RESULTS
 cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
-icb_levels <- c("industry", "supersector", "supersector", "subsector")
+icb_levels <- c("industry", "supersector", "sector", "subsector")
 cd_icb_levels <- vector(mode = "character", length = length(icb_levels))
 for (i in 1:length(icb_levels)) {
   cd_icb_levels[[i]] <- paste0(cd_base, icb_levels[[i]], "/")
 }
 
+store_results <- function(results, cd_root, icb_level = "", return_type = "") {
+  # function writes results in individual ".csv" files
+  # constructs the basic directory
+  cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
+  # retrieves sub-grouping
+  keys <- names(results)
+  # STORE THE RESULTS
+  for (i in length(results)) {
+    directory <- paste0(cd_trunk, keys[[i]], ".csv")
+    write.csv(results[[i]], file = directory)
+    rm(directory)
+  }
+}
+
+for (i in length(ar_industry)) {
+  directory <- paste0(cd_trunk, keys2[[i]], ".csv")
+  write.csv(ar_industry[[i]], file = directory)
+  rm(directory)
+}
+
+store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "ar")
+store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "car")
+
+store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar")
+store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car")
+
+store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "ar")
+store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "car")
+
+store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "ar")
+store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
+
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+print("Terminating script...")
+
+# FOR DELETION ####
 cd_ar <-
   "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
 cd_car <-
@@ -1026,8 +1103,3 @@ for (i in 1:length(car_test_results_list)) {
   write.csv(car_test_results_list[[i]],
             file = car_results_filenames[[i]])
 }
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-print("Terminating script...")
