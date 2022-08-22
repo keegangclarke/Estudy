@@ -313,7 +313,9 @@ paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "sec
 
 # 0. Remove unused objects, Removal of duplicates, user defined functions ####
 rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
-
+print("Unused objects removed.")
+start_time <- Sys.time()
+print("Specifying functions.")
 # checks the lengths of objects in order to ensure information preservation
 length_checker <- function(obj1, obj2, expected_diff = 0, side = "none", mode = "objects") {
   
@@ -392,6 +394,7 @@ sub_list <- function(dataa, llist, focus="") {
   invisible(llist)
 } 
 
+print("Complete. Removing duplicate stocks from stock-data.")
 # REMOVE MARKETS WHERE DUPLICATES RESIDE
 len1 <- length(unlist(stock_list, recursive = FALSE))
 dupes_num <- length(stock_list[(names(stock_list) != "INDU.Index")]) + 
@@ -421,25 +424,30 @@ cat(
 
 length_checker(len1, len2, expected_diff = dupes_num, side = "right", mode = "length")
 
-# 1. Obtain the right names ####
-# Record names of remaining shares
-remainder <- vector(mode="list", length=length(market_list))
-names(remainder) <- keys
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+# 1. REDUNDANT? Obtain the right names ####
+# start_time <- Sys.time()
+# # Record names of remaining shares
+# remainder <- vector(mode="list", length=length(market_list))
+# names(remainder) <- keys
+# 
+# for (i in 1:length(remainder)) 
+# {
+#   # Select stock series' names and remove 'date'
+#   selector <- names(stock_list[[keys[[i]]]])
+#   selector <- selector[! selector %in% 'date']
+#   # store remainder in 'remainder' 
+#   remainder[[keys[[i]]]] <- selector
+#   rm(selector)
+# }
 
-for (i in 1:length(remainder)) 
-{
-  # Select stock series' names and remove 'date'
-  selector <- names(stock_list[[keys[[i]]]])
-  selector <- selector[! selector %in% 'date']
-  # store remainder in 'remainder' 
-  remainder[[keys[[i]]]] <- selector
-  rm(selector)
-}
 
 # 2. OLS model creation and storage loop ####
 # Creates OLS models on their market specified indices
 # Stores models for reorganisation
-
 start_time <- Sys.time()
 
 # Create data storage lists 
@@ -536,9 +544,11 @@ if (dupe_yesno == 1) {
 }
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
+paste("OLS model creation and storage complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
 # 3. Load Sector Identification data ####
+start_time <- Sys.time()
+print("Loading ICB classification data.")
 cd_sec <- 'C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
 sector_data <- as.list(readxl::read_xlsx(cd_sec))
 
@@ -567,7 +577,14 @@ sector_data <- as.data.frame(sector_data) %>%
   dplyr::distinct(Ticker,.keep_all = TRUE) %>% 
   na.omit
 
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+
 # 4. Reference REGEX specification for name-string cleaning ####
+start_time <- Sys.time()
+
 # Construct regex patterns for later
 pat <- names(reg_results_list)
 pat <- pat %>%
@@ -579,11 +596,16 @@ for (i in 1:length(pat)) {
   pat[[i]] <- paste0("^", pat[[i]], "\\.Index\\.?")
 }
 print("REGEX patterns constructed for name (string) cleaning")
-
+end_time <- Sys.time()
+paste("Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 # Unlist the 'list of lists of lists' into a 'list of lists'
 lol <- unlist(reg_results_list, recursive = FALSE)
 
 # 5. Fix names using regex ####
+start_time <- Sys.time()
+print('Cleaning string data.')
 # Fix names using regex, whilst maintaining order
 fixed_names <- names(lol) %>%
   lapply(stringr::str_remove_all,
@@ -604,13 +626,18 @@ if (anyDuplicated(fixed_names) != 0) {
   ori_locs <- which(ori_vec == TRUE)
   cat("\n", dupe_locs)
 }
-
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 # Rename items in list
 names(lol) <- fixed_names
 
-# 6. subset ID and Model data in order for inner join match ####
+# 6. Subset ID and Model data in order for inner join match ####
+start_time <- Sys.time()
+print("Subsetting OLS model data according to inner join with ICB identification data.")
 # Get reference names
-usable_ticks <- intersect(sector_data[["Ticker"]], fixed_names) #unlist(sector_data[["Ticker"]])
+usable_ticks <- intersect(sector_data[["Ticker"]], fixed_names)
 
 len3 <- nrow(sector_data)
 # Remove irrelevant names
@@ -623,7 +650,15 @@ sector_data <- sector_data[sec_idx,]
 
 length_checker(len3, nrow(sector_data), mode = "lengths")
 
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+
 # 7. Pre-allocate objects and variables for sector wrangling ####
+start_time <- Sys.time()
+print("Creating storage objects for model regrouping.")
+
 # Create new storage lists
 # need to pre-allocate the length of the subcomponents of the lists
 industry <- vector(mode = "list",
@@ -652,7 +687,13 @@ subs_i <- subsector # copy list for later counter
 subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 
 print("Creation of Storage Objects complete.")
+end_time <- Sys.time()
+paste("Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
+start_time <- Sys.time()
+print("Reconfiguring storage objects to contain specified named-references.")
 # START COUNTERS AT 1
 indu_i <- start_counter(indu_i)
 supe_i <- start_counter(supe_i)
@@ -704,9 +745,16 @@ for (i in 1:nrow(sector_data)) {
   }
 }
 print("Named-reference reconfiguration of storage objects complete.")
+end_time <- Sys.time()
+paste("Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 8. Allocate data to pre-allocated storage objects ####
 # ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
+start_time <- Sys.time()
+print("Regrouping calculated models according ICB classifications. Allocating.")
+
 for (i in 1:length(lol)) {
   tryCatch({
     # Get ID and classification for matching purposes
@@ -752,9 +800,13 @@ for (i in 1:length(lol)) {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
-print("Model allocation complete.")
+paste("Model allocation complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9. Calculation of test results ####
+start_time <- Sys.time()
+print("Applying event-study statistical process to stored models and recording results.")
 # PREALLOCATE STORAGE LIST
 # abnormal return
 ar_industry <- vector(mode = "list", length = length(industry))
@@ -875,6 +927,11 @@ run_estudy(
   car_storage_list = car_subsector
 )
 
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+
 # FOR DELETION ####
 # for (i in 1:length(market_list))
 # {
@@ -926,6 +983,7 @@ run_estudy(
 
 # 10. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
+print("Recording results in prespecified directories.")
 
 # WRITE RESULTS
 cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
