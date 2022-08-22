@@ -299,17 +299,8 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
 
-# DATA WRANGLING: REARRANGEMENT ####
 
-# OBJECTIVE: take data that I have and re-organise into the correct format 
-# COMPLICATION: a. For each share, their relevant market-proxy is their index.
-# Therefore, in order to accomplish a sectorised estudy I need to fist estimate
-# the securities returns before reorganising.
-# PROPOSED SOLUTION: 
-# a. Run the loop to calc the rates and security return (ols) models, 
-# Reorganise the models according to sectorisation
-# feed reorganised models to remainder of estimation loop
-# record results of tests in '.csv' files 
+# DATA WRANGLING: REARRANGEMENT ####
 
 # 0. Remove unused objects, Removal of duplicates, user defined functions ####
 rm(cds, df2, df3, market_list_copy, stock_list_copy, name_dict)
@@ -434,24 +425,7 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
-# 1. REDUNDANT? Obtain the right names ####
-# start_time <- Sys.time()
-# # Record names of remaining shares
-# remainder <- vector(mode="list", length=length(market_list))
-# names(remainder) <- keys
-# 
-# for (i in 1:length(remainder)) 
-# {
-#   # Select stock series' names and remove 'date'
-#   selector <- names(stock_list[[keys[[i]]]])
-#   selector <- selector[! selector %in% 'date']
-#   # store remainder in 'remainder' 
-#   remainder[[keys[[i]]]] <- selector
-#   rm(selector)
-# }
-
-
-# 2. OLS model creation and storage loop ####
+# 1. OLS model creation and storage loop ####
 # Creates OLS models on their market specified indices
 # Stores models for reorganisation
 start_time <- Sys.time()
@@ -552,7 +526,7 @@ if (dupe_yesno == 1) {
 end_time <- Sys.time()
 paste("OLS model creation and storage complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
-# 3. Load Sector Identification data ####
+# 2. Load Sector Identification data ####
 start_time <- Sys.time()
 print("Loading ICB classification data.")
 cd_sec <- 'C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/sectors/icb_stocks_clean.xlsx'
@@ -588,7 +562,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 4. Reference REGEX specification for name-string cleaning ####
+# 3. Reference REGEX specification for name-string cleaning ####
 start_time <- Sys.time()
 
 # Construct regex patterns for later
@@ -609,7 +583,7 @@ paste("Time elapsed: ",
 # Unlist the 'list of lists of lists' into a 'list of lists'
 lol <- unlist(reg_results_list, recursive = FALSE)
 
-# 5. Fix names using regex ####
+# 4. Fix names using regex ####
 start_time <- Sys.time()
 print('Cleaning string data.')
 # Fix names using regex, whilst maintaining order
@@ -639,7 +613,7 @@ paste("Complete. Time elapsed: ",
 # Rename items in list
 names(lol) <- fixed_names
 
-# 6. Subset ID and Model data in order for inner join match ####
+# 5. Subset ID and Model data in order for inner join match ####
 start_time <- Sys.time()
 print("Subsetting OLS model data according to inner join with ICB identification data.")
 # Get reference names
@@ -661,7 +635,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 7. Pre-allocate objects and variables for sector wrangling ####
+# 6. Pre-allocate objects and variables for sector wrangling ####
 start_time <- Sys.time()
 print("Creating storage objects for model regrouping.")
 
@@ -756,7 +730,7 @@ paste("Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 8. Allocate data to pre-allocated storage objects ####
+# 7. Allocate data to pre-allocated storage objects ####
 # ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
 start_time <- Sys.time()
 print("Regrouping calculated models according ICB classifications. Allocating.")
@@ -811,7 +785,7 @@ paste("Model allocation complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 9. Calculation of test results ####
+# 8. Preparation for calculation of test results ####
 start_time <- Sys.time()
 print("Applying event-study statistical process to stored models and recording results.")
 # PREALLOCATE STORAGE LIST
@@ -835,6 +809,371 @@ names(car_sector) <- names(sector)
 car_subsector <- vector(mode = "list", length = length(subsector))
 names(car_subsector) <- names(subsector)
 
+
+# 9. Large loops that apply Estudy process over the large dataset for ICB groupings: ####
+
+# 9.1 INDUSTRY ####
+for (i in 1:length(industry)) {
+  tryCatch({
+    print("Applying parametric and non-parametric tests to abnormal returns.")
+    
+    keyss <- names(industry)
+    
+    securities_returns <- industry[[i]]
+    
+    if (length(securities_returns) < 2) {
+      next
+    }
+    
+    # ABNORMAL RETURN TESTS
+    # Parametric tests
+    ar_para <- data.frame(
+      parametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    ar_non_para <- data.frame(
+      nonparametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # CUMULATIVE ABNORMAL RETURN TESTS
+    # Parametric tests
+    car_para <- data.frame(
+      car_parametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    car_non_para <- data.frame(
+      car_nonparametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    print(paste("Merging results.", keyss[[i]]))
+    # Stage results for storage
+    ar_results <-
+      data.frame(merge(ar_para, ar_non_para, by = "date"))
+    car_results <- dplyr::bind_rows(car_para, car_non_para)
+    # Clean up 'ar_results'
+    ar_results <- subset(ar_results, select = -c(weekday.y))
+    ar_results <-
+      dplyr::rename(
+        ar_results,
+        weekday = weekday.x,
+        pct.para = percentage.x,
+        pct.nonpara = percentage.y
+      )
+    # Store results for later recording
+    ar_industry[[keyss[[i]]]] <- ar_results
+    car_industry[[keyss[[i]]]] <- car_results
+    # Explicit memory cleanup
+    rm(ar_results,
+       car_results,
+       ar_para,
+       ar_non_para,
+       car_para,
+       car_non_para)
+  }, error = function(e) {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+  })
+} 
+
+
+
+
+# 9.2 SUPERSECTOR ####
+for (i in 1:length(supersector)) {
+  tryCatch({
+    print("Applying parametric and non-parametric tests to abnormal returns.")
+    
+    keyss <- names(sector)
+    
+    securities_returns <- supersector[[i]]
+    
+    if (length(securities_returns) < 2) {
+      next
+    }
+    
+    # ABNORMAL RETURN TESTS
+    # Parametric tests
+    ar_para <- data.frame(
+      parametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    ar_non_para <- data.frame(
+      nonparametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # CUMULATIVE ABNORMAL RETURN TESTS
+    # Parametric tests
+    car_para <- data.frame(
+      car_parametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    car_non_para <- data.frame(
+      car_nonparametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    print(paste("Merging results.", keyss[[i]]))
+    # Stage results for storage
+    ar_results <-
+      data.frame(merge(ar_para, ar_non_para, by = "date"))
+    car_results <- dplyr::bind_rows(car_para, car_non_para)
+    # Clean up 'ar_results'
+    ar_results <- subset(ar_results, select = -c(weekday.y))
+    ar_results <-
+      dplyr::rename(
+        ar_results,
+        weekday = weekday.x,
+        pct.para = percentage.x,
+        pct.nonpara = percentage.y
+      )
+    # Store results for later recording
+    ar_supersector[[keyss[[i]]]] <- ar_results
+    car_supersector[[keyss[[i]]]] <- car_results
+    # Explicit memory cleanup
+    rm(ar_results,
+       car_results,
+       ar_para,
+       ar_non_para,
+       car_para,
+       car_non_para)
+  }, error = function(e) {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+  })
+} 
+
+
+
+
+
+# 9.3 SECTOR - NOT FUNCTIONING ####
+# for (i in 1:length(sector)) {
+#   tryCatch({
+#     print("Applying parametric and non-parametric tests to abnormal returns.")
+#     
+#     keyss <- names(sector)
+#     
+#     securities_returns <- sector[[i]]
+#     
+#     if (length(securities_returns) < 2) {
+#       next
+#     }
+#     
+#     # ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     ar_para <- data.frame(
+#       parametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     ar_non_para <- data.frame(
+#       nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # CUMULATIVE ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     car_para <- data.frame(
+#       car_parametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     car_non_para <- data.frame(
+#       car_nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     print(paste("Merging results.", keyss[[i]]))
+#     # Stage results for storage
+#     ar_results <-
+#       data.frame(merge(ar_para, ar_non_para, by = "date"))
+#     car_results <- dplyr::bind_rows(car_para, car_non_para)
+#     # Clean up 'ar_results'
+#     ar_results <- subset(ar_results, select = -c(weekday.y))
+#     ar_results <-
+#       dplyr::rename(
+#         ar_results,
+#         weekday = weekday.x,
+#         pct.para = percentage.x,
+#         pct.nonpara = percentage.y
+#       )
+#     # Store results for later recording
+#     ar_sector[[keyss[[i]]]] <- ar_results
+#     car_sector[[keyss[[i]]]] <- car_results
+#     # Explicit memory cleanup
+#     rm(ar_results,
+#        car_results,
+#        ar_para,
+#        ar_non_para,
+#        car_para,
+#        car_non_para)
+#   }, error = function(e) {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+#   })
+# } 
+
+
+# 9.4 SUBSECTOR - NOT FUNCTIONING ####
+# for (i in 1:length(subsector)) {
+#   tryCatch({
+#     print("Applying parametric and non-parametric tests to abnormal returns.")
+#     
+#     keyss <- names(subsector)
+#     
+#     securities_returns <- subsector[[i]]
+#     
+#     if (length(securities_returns) < 2) {
+#       next
+#     }
+#     
+#     # ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     ar_para <- data.frame(
+#       parametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     ar_non_para <- data.frame(
+#       nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # CUMULATIVE ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     car_para <- data.frame(
+#       car_parametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     car_non_para <- data.frame(
+#       car_nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     print(paste("Merging results.", keyss[[i]]))
+#     # Stage results for storage
+#     ar_results <-
+#       data.frame(merge(ar_para, ar_non_para, by = "date"))
+#     car_results <- dplyr::bind_rows(car_para, car_non_para)
+#     # Clean up 'ar_results'
+#     ar_results <- subset(ar_results, select = -c(weekday.y))
+#     ar_results <-
+#       dplyr::rename(
+#         ar_results,
+#         weekday = weekday.x,
+#         pct.para = percentage.x,
+#         pct.nonpara = percentage.y
+#       )
+#     # Store results for later recording
+#     ar_subsector[[keyss[[i]]]] <- ar_results
+#     car_subsector[[keyss[[i]]]] <- car_results
+#     # Explicit memory cleanup
+#     rm(ar_results,
+#        car_results,
+#        ar_para,
+#        ar_non_para,
+#        car_para,
+#        car_non_para)
+#   }, error = function(e) {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+#   })
+# } 
+
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+
+
+
+
+# 10. Recording of results in new '.csv' data-files #####
+start_time <- Sys.time()
+print("Recording results in prespecified directories.")
+
+# WRITE RESULTS
+cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
+
+store_results <- function(results, cd_root, icb_level = "", return_type = "") {
+  # function writes results in individual ".csv" files
+  # constructs the basic directory
+  cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
+  # retrieves sub-grouping
+  keys <- names(results)
+  # STORE THE RESULTS
+  for (i in 1:length(results)) {
+    directory <- paste0(cd_trunk, keys[[i]], ".csv")
+    write.csv(results[[i]], file = directory)
+    rm(directory)
+  }
+}
+
+store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "ar")
+store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "car")
+
+store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar")
+store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car")
+
+# store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "ar")
+# store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "car")
+# 
+# store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "ar")
+# store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
+
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
+print("Terminating script...")
+
+
+
+# FUNCTION FOR TESTING LOOP BUT BROKEN SCOPING MAKES IT USELESS ####
 run_estudy <- function(models,
                        ar_storage_list,
                        car_storage_list) {
@@ -913,463 +1252,3 @@ run_estudy <- function(models,
     invisible(list(ar_storage_list, car_storage_list))
   } 
 } 
-
-# Large loops that applies Estudy process over the large dataset for ICB groupings
-
-# INDUSTRY
-for (i in 1:length(industry)) {
-  tryCatch({
-    print("Applying parametric and non-parametric tests to abnormal returns.")
-    
-    keyss <- names(industry)
-    
-    securities_returns <- industry[[i]]
-    
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keyss[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_industry[[keyss[[i]]]] <- ar_results
-    car_industry[[keyss[[i]]]] <- car_results
-    # Explicit memory cleanup
-    rm(ar_results,
-       car_results,
-       ar_para,
-       ar_non_para,
-       car_para,
-       car_non_para)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-} 
-
-# supersector
-for (i in 1:length(supersector)) {
-  tryCatch({
-    print("Applying parametric and non-parametric tests to abnormal returns.")
-    
-    keyss <- names(sector)
-    
-    securities_returns <- supersector[[i]]
-    
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keyss[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_supersector[[keyss[[i]]]] <- ar_results
-    car_supersector[[keyss[[i]]]] <- car_results
-    # Explicit memory cleanup
-    rm(ar_results,
-       car_results,
-       ar_para,
-       ar_non_para,
-       car_para,
-       car_non_para)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-} 
-
-# sector
-for (i in 1:length(sector)) {
-  tryCatch({
-    print("Applying parametric and non-parametric tests to abnormal returns.")
-    
-    keyss <- names(sector)
-    
-    securities_returns <- sector[[i]]
-    
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keyss[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_sector[[keyss[[i]]]] <- ar_results
-    car_sector[[keyss[[i]]]] <- car_results
-    # Explicit memory cleanup
-    rm(ar_results,
-       car_results,
-       ar_para,
-       ar_non_para,
-       car_para,
-       car_non_para)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-} 
-
-# subsector
-for (i in 1:length(subsector)) {
-  tryCatch({
-    print("Applying parametric and non-parametric tests to abnormal returns.")
-    
-    keyss <- names(subsector)
-    
-    securities_returns <- subsector[[i]]
-    
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keyss[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_subsector[[keyss[[i]]]] <- ar_results
-    car_subsector[[keyss[[i]]]] <- car_results
-    # Explicit memory cleanup
-    rm(ar_results,
-       car_results,
-       ar_para,
-       ar_non_para,
-       car_para,
-       car_non_para)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-} 
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-
-# DEBUG TIME
-# all_possible <- lapply(reg_results_list, names)
-# summary(securities_returns)
-# for (i in 1:length(all_possible)) {
-#   test_piece <- all_possible[[i]]
-#   if (("JAZTAKAF.AB.Equity" %in% test_piece)==TRUE) {
-#     cat("It is here: ", i, names(all_possible)[[i]], "\n")
-#   } else {
-#     cat("It is not here: ", i, names(all_possible)[[i]], "\n")
-#   }
-# }
-# 
-# print("Applying parametric and non-parametric tests to abnormal returns.")
-for (i in 1:length(industry)) {
-  keyss <- names(industry)
-
-  securities_returns <- industry[[i]]
-
-  # ABNORMAL RETURN TESTS
-  # Parametric tests
-  ar_para <- data.frame(
-    parametric_tests(
-      list_of_returns = securities_returns,
-      event_start = as.Date("2020-03-16"),
-      event_end = as.Date("2020-03-20")
-    )
-  )
-  # Non-parametric tests
-  ar_non_para <- data.frame(
-    nonparametric_tests(
-      list_of_returns = securities_returns,
-      event_start = as.Date("2020-03-16"),
-      event_end = as.Date("2020-03-20")
-    )
-  )
-  # CUMULATIVE ABNORMAL RETURN TESTS
-  # Parametric tests
-  car_para <- data.frame(
-    car_parametric_tests(
-      list_of_returns = securities_returns,
-      car_start = as.Date("2020-03-16"),
-      car_end = as.Date("2020-03-20")
-    )
-  )
-  # Non-parametric tests
-  car_non_para <- data.frame(
-    car_nonparametric_tests(
-      list_of_returns = securities_returns,
-      car_start = as.Date("2020-03-16"),
-      car_end = as.Date("2020-03-20")
-    )
-  )
-  print(paste("Merging results for", keyss[[i]]))
-  # Stage results for storage
-  ar_results <-
-    data.frame(merge(ar_para, ar_non_para, by = "date"))
-  car_results <- dplyr::bind_rows(car_para, car_non_para)
-  # Clean up 'ar_results'
-  ar_results <- subset(ar_results, select = -c(weekday.y))
-  ar_results <-
-    dplyr::rename(
-      ar_results,
-      weekday = weekday.x,
-      pct.para = percentage.x,
-      pct.nonpara = percentage.y
-    )
-  # Store results for later recording
-  ar_industry[[keyss[[i]]]] <- ar_results
-  car_industry[[keyss[[i]]]] <- car_results
-  # Explicit memory cleanup
-  rm(c(
-    ar_results,
-    car_results,
-    ar_para,
-    ar_non_para,
-    car_para,
-    car_non_para
-  ))
-}
-
-# 10. Recording of results in new '.csv' data-files #####
-start_time <- Sys.time()
-print("Recording results in prespecified directories.")
-
-# WRITE RESULTS
-cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
-icb_levels <- c("industry", "supersector", "sector", "subsector")
-cd_icb_levels <- vector(mode = "character", length = length(icb_levels))
-for (i in 1:length(icb_levels)) {
-  cd_icb_levels[[i]] <- paste0(cd_base, icb_levels[[i]], "/")
-}
-
-store_results <- function(results, cd_root, icb_level = "", return_type = "") {
-  # function writes results in individual ".csv" files
-  # constructs the basic directory
-  cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
-  # retrieves sub-grouping
-  keys <- names(results)
-  # STORE THE RESULTS
-  for (i in length(results)) {
-    directory <- paste0(cd_trunk, keys[[i]], ".csv")
-    write.csv(results[[i]], file = directory)
-    rm(directory)
-  }
-}
-
-# for (i in length(ar_industry)) {
-#   directory <- paste0(cd_trunk, keys2[[i]], ".csv")
-#   write.csv(ar_industry[[i]], file = directory)
-#   rm(directory)
-# }
-
-store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "ar")
-store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "car")
-
-store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar")
-store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car")
-
-store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "ar")
-store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "car")
-
-store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "ar")
-store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-print("Terminating script...")
-
-# FOR DELETION ####
-cd_ar <-
-  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
-cd_car <-
-  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
-ar_results_filenames <-
-  vector(mode = "character", length = length(ar_test_results_list))
-car_results_filenames <-
-  vector(mode = "character", length = length(car_test_results_list))
-
-# Create file-directory strings
-# AR DIRECTORIES
-for (i in 1:length(ar_test_results_list)) {
-  directory <- paste0(cd_ar, paste0(keys[[i]], ".csv"))
-  ar_results_filenames[[i]] = directory
-  rm(directory)
-}
-# CAR DIRECTORIES
-for (i in 1:length(car_test_results_list)) {
-  directory <- paste0(cd_car, paste0(keys[[i]], ".csv"))
-  car_results_filenames[[i]] = directory
-  rm(directory)
-}
-# Writes results data in specified place
-# AR RESULTS
-for (i in 1:length(ar_test_results_list)) {
-  write.csv(ar_test_results_list[[i]],
-            file = ar_results_filenames[[i]])
-}
-# CAR RESULTS
-for (i in 1:length(car_test_results_list)) {
-  write.csv(car_test_results_list[[i]],
-            file = car_results_filenames[[i]])
-}
