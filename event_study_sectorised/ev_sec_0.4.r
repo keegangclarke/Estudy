@@ -813,6 +813,8 @@ names(car_subsector) <- names(subsector)
 # 9. Large loops that apply Estudy process over the large dataset for ICB groupings: ####
 
 # 9.1 INDUSTRY ####
+start_time <- Sys.time()
+print("Testing INDUSTRIEs.")
 for (i in 1:length(industry)) {
   tryCatch({
     print("Applying parametric and non-parametric tests to abnormal returns.")
@@ -887,11 +889,14 @@ for (i in 1:length(industry)) {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
   })
 } 
-
-
-
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9.2 SUPERSECTOR ####
+start_time <- Sys.time()
+print("Testing SUPERSECTORs.")
 for (i in 1:length(supersector)) {
   tryCatch({
     print("Applying parametric and non-parametric tests to abnormal returns.")
@@ -966,12 +971,14 @@ for (i in 1:length(supersector)) {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
   })
 } 
-
-
-
-
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9.3 SECTOR - NOT FUNCTIONING ####
+# start_time <- Sys.time()
+# print("Testing SECTORs.")
 # for (i in 1:length(sector)) {
 #   tryCatch({
 #     print("Applying parametric and non-parametric tests to abnormal returns.")
@@ -1046,9 +1053,14 @@ for (i in 1:length(supersector)) {
 #     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
 #   })
 # } 
-
+# end_time <- Sys.time()
+# paste("Complete. Time elapsed: ",
+#       round(end_time - start_time, digits = 4),
+#       "seconds")
 
 # 9.4 SUBSECTOR - NOT FUNCTIONING ####
+# start_time <- Sys.time()
+# print("Testing SUBSECTORs.")
 # for (i in 1:length(subsector)) {
 #   tryCatch({
 #     print("Applying parametric and non-parametric tests to abnormal returns.")
@@ -1123,14 +1135,10 @@ for (i in 1:length(supersector)) {
 #     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
 #   })
 # } 
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-
-
-
+# end_time <- Sys.time()
+# paste("Complete. Time elapsed: ",
+#       round(end_time - start_time, digits = 4),
+#       "seconds")
 
 # 10. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
