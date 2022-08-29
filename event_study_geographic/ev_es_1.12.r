@@ -48,7 +48,7 @@ print("Fetching data...")
 start_time <- Sys.time()
 
 cd <-
-  'C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/daily/cleaned/es_format/'
+  'C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/daily/cleaned/es_format/'
 files <-
   c('stock_data_column-wise.csv',
     'market-index_data_column-wise.csv')
@@ -127,8 +127,8 @@ cat(
 )
 start_time <- Sys.time()
 
-cd_dict = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/index_member_dict_fixed.xlsx"
-cd_problem_stocks = "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/problem_id_s.txt"
+cd_dict = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/index_member_dict_fixed.xlsx"
+cd_problem_stocks = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/multi_series_data/id/problem_id_s.txt"
 name_dict = readxl::read_xlsx(cd_dict)
 # read in fully formatted names of problematic stock series
 problem_names = read.delim(cd_problem_stocks, header = FALSE)
@@ -499,9 +499,9 @@ start_time <- Sys.time()
 
 # WRITE RESULTS
 cd_ar <-
-  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
 cd_car <-
-  "C:/Users/Keegan/iCloudDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
 ar_results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results_filenames <-
