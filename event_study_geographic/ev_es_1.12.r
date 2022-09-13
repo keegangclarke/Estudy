@@ -2,7 +2,7 @@
 print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
-library(estudy2)
+# library(estudy2)
 library(magrittr)
 
 fun_insert <- function(x, pos, insert) {
@@ -393,18 +393,21 @@ car_test_results_list <-
   vector(mode = "list", length = length(market_list))
 names(car_test_results_list) <- keys
 
+# Source "apply_market_model_gls.R"#####
+source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
+
 # Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
 for (i in 1:length(market_list)) {
   tryCatch({
     print(paste("Getting rates from prices for", keys[[i]]))
-    rates <- get_rates_from_prices(
+    rates <- estudy2::get_rates_from_prices(
       stock_list[[i]],
       quote = "Close",
       multi_day = TRUE,
       compounding = "continuous"
     )
     
-    rates_indx <- get_rates_from_prices(
+    rates_indx <- estudy2::get_rates_from_prices(
       market_list[[i]],
       quote = "Close",
       multi_day = TRUE,
@@ -418,12 +421,12 @@ for (i in 1:length(market_list)) {
     print("Done. Applying single-index market model.")
     
     # apply single-index market model to get ARs
-    securities_returns <- apply_market_model(
+    securities_returns <- apply_market_model.data.frame(
       rates = rates,
       regressor = rates_indx,
       same_regressor_for_all = TRUE,
       market_model = "sim",
-      estimation_method = "ols",
+      estimation_method = "gls",
       estimation_start = as.Date("2019-04-01"),
       estimation_end = as.Date("2020-03-13")
     )
@@ -432,7 +435,7 @@ for (i in 1:length(market_list)) {
     # ABNORMAL RETURN TESTS
     # Parametric tests
     ar_para <- data.frame(
-      parametric_tests(
+      estudy2::parametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -440,7 +443,7 @@ for (i in 1:length(market_list)) {
     )
     # Non-parametric tests
     ar_non_para <- data.frame(
-      nonparametric_tests(
+      estudy2::nonparametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -449,7 +452,7 @@ for (i in 1:length(market_list)) {
     # CUMULATIVE ABNORMAL RETURN TESTS
     # Parametric tests
     car_para <- data.frame(
-      car_parametric_tests(
+      estudy2::car_parametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -457,7 +460,7 @@ for (i in 1:length(market_list)) {
     )
     # Non-parametric tests
     car_non_para <- data.frame(
-      car_nonparametric_tests(
+      estudy2::car_nonparametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -499,9 +502,9 @@ start_time <- Sys.time()
 
 # WRITE RESULTS
 cd_ar <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/abnormal_returns/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/ar/"
 cd_car <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/cumulative_abnormal_returns/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/car/"
 ar_results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results_filenames <-
