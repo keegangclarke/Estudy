@@ -4,7 +4,6 @@
 print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
-library(estudy2)
 library(magrittr)
 
 fun_insert <- function(x, pos, insert)
@@ -440,6 +439,9 @@ rates_indx_list <- vector(mode = "list", length = length(market_list))
 names(rates_list) <- keys
 names(rates_indx_list) <- keys
 
+# Source "apply_market_model_gls.R"#####
+source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
+
 # Loop estimates estudy ols objects
 # dependency of para and nonpara tests
 
@@ -448,12 +450,12 @@ for (i in 1:length(market_list))
 {
   tryCatch({
     print(paste("Getting rates from prices for", keys[[i]]))
-    r8tes <- get_rates_from_prices(stock_list[[i]], 
+    r8tes <- estudy2::get_rates_from_prices(stock_list[[i]], 
                                    quote = "Close", 
                                    multi_day = TRUE, 
                                    compounding = "continuous")
     
-    r8tes_indx <- get_rates_from_prices(market_list[[i]], 
+    r8tes_indx <- estudy2::get_rates_from_prices(market_list[[i]], 
                                         quote = "Close", 
                                         multi_day = TRUE, 
                                         compounding = "continuous")
@@ -464,11 +466,11 @@ for (i in 1:length(market_list))
     print("Done. Applying single-index market model.")
     
     # apply single-index market model to get ARs
-    reg_model_results <- apply_market_model(rates = r8tes,
+    reg_model_results <- apply_market_model.data.frame(rates = r8tes,
                                             regressor = r8tes_indx,
                                             same_regressor_for_all = TRUE,
                                             market_model = "sim",
-                                            estimation_method = "ols",
+                                            estimation_method = "gls",
                                             estimation_start = as.Date("2019-04-01"),
                                             estimation_end = as.Date("2020-03-13"))
     
@@ -813,230 +815,230 @@ names(car_subsector) <- names(subsector)
 # 9. Large loops that apply Estudy process over the large dataset for ICB groupings: ####
 
 # 9.1 INDUSTRY ####
-# start_time <- Sys.time()
-# cat("Testing INDUSTRY.","\n")
-# for (i in 1:length(industry)) {
-#   tryCatch({
-#     print("Applying parametric and non-parametric tests to abnormal returns.")
-#     
-#     keyss <- names(industry)
-#     
-#     securities_returns <- industry[[i]]
-#     
-#     if (length(securities_returns) < 2) {
-#       next
-#     }
-#     
-#     # ABNORMAL RETURN TESTS
-#     # Parametric tests
-#     ar_para <- data.frame(
-#       parametric_tests(
-#         list_of_returns = securities_returns,
-#         event_start = as.Date("2020-03-16"),
-#         event_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # Non-parametric tests
-#     ar_non_para <- data.frame(
-#       nonparametric_tests(
-#         list_of_returns = securities_returns,
-#         event_start = as.Date("2020-03-16"),
-#         event_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # CUMULATIVE ABNORMAL RETURN TESTS
-#     # Parametric tests
-#     car_para <- data.frame(
-#       car_parametric_tests(
-#         list_of_returns = securities_returns,
-#         car_start = as.Date("2020-03-16"),
-#         car_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # Non-parametric tests
-#     car_non_para <- data.frame(
-#       car_nonparametric_tests(
-#         list_of_returns = securities_returns,
-#         car_start = as.Date("2020-03-16"),
-#         car_end = as.Date("2020-03-20")
-#       )
-#     )
-#     print(paste("Merging results.", keyss[[i]], "n = ", i))
-#     # Stage results for storage
-#     ar_results <-
-#       data.frame(merge(ar_para, ar_non_para, by = "date"))
-#     car_results <- dplyr::bind_rows(car_para, car_non_para)
-#     # Clean up 'ar_results'
-#     ar_results <- subset(ar_results, select = -c(weekday.y))
-#     ar_results <-
-#       dplyr::rename(
-#         ar_results,
-#         weekday = weekday.x,
-#         pct.para = percentage.x,
-#         pct.nonpara = percentage.y
-#       )
-#     # Store results for later recording
-#     ar_industry[[keyss[[i]]]] <- ar_results
-#     car_industry[[keyss[[i]]]] <- car_results
-#     # Explicit memory cleanup
-#     rm(ar_results,
-#        car_results,
-#        ar_para,
-#        ar_non_para,
-#        car_para,
-#        car_non_para)
-#   }, error = function(e) {
-#     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-#   })
-# } 
-# end_time <- Sys.time()
-# paste("Complete. Time elapsed: ",
-#       round(end_time - start_time, digits = 4),
-#       "seconds")
+start_time <- Sys.time()
+cat("Testing INDUSTRY.","\n")
+for (i in 1:length(industry)) {
+  tryCatch({
+    print("Applying parametric and non-parametric tests to abnormal returns.")
+
+    keyss <- names(industry)
+
+    securities_returns <- industry[[i]]
+
+    if (length(securities_returns) < 2) {
+      next
+    }
+
+    # ABNORMAL RETURN TESTS
+    # Parametric tests
+    ar_para <- data.frame(
+      parametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    ar_non_para <- data.frame(
+      nonparametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # CUMULATIVE ABNORMAL RETURN TESTS
+    # Parametric tests
+    car_para <- data.frame(
+      car_parametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    car_non_para <- data.frame(
+      car_nonparametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    print(paste("Merging results.", keyss[[i]], "n = ", i))
+    # Stage results for storage
+    ar_results <-
+      data.frame(merge(ar_para, ar_non_para, by = "date"))
+    car_results <- dplyr::bind_rows(car_para, car_non_para)
+    # Clean up 'ar_results'
+    ar_results <- subset(ar_results, select = -c(weekday.y))
+    ar_results <-
+      dplyr::rename(
+        ar_results,
+        weekday = weekday.x,
+        pct.para = percentage.x,
+        pct.nonpara = percentage.y
+      )
+    # Store results for later recording
+    ar_industry[[keyss[[i]]]] <- ar_results
+    car_industry[[keyss[[i]]]] <- car_results
+    # Explicit memory cleanup
+    rm(ar_results,
+       car_results,
+       ar_para,
+       ar_non_para,
+       car_para,
+       car_non_para)
+  }, error = function(e) {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+  })
+}
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9.2 SUPERSECTOR ####
-# start_time <- Sys.time()
-# cat("Testing SUPERSECTORs.","\n")
-# for (i in 1:length(supersector)) {
-#   tryCatch({
-#     print("Applying parametric and non-parametric tests to abnormal returns.")
-#     
-#     keyss <- names(sector)
-#     
-#     securities_returns <- supersector[[i]]
-#     
-#     if (length(securities_returns) < 2) {
-#       next
-#     }
-#     
-#     # ABNORMAL RETURN TESTS
-#     # Parametric tests
-#     ar_para <- data.frame(
-#       parametric_tests(
-#         list_of_returns = securities_returns,
-#         event_start = as.Date("2020-03-16"),
-#         event_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # Non-parametric tests
-#     ar_non_para <- data.frame(
-#       nonparametric_tests(
-#         list_of_returns = securities_returns,
-#         event_start = as.Date("2020-03-16"),
-#         event_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # CUMULATIVE ABNORMAL RETURN TESTS
-#     # Parametric tests
-#     car_para <- data.frame(
-#       car_parametric_tests(
-#         list_of_returns = securities_returns,
-#         car_start = as.Date("2020-03-16"),
-#         car_end = as.Date("2020-03-20")
-#       )
-#     )
-#     # Non-parametric tests
-#     car_non_para <- data.frame(
-#       car_nonparametric_tests(
-#         list_of_returns = securities_returns,
-#         car_start = as.Date("2020-03-16"),
-#         car_end = as.Date("2020-03-20")
-#       )
-#     )
-#     print(paste("Merging results.", keyss[[i]], "n = ", i))
-#     # Stage results for storage
-#     ar_results <-
-#       data.frame(merge(ar_para, ar_non_para, by = "date"))
-#     car_results <- dplyr::bind_rows(car_para, car_non_para)
-#     # Clean up 'ar_results'
-#     ar_results <- subset(ar_results, select = -c(weekday.y))
-#     ar_results <-
-#       dplyr::rename(
-#         ar_results,
-#         weekday = weekday.x,
-#         pct.para = percentage.x,
-#         pct.nonpara = percentage.y
-#       )
-#     # Store results for later recording
-#     ar_supersector[[keyss[[i]]]] <- ar_results
-#     car_supersector[[keyss[[i]]]] <- car_results
-#     # Explicit memory cleanup
-#     rm(ar_results,
-#        car_results,
-#        ar_para,
-#        ar_non_para,
-#        car_para,
-#        car_non_para)
-#   }, error = function(e) {
-#     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-#   })
-# } 
-# end_time <- Sys.time()
-# paste("Complete. Time elapsed: ",
-#       round(end_time - start_time, digits = 4),
-#       "seconds")
+start_time <- Sys.time()
+cat("Testing SUPERSECTORs.","\n")
+for (i in 1:length(supersector)) {
+  tryCatch({
+    print("Applying parametric and non-parametric tests to abnormal returns.")
+
+    keyss <- names(sector)
+
+    securities_returns <- supersector[[i]]
+
+    if (length(securities_returns) < 2) {
+      next
+    }
+
+    # ABNORMAL RETURN TESTS
+    # Parametric tests
+    ar_para <- data.frame(
+      parametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    ar_non_para <- data.frame(
+      nonparametric_tests(
+        list_of_returns = securities_returns,
+        event_start = as.Date("2020-03-16"),
+        event_end = as.Date("2020-03-20")
+      )
+    )
+    # CUMULATIVE ABNORMAL RETURN TESTS
+    # Parametric tests
+    car_para <- data.frame(
+      car_parametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    # Non-parametric tests
+    car_non_para <- data.frame(
+      car_nonparametric_tests(
+        list_of_returns = securities_returns,
+        car_start = as.Date("2020-03-16"),
+        car_end = as.Date("2020-03-20")
+      )
+    )
+    print(paste("Merging results.", keyss[[i]], "n = ", i))
+    # Stage results for storage
+    ar_results <-
+      data.frame(merge(ar_para, ar_non_para, by = "date"))
+    car_results <- dplyr::bind_rows(car_para, car_non_para)
+    # Clean up 'ar_results'
+    ar_results <- subset(ar_results, select = -c(weekday.y))
+    ar_results <-
+      dplyr::rename(
+        ar_results,
+        weekday = weekday.x,
+        pct.para = percentage.x,
+        pct.nonpara = percentage.y
+      )
+    # Store results for later recording
+    ar_supersector[[keyss[[i]]]] <- ar_results
+    car_supersector[[keyss[[i]]]] <- car_results
+    # Explicit memory cleanup
+    rm(ar_results,
+       car_results,
+       ar_para,
+       ar_non_para,
+       car_para,
+       car_non_para)
+  }, error = function(e) {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+  })
+}
+end_time <- Sys.time()
+paste("Complete. Time elapsed: ",
+      round(end_time - start_time, digits = 4),
+      "seconds")
 
 # 9.3 SECTOR - NOT FUNCTIONING ####
-
-print("Applying parametric and non-parametric tests to abnormal returns.")
-i <- 38
-keyss <- names(sector)
-
-securities_returns <- sector[[i]]
-
-# ABNORMAL RETURN TESTS
-# Parametric tests
-ar_para <- parametric_tests(
-  list_of_returns = securities_returns,
-  event_start = as.Date("2020-03-16"),
-  event_end = as.Date("2020-03-20")
-)#%>% data.frame()
-# Non-parametric tests
-ar_non_para <- nonparametric_tests(
-  list_of_returns = securities_returns,
-  event_start = as.Date("2020-03-16"),
-  event_end = as.Date("2020-03-20")
-) #%>% data.frame()
-# CUMULATIVE ABNORMAL RETURN TESTS
-# Parametric tests
-car_para <- car_parametric_tests(
-  list_of_returns = securities_returns,
-  car_start = as.Date("2020-03-16"),
-  car_end = as.Date("2020-03-20"),
-  all = FALSE,
-  tests = list(car_brown_warner_1985)
-) #%>% data.frame()
-# Non-parametric tests
-car_non_para <- car_nonparametric_tests(
-  list_of_returns = securities_returns,
-  car_start = as.Date("2020-03-16"),
-  car_end = as.Date("2020-03-20")
-) %>% data.frame()
-print(paste("Merging results.", keyss[[i]], "n = ", i))
-# Stage results for storage
-ar_results <-
-  data.frame(merge(ar_para, ar_non_para, by = "date"))
-car_results <- dplyr::bind_rows(car_para, car_non_para)
-# Clean up 'ar_results'
-ar_results <- subset(ar_results, select = -c(weekday.y))
-ar_results <-
-  dplyr::rename(
-    ar_results,
-    weekday = weekday.x,
-    pct.para = percentage.x,
-    pct.nonpara = percentage.y
-  )
-# Store results for later recording
-ar_sector[[keyss[[i]]]] <- ar_results
-car_sector[[keyss[[i]]]] <- car_results
-
-# Explicit memory cleanup
-rm(ar_results,
-   car_results,
-   ar_para,
-   ar_non_para,
-   car_para,
-   car_non_para)
+# 
+# print("Applying parametric and non-parametric tests to abnormal returns.")
+# i <- 38
+# keyss <- names(sector)
+# 
+# securities_returns <- sector[[i]]
+# 
+# # ABNORMAL RETURN TESTS
+# # Parametric tests
+# ar_para <- parametric_tests(
+#   list_of_returns = securities_returns,
+#   event_start = as.Date("2020-03-16"),
+#   event_end = as.Date("2020-03-20")
+# )#%>% data.frame()
+# # Non-parametric tests
+# ar_non_para <- nonparametric_tests(
+#   list_of_returns = securities_returns,
+#   event_start = as.Date("2020-03-16"),
+#   event_end = as.Date("2020-03-20")
+# ) #%>% data.frame()
+# # CUMULATIVE ABNORMAL RETURN TESTS
+# # Parametric tests
+# car_para <- car_parametric_tests(
+#   list_of_returns = securities_returns,
+#   car_start = as.Date("2020-03-16"),
+#   car_end = as.Date("2020-03-20"),
+#   all = FALSE,
+#   tests = list(car_brown_warner_1985)
+# ) #%>% data.frame()
+# # Non-parametric tests
+# car_non_para <- car_nonparametric_tests(
+#   list_of_returns = securities_returns,
+#   car_start = as.Date("2020-03-16"),
+#   car_end = as.Date("2020-03-20")
+# ) %>% data.frame()
+# print(paste("Merging results.", keyss[[i]], "n = ", i))
+# # Stage results for storage
+# ar_results <-
+#   data.frame(merge(ar_para, ar_non_para, by = "date"))
+# car_results <- dplyr::bind_rows(car_para, car_non_para)
+# # Clean up 'ar_results'
+# ar_results <- subset(ar_results, select = -c(weekday.y))
+# ar_results <-
+#   dplyr::rename(
+#     ar_results,
+#     weekday = weekday.x,
+#     pct.para = percentage.x,
+#     pct.nonpara = percentage.y
+#   )
+# # Store results for later recording
+# ar_sector[[keyss[[i]]]] <- ar_results
+# car_sector[[keyss[[i]]]] <- car_results
+# 
+# # Explicit memory cleanup
+# rm(ar_results,
+#    car_results,
+#    ar_para,
+#    ar_non_para,
+#    car_para,
+#    car_non_para)
 
 
 
@@ -1116,91 +1118,91 @@ rm(ar_results,
 #       "seconds")
 
 # 9.4 SUBSECTOR - NOT FUNCTIONING ####
-start_time <- Sys.time()
-print("Testing SUBSECTORs. \n")
-for (i in 1:length(subsector)) {
-  tryCatch({
-    print("Applying parametric and non-parametric tests to abnormal returns.")
-
-    keyss <- names(subsector)
-
-    securities_returns <- subsector[[i]]
-
-    if (length(securities_returns) <= 2) {
-      next
-    }
-
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keyss[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_subsector[[keyss[[i]]]] <- ar_results
-    car_subsector[[keyss[[i]]]] <- car_results
-    # Explicit memory cleanup
-    rm(ar_results,
-       car_results,
-       ar_para,
-       ar_non_para,
-       car_para,
-       car_non_para)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-}
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-
-car_para <- car_lamb(
-  list_of_returns = subsector$Forestry,
-  car_start = as.Date("2020-03-16"),
-  car_end = as.Date("2020-03-20"))
+# start_time <- Sys.time()
+# print("Testing SUBSECTORs. \n")
+# for (i in 1:length(subsector)) {
+#   tryCatch({
+#     print("Applying parametric and non-parametric tests to abnormal returns.")
+# 
+#     keyss <- names(subsector)
+# 
+#     securities_returns <- subsector[[i]]
+# 
+#     if (length(securities_returns) <= 2) {
+#       next
+#     }
+# 
+#     # ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     ar_para <- data.frame(
+#       parametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     ar_non_para <- data.frame(
+#       nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         event_start = as.Date("2020-03-16"),
+#         event_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # CUMULATIVE ABNORMAL RETURN TESTS
+#     # Parametric tests
+#     car_para <- data.frame(
+#       car_parametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     # Non-parametric tests
+#     car_non_para <- data.frame(
+#       car_nonparametric_tests(
+#         list_of_returns = securities_returns,
+#         car_start = as.Date("2020-03-16"),
+#         car_end = as.Date("2020-03-20")
+#       )
+#     )
+#     print(paste("Merging results.", keyss[[i]]))
+#     # Stage results for storage
+#     ar_results <-
+#       data.frame(merge(ar_para, ar_non_para, by = "date"))
+#     car_results <- dplyr::bind_rows(car_para, car_non_para)
+#     # Clean up 'ar_results'
+#     ar_results <- subset(ar_results, select = -c(weekday.y))
+#     ar_results <-
+#       dplyr::rename(
+#         ar_results,
+#         weekday = weekday.x,
+#         pct.para = percentage.x,
+#         pct.nonpara = percentage.y
+#       )
+#     # Store results for later recording
+#     ar_subsector[[keyss[[i]]]] <- ar_results
+#     car_subsector[[keyss[[i]]]] <- car_results
+#     # Explicit memory cleanup
+#     rm(ar_results,
+#        car_results,
+#        ar_para,
+#        ar_non_para,
+#        car_para,
+#        car_non_para)
+#   }, error = function(e) {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+#   })
+# }
+# end_time <- Sys.time()
+# paste("Complete. Time elapsed: ",
+#       round(end_time - start_time, digits = 4),
+#       "seconds")
+# 
+# car_para <- car_lamb(
+#   list_of_returns = subsector$Forestry,
+#   car_start = as.Date("2020-03-16"),
+#   car_end = as.Date("2020-03-20"))
 
 # 10. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
@@ -1236,89 +1238,7 @@ store_results(results = car_supersector, icb_level = "supersector", cd_root = cd
 # store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
+paste("Complete. Time elased: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 print("Terminating script...")
-
-
-
-# FUNCTION FOR TESTING LOOP BUT BROKEN SCOPING MAKES IT USELESS ####
-run_estudy <- function(models,
-                       ar_storage_list,
-                       car_storage_list) {
-  # Large loop that applies Estudy process over the large dataset for SECTOR regions
-  for (i in 1:length(models)) {
-    tryCatch({
-      print("Applying parametric and non-parametric tests to abnormal returns.")
-      
-      keyss <- names(models)
-      
-      securities_returns <- models[[i]]
-      
-      # ABNORMAL RETURN TESTS
-      # Parametric tests
-      ar_para <- data.frame(
-        parametric_tests(
-          list_of_returns = securities_returns,
-          event_start = as.Date("2020-03-16"),
-          event_end = as.Date("2020-03-20")
-        )
-      )
-      # Non-parametric tests
-      ar_non_para <- data.frame(
-        nonparametric_tests(
-          list_of_returns = securities_returns,
-          event_start = as.Date("2020-03-16"),
-          event_end = as.Date("2020-03-20")
-        )
-      )
-      # CUMULATIVE ABNORMAL RETURN TESTS
-      # Parametric tests
-      car_para <- data.frame(
-        car_parametric_tests(
-          list_of_returns = securities_returns,
-          car_start = as.Date("2020-03-16"),
-          car_end = as.Date("2020-03-20")
-        )
-      )
-      # Non-parametric tests
-      car_non_para <- data.frame(
-        car_nonparametric_tests(
-          list_of_returns = securities_returns,
-          car_start = as.Date("2020-03-16"),
-          car_end = as.Date("2020-03-20")
-        )
-      )
-      print(paste("Merging results.", keyss[[i]]))
-      # Stage results for storage
-      ar_results <-
-        data.frame(merge(ar_para, ar_non_para, by = "date"))
-      car_results <- dplyr::bind_rows(car_para, car_non_para)
-      # Clean up 'ar_results'
-      ar_results <- subset(ar_results, select = -c(weekday.y))
-      ar_results <-
-        dplyr::rename(
-          ar_results,
-          weekday = weekday.x,
-          pct.para = percentage.x,
-          pct.nonpara = percentage.y
-        )
-      # Store results for later recording
-      ar_storage_list[[keyss[[i]]]] <- ar_results
-      car_storage_list[[keyss[[i]]]] <- car_results
-      # Explicit memory cleanup
-      rm(
-        ar_results,
-        car_results,
-        ar_para,
-        ar_non_para,
-        car_para,
-        car_non_para
-      ) 
-    }, error = function(e) {
-      message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-    })
-    invisible(list(ar_storage_list, car_storage_list))
-  } 
-} 
