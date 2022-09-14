@@ -533,6 +533,19 @@ for (i in 1:length(car_test_results_list)) {
   write.csv(car_test_results_list[[i]],
             file = car_results_filenames[[i]])
 }
+
+# Records absolute directories for later
+write.table(ar_results_filenames,
+            file = paste0(cd_ar,"geo_ar_cd.txt"),
+            quote = TRUE,
+            row.names = FALSE,
+            col.names = FALSE)
+write.table(car_results_filenames,
+            file = paste0(cd_car,"geo_car_cd.txt"),
+            quote = TRUE,
+            row.names = FALSE,
+            col.names = FALSE)
+
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
