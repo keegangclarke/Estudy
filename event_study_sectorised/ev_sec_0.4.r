@@ -834,7 +834,7 @@ for (i in 1:length(industry)) {
     # ABNORMAL RETURN TESTS
     # Parametric tests
     ar_para <- data.frame(
-      parametric_tests(
+      estudy2::parametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -842,7 +842,7 @@ for (i in 1:length(industry)) {
     )
     # Non-parametric tests
     ar_non_para <- data.frame(
-      nonparametric_tests(
+      estudy2::nonparametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -851,7 +851,7 @@ for (i in 1:length(industry)) {
     # CUMULATIVE ABNORMAL RETURN TESTS
     # Parametric tests
     car_para <- data.frame(
-      car_parametric_tests(
+      estudy2::car_parametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -859,7 +859,7 @@ for (i in 1:length(industry)) {
     )
     # Non-parametric tests
     car_non_para <- data.frame(
-      car_nonparametric_tests(
+      estudy2::car_nonparametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -916,7 +916,7 @@ for (i in 1:length(supersector)) {
     # ABNORMAL RETURN TESTS
     # Parametric tests
     ar_para <- data.frame(
-      parametric_tests(
+      estudy2::parametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -924,7 +924,7 @@ for (i in 1:length(supersector)) {
     )
     # Non-parametric tests
     ar_non_para <- data.frame(
-      nonparametric_tests(
+      estudy2::nonparametric_tests(
         list_of_returns = securities_returns,
         event_start = as.Date("2020-03-16"),
         event_end = as.Date("2020-03-20")
@@ -933,7 +933,7 @@ for (i in 1:length(supersector)) {
     # CUMULATIVE ABNORMAL RETURN TESTS
     # Parametric tests
     car_para <- data.frame(
-      car_parametric_tests(
+      estudy2::car_parametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -941,7 +941,7 @@ for (i in 1:length(supersector)) {
     )
     # Non-parametric tests
     car_non_para <- data.frame(
-      car_nonparametric_tests(
+      estudy2::car_nonparametric_tests(
         list_of_returns = securities_returns,
         car_start = as.Date("2020-03-16"),
         car_end = as.Date("2020-03-20")
@@ -990,20 +990,20 @@ paste("Complete. Time elapsed: ",
 # 
 # # ABNORMAL RETURN TESTS
 # # Parametric tests
-# ar_para <- parametric_tests(
+# ar_para <- estudy2::parametric_tests(
 #   list_of_returns = securities_returns,
 #   event_start = as.Date("2020-03-16"),
 #   event_end = as.Date("2020-03-20")
 # )#%>% data.frame()
 # # Non-parametric tests
-# ar_non_para <- nonparametric_tests(
+# ar_non_para <- estudy2::nonparametric_tests(
 #   list_of_returns = securities_returns,
 #   event_start = as.Date("2020-03-16"),
 #   event_end = as.Date("2020-03-20")
 # ) #%>% data.frame()
 # # CUMULATIVE ABNORMAL RETURN TESTS
 # # Parametric tests
-# car_para <- car_parametric_tests(
+# car_para <- estudy2::car_parametric_tests(
 #   list_of_returns = securities_returns,
 #   car_start = as.Date("2020-03-16"),
 #   car_end = as.Date("2020-03-20"),
@@ -1011,7 +1011,7 @@ paste("Complete. Time elapsed: ",
 #   tests = list(car_brown_warner_1985)
 # ) #%>% data.frame()
 # # Non-parametric tests
-# car_non_para <- car_nonparametric_tests(
+# car_non_para <- estudy2::car_nonparametric_tests(
 #   list_of_returns = securities_returns,
 #   car_start = as.Date("2020-03-16"),
 #   car_end = as.Date("2020-03-20")
@@ -1137,7 +1137,7 @@ paste("Complete. Time elapsed: ",
 #     # ABNORMAL RETURN TESTS
 #     # Parametric tests
 #     ar_para <- data.frame(
-#       parametric_tests(
+#       estudy2::parametric_tests(
 #         list_of_returns = securities_returns,
 #         event_start = as.Date("2020-03-16"),
 #         event_end = as.Date("2020-03-20")
@@ -1145,7 +1145,7 @@ paste("Complete. Time elapsed: ",
 #     )
 #     # Non-parametric tests
 #     ar_non_para <- data.frame(
-#       nonparametric_tests(
+#       estudy2::nonparametric_tests(
 #         list_of_returns = securities_returns,
 #         event_start = as.Date("2020-03-16"),
 #         event_end = as.Date("2020-03-20")
@@ -1154,7 +1154,7 @@ paste("Complete. Time elapsed: ",
 #     # CUMULATIVE ABNORMAL RETURN TESTS
 #     # Parametric tests
 #     car_para <- data.frame(
-#       car_parametric_tests(
+#       estudy2::car_parametric_tests(
 #         list_of_returns = securities_returns,
 #         car_start = as.Date("2020-03-16"),
 #         car_end = as.Date("2020-03-20")
@@ -1162,7 +1162,7 @@ paste("Complete. Time elapsed: ",
 #     )
 #     # Non-parametric tests
 #     car_non_para <- data.frame(
-#       car_nonparametric_tests(
+#       estudy2::car_nonparametric_tests(
 #         list_of_returns = securities_returns,
 #         car_start = as.Date("2020-03-16"),
 #         car_end = as.Date("2020-03-20")
@@ -1211,7 +1211,7 @@ start_time <- Sys.time()
 print("Recording results in prespecified directories.")
 
 # WRITE RESULTS
-cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
+cd_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classification/"
 
 store_results <- function(results,
                           cd_root,
@@ -1269,9 +1269,8 @@ store_results(results = car_supersector, icb_level = "supersector", cd_root = cd
 # store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
 
 end_time <- Sys.time()
-paste("Complete. Time elased: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
 # 11. Process to capture & restore ARs and CARs
 
@@ -1350,9 +1349,8 @@ for (i in 1:nrow(sector_data)) {
 }
 print("Named-reference reconfiguration of storage objects complete.")
 end_time <- Sys.time()
-paste("Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
 # 11.2. Allocate data to pre-allocated storage objects ####
 # ALLOCATE CALCULATED ABNORMAL RETURNS DATA TO PREALLOCATED LOCATION
@@ -1401,11 +1399,11 @@ for (i in 1:length(lol)) {
 
 
 end_time <- Sys.time()
-paste("Data allocation complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
 # 11.3 Reconfigure into merged zoo objects
+start_time <- Sys.time()
 industry_names <- names(ar_data_industry)
 supersector_names <- names(ar_data_supersector)
 
@@ -1437,7 +1435,8 @@ store_results(results = car_data_industry, icb_level = "industry", cd_root = cd_
 store_results(results = ar_data_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "data")
 store_results(results = car_data_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "data")
 
-
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
 
 
