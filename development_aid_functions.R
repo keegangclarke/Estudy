@@ -55,7 +55,8 @@ store_results <- function(results,
                           cd_root,
                           icb_level = "",
                           return_type = "",
-                          type = c("data", "directory")) {
+                          type = c("data", "directory"),
+                          rowNames = TRUE) {
   # function writes results in individual ".csv" files
   # constructs the basic directory
   cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
@@ -65,7 +66,8 @@ store_results <- function(results,
     # STORE THE RESULTS
     for (i in seq_along(results)) {
       write.csv(results[[i]],
-                file = paste0(cd_trunk, keys[[i]], ".csv"))
+                file = paste0(cd_trunk, keys[[i]], ".csv"),
+                row.names = rowNames)
     }
   } else if (type == "directory") {
     d_list <- vector(mode = "character", length = length(results))
