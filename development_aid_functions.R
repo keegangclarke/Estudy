@@ -56,33 +56,47 @@ store_results <- function(results,
                           icb_level = "",
                           return_type = "",
                           type = c("data", "directory"),
-                          rowNames = TRUE) {
+                          mode = "csv",
+                          rowNames = TRUE,
+                          colNames = TRUE) {
   # function writes results in individual ".csv" files
   # constructs the basic directory
   cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
   # retrieves sub-grouping
   keys <- names(results)
   if (type == "data") {
-    # STORE THE RESULTS
-    for (i in seq_along(results)) {
-      write.csv(results[[i]],
-                file = paste0(cd_trunk, keys[[i]], ".csv"),
-                row.names = rowNames)
+    if (mode == "csv") {
+      # STORE THE RESULTS
+      for (i in seq_along(results)) {
+        write.csv(results[[i]],
+                  file = paste0(cd_trunk, keys[[i]], ".csv"),
+                  row.names = rowNames
+        )
+      }
+    } else if (mode == "zoo") {
+      # STORE THE RESULTS
+      for (i in seq_along(results)) {
+        zoo::write.zoo(
+          results[[i]],
+          file = paste0(cd_trunk, keys[[i]], ".csv"),
+          row.names = rowNames,
+          col.names = colNames
+        )
+      }
+    } else if (type == "directory") {
+      d_list <- vector(mode = "character", length = length(results))
+      # fills "d_list" with directories
+      for (i in seq_along(results)) {
+        d_list[[i]] <- paste0(cd_trunk, keys[[i]], ".csv")
+      }
+      # writes "d_list" as .txt file
+      write.table(
+        d_list,
+        file = paste0(cd_trunk, icb_level, "_", return_type, "_", "cd.txt"),
+        quote = TRUE,
+        row.names = FALSE,
+        col.names = FALSE
+      )
     }
-  } else if (type == "directory") {
-    d_list <- vector(mode = "character", length = length(results))
-    # fills "d_list" with directories
-    for (i in seq_along(results)) {
-      d_list[[i]] <- paste0(cd_trunk, keys[[i]], ".csv")
-    }
-    # writes "d_list" as .txt file
-    write.table(
-      d_list,
-      file = paste0(cd_trunk, icb_level, "_", return_type, "_", "cd.txt"),
-      quote = TRUE,
-      row.names = FALSE,
-      col.names = FALSE
-    )
   }
-  
 }
