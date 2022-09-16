@@ -453,14 +453,14 @@ for (i in 1:length(market_list))
   tryCatch({
     print(paste("Getting rates from prices for", keys[[i]]))
     r8tes <- estudy2::get_rates_from_prices(stock_list[[i]], 
-                                   quote = "Close", 
-                                   multi_day = TRUE, 
-                                   compounding = "continuous")
+                                            quote = "Close", 
+                                            multi_day = TRUE, 
+                                            compounding = "continuous")
     
     r8tes_indx <- estudy2::get_rates_from_prices(market_list[[i]], 
-                                        quote = "Close", 
-                                        multi_day = TRUE, 
-                                        compounding = "continuous")
+                                                 quote = "Close", 
+                                                 multi_day = TRUE, 
+                                                 compounding = "continuous")
     
     # FIX DTYPES OF COLUMN PRIOR TO TESTING
     r8tes <- transform.data.frame(r8tes, date = as.Date(date))
@@ -469,12 +469,12 @@ for (i in 1:length(market_list))
     
     # apply single-index market model to get ARs
     reg_model_results <- apply_market_model.data.frame(rates = r8tes,
-                                            regressor = r8tes_indx,
-                                            same_regressor_for_all = TRUE,
-                                            market_model = "sim",
-                                            estimation_method = "gls",
-                                            estimation_start = as.Date("2019-04-01"),
-                                            estimation_end = as.Date("2020-03-13"))
+                                                       regressor = r8tes_indx,
+                                                       same_regressor_for_all = TRUE,
+                                                       market_model = "sim",
+                                                       estimation_method = "gls",
+                                                       estimation_start = as.Date("2019-04-01"),
+                                                       estimation_end = as.Date("2020-03-13"))
     
     print("Done. Storing rates and market-models.")
     # Store results for later recording
@@ -822,15 +822,15 @@ cat("Testing INDUSTRY.","\n")
 for (i in 1:length(industry)) {
   tryCatch({
     print("Applying parametric and non-parametric tests to abnormal returns.")
-
+    
     keyss <- names(industry)
-
+    
     securities_returns <- industry[[i]]
-
+    
     if (length(securities_returns) < 2) {
       next
     }
-
+    
     # ABNORMAL RETURN TESTS
     # Parametric tests
     ar_para <- data.frame(
@@ -904,15 +904,15 @@ cat("Testing SUPERSECTORs.","\n")
 for (i in 1:length(supersector)) {
   tryCatch({
     print("Applying parametric and non-parametric tests to abnormal returns.")
-
+    
     keyss <- names(sector)
-
+    
     securities_returns <- supersector[[i]]
-
+    
     if (length(securities_returns) < 2) {
       next
     }
-
+    
     # ABNORMAL RETURN TESTS
     # Parametric tests
     ar_para <- data.frame(
@@ -1217,7 +1217,8 @@ store_results <- function(results,
                           cd_root,
                           icb_level = "",
                           return_type = "",
-                          type = c("data", "directory")) {
+                          type = c("data", "directory"),
+                          rowNames = TRUE) {
   # function writes results in individual ".csv" files
   # constructs the basic directory
   cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
@@ -1227,7 +1228,8 @@ store_results <- function(results,
     # STORE THE RESULTS
     for (i in seq_along(results)) {
       write.csv(results[[i]],
-                file = paste0(cd_trunk, keys[[i]], ".csv"))
+                file = paste0(cd_trunk, keys[[i]], ".csv"),
+                row.names = rowNames)
     }
   } else if (type == "directory") {
     d_list <- vector(mode = "character", length = length(results))
@@ -1249,23 +1251,23 @@ store_results <- function(results,
 
 # Storage ####
 # Records absolute directories for later
-store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "ar", type = "directory")
-store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "car", type = "directory")
+store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "abnormal", type = "directory")
+store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "cumulative_abnormal", type = "directory")
 
-store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "directory")
-store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "directory")
+store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "abnormal", type = "directory")
+store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "cumulative_abnormal", type = "directory")
 
 # store results of statistical tests
-store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "ar", type = "data")
-store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "car", type = "data")
+store_results(results = ar_industry, icb_level = "industry", cd_root = cd_base, return_type = "abnormal", type = "data")
+store_results(results = car_industry, icb_level = "industry", cd_root = cd_base, return_type = "cumulative_abnormal", type = "data")
 
-store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "data")
-store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "data")
+store_results(results = ar_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "abnormal", type = "data")
+store_results(results = car_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "cumulative_abnormal", type = "data")
 
-# store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "ar")
+# store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "abnormal")
 # store_results(results = ar_sector, icb_level = "sector", cd_root = cd_base, return_type = "car")
 # 
-# store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "ar")
+# store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "abnormal")
 # store_results(results = ar_subsector, icb_level = "subsector", cd_root = cd_base, return_type = "car")
 
 end_time <- Sys.time()
@@ -1282,35 +1284,33 @@ print("Creating storage objects for model regrouping.")
 # need to pre-allocate the length of the subcomponents of the lists
 # ARs
 ar_data_industry <- vector(mode = "list",
-                   length = length(unique(sector_data$ICB.Industry.Name)))
+                           length = length(unique(sector_data$ICB.Industry.Name)))
 names(ar_data_industry) <- unique(sector_data$ICB.Industry.Name)
 indu_i <- ar_data_industry # copy list for later counter
 ar_data_industry <- sub_list(sector_data, ar_data_industry, focus = "ICB.Industry.Name")
 
 ar_data_supersector <- vector(mode = "list",
-                      length = length(unique(sector_data$ICB.Supersector.Name)))
+                              length = length(unique(sector_data$ICB.Supersector.Name)))
 names(ar_data_supersector) <- unique(sector_data$ICB.Supersector.Name)
 supe_i <- ar_data_supersector # copy list for later counter
 ar_data_supersector <- sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
 
 # CARs
 car_data_industry <- vector(mode = "list",
-                           length = length(unique(sector_data$ICB.Industry.Name)))
+                            length = length(unique(sector_data$ICB.Industry.Name)))
 names(car_data_industry) <- unique(sector_data$ICB.Industry.Name)
 indu_i <- car_data_industry # copy list for later counter
 car_data_industry <- sub_list(sector_data, car_data_industry, focus = "ICB.Industry.Name")
 
 car_data_supersector <- vector(mode = "list",
-                              length = length(unique(sector_data$ICB.Supersector.Name)))
+                               length = length(unique(sector_data$ICB.Supersector.Name)))
 names(car_data_supersector) <- unique(sector_data$ICB.Supersector.Name)
 supe_i <- car_data_supersector # copy list for later counter
 car_data_supersector <- sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
 
-print("Creation of Storage Objects complete.")
 end_time <- Sys.time()
-paste("Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+print("Creation of Storage Objects complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
 start_time <- Sys.time()
 print("Reconfiguring storage objects to contain specified named-references.")
@@ -1330,7 +1330,7 @@ for (i in 1:nrow(sector_data)) {
   tick <- sector_data[i, 1] # ticker
   indu <- sector_data[i, 2] # industry
   supe <- sector_data[i, 3] # supersector
-
+  
   # ALLOCATE TICKERS (ID strings) to respective locations
   if (sector_data[i, 2] == indu) {
     # INDUSTRY
@@ -1355,7 +1355,7 @@ round(end_time - start_time, digits = 4) %>%  print()
 # 11.2. Allocate data to pre-allocated storage objects ####
 # ALLOCATE CALCULATED ABNORMAL RETURNS DATA TO PREALLOCATED LOCATION
 start_time <- Sys.time()
-print("Extracting and regrouping calculated abnormal returns according ICB classifications. Allocating.")
+print("Extracting and regrouping calculated abnormal returns according ICB classifications.")
 
 for (i in 1:length(lol)) {
   tryCatch({
@@ -1377,13 +1377,13 @@ for (i in 1:length(lol)) {
     if (exists("supe") == TRUE) {
       rm(supe)
     }
-
+    
     # Slice sector info for matching
     row_slice <- sector_data[sector_data[, 1] == nam,]
     tick <- row_slice[["Ticker"]]
     indu <- row_slice[["ICB.Industry.Name"]]
     supe <- row_slice[["ICB.Supersector.Name"]]
-
+    
     # print(i)
     # ALLOCATE MODELS VIA REFERENCING
     ar_data_industry[[indu]][[tick]] <- lol[[tick]]$abnormal
@@ -1397,7 +1397,6 @@ for (i in 1:length(lol)) {
   })
 }
 
-
 end_time <- Sys.time()
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
@@ -1408,42 +1407,77 @@ industry_names <- names(ar_data_industry)
 supersector_names <- names(ar_data_supersector)
 
 ar_data_industry_merged <- ar_data_industry
-car_data_industry_merged <- car_data_industry
+car_data_industry_merged <- ar_data_industry_merged
 for (i in seq_along(ar_data_industry)) {
   indu <- industry_names[[i]]
   ar_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo, ar_data_industry[[indu]])
-  # car_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo, car_data_industry[[indu]])
+  s1 <- ar_data_industry_merged[[indu]]
+  s2 <- s1
+  car_data_industry_merged[[indu]] <- cumsum(s2[!is.na(s1)])
+  # rm(s1,s2)
+  # car_data_industry_merged[[indu]] <- cumsum(ar_data_industry_merged[[indu]])
 }
 
+# for (i in seq_along(ar_data_industry)) {
+#   indu <- industry_names[[i]]
+#   ar_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo, ar_data_industry[[indu]])
+#   car_data_industry_merged[[indu]] <- cumsum(ar_data_industry_merged[[indu]])
+# }
+
 ar_data_supersector_merged <- ar_data_supersector
-car_data_supersector_merged <- car_data_supersector
+car_data_supersector_merged <- ar_data_supersector_merged
 for (i in seq_along(ar_data_supersector)) {
   supe <- supersector_names[[i]]
   ar_data_supersector_merged[[supe]] <- do.call(zoo::merge.zoo, ar_data_supersector[[supe]])
-  # car_data_supersector_merged[[supe]] <- do.call(zoo::merge.zoo, car_data_supersector[[supe]])
+  s1 <- ar_data_supersector_merged[[supe]]
+  s2 <- s1
+  car_data_supersector_merged[[supe]] <- cumsum(s2[!is.na(s1)])
+  rm(s1,s2)
+  # car_data_supersector_merged[[supe]] <- cumsum(ar_data_supersector_merged[[supe]])
 }
-
 
 for (i in seq_along(ar_data_industry_merged)) {dim(ar_data_industry_merged[[i]]) %>% print}
 
 # Store results ####
+store_results(results = ar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "ar", type = "data", rowNames = FALSE)
+store_results(results = car_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "car", type = "data", rowNames = FALSE)
 
-cd_base <-"C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classication/"
-store_results(results = ar_data_industry, icb_level = "industry", cd_root = cd_base, return_type = "abnormal", type = "data")
-store_results(results = car_data_industry, icb_level = "industry", cd_root = cd_base, return_type = "cumulative_abnormal", type = "data")
-
-store_results(results = ar_data_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "data")
-store_results(results = car_data_supersector, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "data")
+store_results(results = ar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "data", rowNames = FALSE)
+store_results(results = car_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "data", rowNames = FALSE)
 
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
 
+# 11.3. Allocate data to pre-allocated storage objects ####
+# CALCULATE AVERAGE ABNORMAL RETURNS 
+start_time <- Sys.time()
+print("Calculating abnormal returns according ICB classifications.")
 
+test <- ar_data_industry_merged$Telecommunications %>% rowMeans(na.rm = TRUE)
 
+aar_data_industry_merged <- ar_data_industry_merged
+caar_data_industry_merged <- car_data_industry_merged
+for (i in seq_along(ar_data_industry)) {
+  indu <- industry_names[[i]]
+  aar_data_industry_merged[[indu]] <- rowMeans(ar_data_industry_merged[[indu]], na.rm = TRUE)
+  caar_data_industry_merged[[indu]] <- cumsum(aar_data_industry_merged[[indu]])
+}
 
+aar_data_supersector_merged <- ar_data_supersector_merged
+caar_data_supersector_merged <- ar_data_supersector_merged
+for (i in seq_along(ar_data_supersector)) {
+  supe <- supersector_names[[i]]
+  aar_data_supersector_merged[[supe]] <- rowMeans(aar_data_supersector_merged[[supe]], na.rm = TRUE)
+  caar_data_supersector_merged[[supe]] <- cumsum(aar_data_supersector_merged[[supe]])
+}
+# Store results ####
+store_results(results = aar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "aar", type = "data", rowNames = FALSE)
+store_results(results = caar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "caar", type = "data", rowNames = FALSE)
 
+store_results(results = aar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "aar", type = "data", rowNames = FALSE)
+store_results(results = caar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "caar", type = "data", rowNames = FALSE)
 
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
-
-
-print("Terminating script...")
+print("Script complete.")
