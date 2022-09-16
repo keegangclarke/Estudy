@@ -427,6 +427,7 @@ paste("Complete. Time elapsed: ",
 
 # Source "apply_market_model_gls.R"#####
 source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
 # 1. OLS/GLS model creation and storage loop ####
 
@@ -1296,17 +1297,17 @@ supe_i <- ar_data_supersector # copy list for later counter
 ar_data_supersector <- sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
 
 # CARs
-car_data_industry <- vector(mode = "list",
-                            length = length(unique(sector_data$ICB.Industry.Name)))
-names(car_data_industry) <- unique(sector_data$ICB.Industry.Name)
-indu_i <- car_data_industry # copy list for later counter
-car_data_industry <- sub_list(sector_data, car_data_industry, focus = "ICB.Industry.Name")
-
-car_data_supersector <- vector(mode = "list",
-                               length = length(unique(sector_data$ICB.Supersector.Name)))
-names(car_data_supersector) <- unique(sector_data$ICB.Supersector.Name)
-supe_i <- car_data_supersector # copy list for later counter
-car_data_supersector <- sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
+# car_data_industry <- vector(mode = "list",
+#                             length = length(unique(sector_data$ICB.Industry.Name)))
+# names(car_data_industry) <- unique(sector_data$ICB.Industry.Name)
+# indu_i <- car_data_industry # copy list for later counter
+# car_data_industry <- sub_list(sector_data, car_data_industry, focus = "ICB.Industry.Name")
+# 
+# car_data_supersector <- vector(mode = "list",
+#                                length = length(unique(sector_data$ICB.Supersector.Name)))
+# names(car_data_supersector) <- unique(sector_data$ICB.Supersector.Name)
+# supe_i <- car_data_supersector # copy list for later counter
+# car_data_supersector <- sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
 
 end_time <- Sys.time()
 print("Creation of Storage Objects complete.")
@@ -1388,8 +1389,8 @@ for (i in 1:length(lol)) {
     # ALLOCATE MODELS VIA REFERENCING
     ar_data_industry[[indu]][[tick]] <- lol[[tick]]$abnormal
     ar_data_supersector[[supe]][[tick]] <- lol[[tick]]$abnormal
-    car_data_industry[[indu]][[tick]] <- zoo::as.zoo(cumsum(lol[[tick]]$abnormal))
-    car_data_supersector[[supe]][[tick]] <- zoo::as.zoo(cumsum(lol[[tick]]$abnormal))
+    # car_data_industry[[indu]][[tick]] <- zoo::as.zoo(cumsum(lol[[tick]]$abnormal))
+    # car_data_supersector[[supe]][[tick]] <- zoo::as.zoo(cumsum(lol[[tick]]$abnormal))
     
   }, error = function(e)
   {
@@ -1401,81 +1402,236 @@ end_time <- Sys.time()
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
 
-# 11.3 Reconfigure into merged zoo objects
+# 11.3 Reconfigure into merged zoo objects & and calculate CARS
 start_time <- Sys.time()
 industry_names <- names(ar_data_industry)
 supersector_names <- names(ar_data_supersector)
 
-ar_data_industry_merged <- ar_data_industry
-car_data_industry_merged <- ar_data_industry_merged
-for (i in seq_along(ar_data_industry)) {
-  indu <- industry_names[[i]]
-  ar_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo, ar_data_industry[[indu]])
-  s1 <- ar_data_industry_merged[[indu]]
-  s2 <- s1
-  car_data_industry_merged[[indu]] <- cumsum(s2[!is.na(s1)])
-  # rm(s1,s2)
-  # car_data_industry_merged[[indu]] <- cumsum(ar_data_industry_merged[[indu]])
-}
-
+# ar_data_industry_merged <- ar_data_industry
 # for (i in seq_along(ar_data_industry)) {
-#   indu <- industry_names[[i]]
-#   ar_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo, ar_data_industry[[indu]])
-#   car_data_industry_merged[[indu]] <- cumsum(ar_data_industry_merged[[indu]])
+#   tryCatch({
+#     indu <- industry_names[[i]]
+#     ar_data_industry_merged[[indu]] <-
+#       do.call(zoo::merge.zoo, ar_data_industry[[indu]])
+#   }, error = function(e)
+#   {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+#   })
+# }
+# car_data_industry_merged <- ar_data_industry_merged
+# for (j in 1:ncol(ar_data_industry_merged[[indu]])) {
+#   tryCatch({
+#     # Slice out series
+#     s1 <- car_data_industry_merged[[indu]][, j]
+#     s2 <- s1
+#     # Accumulate returns, ignoring NAs
+#     s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
+#     # store returns in order
+#     car_data_industry_merged[[indu]][, j] <-
+#       replace(car_data_industry_merged[[indu]][, j],
+#               1:length(s2),
+#               s2)
+#     rm(s1, s2)
+#   }, error = function(e)
+#   {
+#     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+#   })
 # }
 
-ar_data_supersector_merged <- ar_data_supersector
-car_data_supersector_merged <- ar_data_supersector_merged
-for (i in seq_along(ar_data_supersector)) {
-  supe <- supersector_names[[i]]
-  ar_data_supersector_merged[[supe]] <- do.call(zoo::merge.zoo, ar_data_supersector[[supe]])
-  s1 <- ar_data_supersector_merged[[supe]]
-  s2 <- s1
-  car_data_supersector_merged[[supe]] <- cumsum(s2[!is.na(s1)])
-  rm(s1,s2)
-  # car_data_supersector_merged[[supe]] <- cumsum(ar_data_supersector_merged[[supe]])
+# INDUSTRY ####
+# AR and CAR calculation
+ar_data_industry_merged <- ar_data_industry
+for (i in seq_along(ar_data_industry)) {
+  tryCatch({
+    indu <- industry_names[[i]]
+    ar_data_industry_merged[[indu]] <- do.call(zoo::merge.zoo,
+                                                  ar_data_industry[[indu]]
+                                               ) %>% as.data.frame
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+car_data_industry_merged <- ar_data_industry_merged
+for (i in seq_along(ar_data_industry_merged)) {
+  tryCatch({
+    indu <- industry_names[[i]]
+    shem_vec <- names(ar_data_industry_merged[[indu]])
+    for (j in 1:ncol(ar_data_industry_merged[[indu]])) {
+      tryCatch({
+        # Get name
+        shem <- shem_vec[[j]]
+        # Slice out series
+        s1 <- ar_data_industry_merged[[indu]][, shem]
+        s2 <- s1
+        # Accumulate returns, ignoring NAs
+        s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
+        # store returns in order
+        car_data_industry_merged[[indu]][, shem] <- s2
+        rm(s1, s2)
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
+    }
+    ar_data_industry_merged[[indu]] <- as.data.frame(ar_data_industry_merged[[indu]])
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
 }
 
-for (i in seq_along(ar_data_industry_merged)) {dim(ar_data_industry_merged[[i]]) %>% print}
+# SUPERSECTOR
+# AR and CAR calculation
+ar_data_supersector_merged <- ar_data_supersector
+for (i in seq_along(ar_data_supersector)) {
+  tryCatch({
+    supe <- supersector_names[[i]]
+    ar_data_supersector_merged[[supe]] <- do.call(zoo::merge.zoo,
+                                                  ar_data_supersector[[supe]]
+                                                  ) %>% as.data.frame
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+car_data_supersector_merged <- ar_data_supersector_merged
+for (i in seq_along(ar_data_supersector_merged)) {
+  tryCatch({
+    supe <- supersector_names[[i]]
+    shem_vec <- names(ar_data_supersector_merged[[supe]])
+    for (j in 1:ncol(ar_data_supersector_merged[[supe]])) {
+      tryCatch({
+        # Get name
+        shem <- shem_vec[[j]]
+        # Slice out series
+        s1 <- ar_data_supersector_merged[[supe]][, shem]
+        s2 <- s1
+        # Accumulate returns, ignoring NAs
+        s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
+        # store returns in order
+        car_data_supersector_merged[[supe]][, shem] <- s2
+        rm(s1, s2)
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
+    }
+    ar_data_supersector_merged[[supe]] <- as.data.frame(ar_data_supersector_merged[[supe]])
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+end_time <- Sys.time()
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
 
+t <- ar_data_industry_merged[[1]] %>% as.data.frame()
 # Store results ####
-store_results(results = ar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "ar", type = "data", rowNames = FALSE)
-store_results(results = car_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "car", type = "data", rowNames = FALSE)
-
-store_results(results = ar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "ar", type = "data", rowNames = FALSE)
-store_results(results = car_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "car", type = "data", rowNames = FALSE)
+# INDUSTRY
+store_results(
+  results = ar_data_industry_merged,
+  icb_level = "industry",
+  cd_root = cd_base,
+  return_type = "ar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = car_data_industry_merged,
+  icb_level = "industry",
+  cd_root = cd_base,
+  return_type = "car",
+  type = "data",
+  rowNames = TRUE
+)
+# SUPERSECTOR
+store_results(
+  results = ar_data_supersector_merged,
+  icb_level = "supersector",
+  cd_root = cd_base,
+  return_type = "ar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = car_data_supersector_merged,
+  icb_level = "supersector",
+  cd_root = cd_base,
+  return_type = "car",
+  type = "data",
+  rowNames = TRUE
+)
 
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
 
-# 11.3. Allocate data to pre-allocated storage objects ####
-# CALCULATE AVERAGE ABNORMAL RETURNS 
+# 11.3. Calculate average abnormal returns ####
 start_time <- Sys.time()
 print("Calculating abnormal returns according ICB classifications.")
 
-test <- ar_data_industry_merged$Telecommunications %>% rowMeans(na.rm = TRUE)
-
+# INDUSTRY
 aar_data_industry_merged <- ar_data_industry_merged
 caar_data_industry_merged <- car_data_industry_merged
 for (i in seq_along(ar_data_industry)) {
   indu <- industry_names[[i]]
-  aar_data_industry_merged[[indu]] <- rowMeans(ar_data_industry_merged[[indu]], na.rm = TRUE)
+  aar_data_industry_merged[[indu]] <- rowMeans(
+    ar_data_industry_merged[[indu]],
+    na.rm = TRUE) %>% 
+    as.data.frame() %>% 
+    set_rownames(row.names(ar_data_industry_merged[[indu]])) %>% 
+    set_colnames(indu)
   caar_data_industry_merged[[indu]] <- cumsum(aar_data_industry_merged[[indu]])
 }
-
+# SUPERSECTOR
 aar_data_supersector_merged <- ar_data_supersector_merged
 caar_data_supersector_merged <- ar_data_supersector_merged
 for (i in seq_along(ar_data_supersector)) {
   supe <- supersector_names[[i]]
-  aar_data_supersector_merged[[supe]] <- rowMeans(aar_data_supersector_merged[[supe]], na.rm = TRUE)
+  aar_data_supersector_merged[[supe]] <- rowMeans(
+    aar_data_supersector_merged[[supe]],
+    na.rm = TRUE) %>% 
+    as.data.frame() %>% 
+    set_rownames(row.names(aar_data_supersector_merged[[supe]])) %>% 
+    set_colnames(supe)
   caar_data_supersector_merged[[supe]] <- cumsum(aar_data_supersector_merged[[supe]])
 }
-# Store results ####
-store_results(results = aar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "aar", type = "data", rowNames = FALSE)
-store_results(results = caar_data_industry_merged, icb_level = "industry", cd_root = cd_base, return_type = "caar", type = "data", rowNames = FALSE)
 
-store_results(results = aar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "aar", type = "data", rowNames = FALSE)
-store_results(results = caar_data_supersector_merged, icb_level = "supersector", cd_root = cd_base, return_type = "caar", type = "data", rowNames = FALSE)
+# Store results ####
+store_results(
+  results = aar_data_industry_merged,
+  icb_level = "industry",
+  cd_root = cd_base,
+  return_type = "aar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = caar_data_industry_merged,
+  icb_level = "industry",
+  cd_root = cd_base,
+  return_type = "caar",
+  type = "data",
+  rowNames = TRUE
+)
+
+store_results(
+  results = aar_data_supersector_merged,
+  icb_level = "supersector",
+  cd_root = cd_base,
+  return_type = "aar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = caar_data_supersector_merged,
+  icb_level = "supersector",
+  cd_root = cd_base,
+  return_type = "caar",
+  type = "data",
+  rowNames = TRUE
+)
 
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
