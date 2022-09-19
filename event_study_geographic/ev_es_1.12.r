@@ -2,7 +2,6 @@
 print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
-# library(estudy2)
 library(magrittr)
 
 fun_insert <- function(x, pos, insert) {
@@ -378,7 +377,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 9. Application of Estudy2 ########################################################
+# 9. Pre-initialize objects for later loop ####
 start_time <- Sys.time()
 # Create data storage lists
 reg_results_list <-
@@ -393,10 +392,12 @@ car_test_results_list <-
   vector(mode = "list", length = length(market_list))
 names(car_test_results_list) <- keys
 
-# Source "apply_market_model_gls.R"#####
+# Source "apply_market_model_gls.R"####
 source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
+# Source development aid functions ####
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
-# Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions
+# 10.Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions ####
 for (i in 1:length(market_list)) {
   tryCatch({
     print(paste("Getting rates from prices for", keys[[i]]))
@@ -497,14 +498,14 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 10. Recording of results in new '.csv' data-files #####
+# 11. Recording of results in new '.csv' data-files #####
 start_time <- Sys.time()
 
 # WRITE RESULTS
 cd_ar <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/ar/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/ar_res/"
 cd_car <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/car/"
+  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/car_res/"
 ar_results_filenames <-
   vector(mode = "character", length = length(ar_test_results_list))
 car_results_filenames <-
@@ -547,7 +548,137 @@ write.table(car_results_filenames,
             col.names = FALSE)
 
 end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-print("Terminating script...")
+paste("Complete. Time elapsed: ")
+round(end_time - start_time, digits = 4)
+
+# 12.1. Extract and store AR data from 'reg_results_list' ####
+start_time <- Sys.time()
+print("Extracting abnormal returns.")
+
+# Extract and store ARs in list
+ar_data <- reg_results_list 
+for (i in 1:length(ar_data)) {
+  tryCatch({
+  indx <- keys[[i]]
+  ticks <- names(stock_list[[indx]][-1]) # minus one to skip first row "date"
+  names(ar_data[[indx]]) <- ticks
+  
+  ar_data_copy <- ar_data
+  for (j in 1:length(ticks)) {
+    tic <- ticks[[j]]
+    ar_data[[indx]][[tic]] <- ar_data_copy[[indx]][[tic]]$abnormal
+  }
+  rm(ar_data_copy)
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+
+end_time <- Sys.time()
+print("Extraction complete.")
+round(end_time - start_time, digits = 4) %>%  print()
+
+# 12.2 Reconfigure into lists of merged data.frame objects ####
+start_time <- Sys.time()
+# AR and CAR calculation
+ar_data_merged <- ar_data
+for (i in seq_along(ar_data)) {
+  tryCatch({
+    indx <- keys[[i]]
+    ar_data_merged[[indx]] <- do.call(zoo::merge.zoo,
+                                               ar_data[[indx]]
+    ) %>% as.data.frame
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+# 12.3 Calculation of CARS ####
+car_data_merged <- ar_data_merged
+for (i in seq_along(ar_data_merged)) {
+  tryCatch({
+    indx <- keys[[i]]
+    ticks <- names(ar_data_merged[[indx]])
+    for (j in 1:ncol(ar_data_merged[[indx]])) {
+      tryCatch({
+        # Get name
+        tic <- ticks[[j]]
+        # Slice out series
+        s1 <- ar_data_merged[[indx]][, tic]
+        s2 <- s1
+        # Accumulate returns, ignoring NAs
+        s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
+        # store returns in order
+        car_data_merged[[indx]][, tic] <- s2
+        rm(s1, s2)
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
+    }
+    ar_data_merged[[indx]] <- as.data.frame(ar_data_merged[[indx]])
+  }, error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
+}
+
+# 12.3 Store ARs and CARs ####
+d_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/"
+store_results(
+  results = ar_data_merged,
+  icb_level = "geographic_region",
+  cd_root = d_base,
+  return_type = "ar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = car_data_merged,
+  icb_level = "geographic_region",
+  cd_root = d_base,
+  return_type = "car",
+  type = "data",
+  rowNames = TRUE
+)
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
+
+# 12.4. Calculate average abnormal returns ####
+start_time <- Sys.time()
+print("Calculating average ARs and CARS.")
+
+aar_data_merged <- ar_data_merged
+caar_data_merged <- car_data_merged
+for (i in seq_along(ar_data)) {
+  indx <- keys[[i]]
+  aar_data_merged[[indx]] <- rowMeans(ar_data_merged[[indx]],
+                                      na.rm = TRUE) %>% 
+    as.data.frame() %>% 
+    set_rownames(row.names(ar_data_merged[[indx]])) %>% 
+    set_colnames(indx)
+  caar_data_merged[[indx]] <- cumsum(aar_data_merged[[indx]])
+}
+
+# 12.5 Store AARs and CAARs  ####
+store_results(
+  results = aar_data_merged,
+  icb_level = "geographic_region",
+  cd_root = d_base,
+  return_type = "aar",
+  type = "data",
+  rowNames = TRUE
+)
+store_results(
+  results = caar_data_merged,
+  icb_level = "geographic_region",
+  cd_root = d_base,
+  return_type = "caar",
+  type = "data",
+  rowNames = TRUE
+)
+paste("Complete.")
+round(end_time - start_time, digits = 4) %>%  print()
+
+print("Script complete.")
