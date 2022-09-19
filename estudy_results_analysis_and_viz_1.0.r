@@ -1,23 +1,16 @@
-# Load packages
+# Load packages & functions
 library(magrittr)
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
-# CHECK TYPES OF OBJECT
-check_types <- function(object) {
-  cat("typeof:", typeof(object), "\n")
-  cat("class:", class(object), "\n")
-  cat("mode:", mode(object), "\n")
-  cat("attributes:", "\n") 
-  print(attributes(object))
-} 
-
-# 0. Specify directory strings and load string info####
+# 0. Specify directory strings and load string info ####
 # Directory components
 d_root <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/"
 d_geo <- "geographic_region/"
 d_icb <- "industry_classification/"
 d_ar <- "ar/"
+d_aar <- "aar/"
 d_car <- "car/"
+d_caar <- "caar/"
 d_id <- "id/"
 
 # Load id info
@@ -35,18 +28,85 @@ df_sector_id <- paste0(d_root,
                        "sector_data.csv") %>%
   read.csv(header = TRUE)
 
-# Use paste0 to get the right names
-
-# Load 2 files for testing
-ar_test_file <- read.table(file = paste0(d_root,
+# Load test files
+# PERIODIC ABNORMAL RETURNS
+ar_test_file <- read.csv(file = paste0(d_root,
                                        d_geo,
                                        d_ar,
                                        market_names[[1]],
-                                       ".csv")) %>% 
-  subset(select = -c(X))
+                                       ".csv")) %>%
+  as.data.frame()
+colnames(ar_test_file)[[1]] <- 'date'
+ar_test_file[['date']] <- as.Date(ar_test_file[['date']])
+
+aar_test_file <- read.csv(file = paste0(d_root,
+                                        d_geo,
+                                        d_aar,
+                                        market_names[[1]],
+                                        ".csv")) %>%
+  as.data.frame()
+colnames(aar_test_file)[[1]] <- 'date'
+aar_test_file[['date']] <- as.Date(aar_test_file[['date']])
+
+# CUMULATIVE ABNORMAL RETURNS
 car_test_file <- read.csv(file = paste0(d_root,
-                                       d_geo,
-                                       d_car,
-                                       market_names[[1]],
-                                       ".csv")) %>% 
-  subset(select = -c(X))
+                                        d_geo,
+                                        d_car,
+                                        market_names[[1]],
+                                        ".csv")) %>%
+  as.data.frame()
+colnames(car_test_file)[[1]] <- 'date'
+car_test_file[['date']] <- as.Date(car_test_file[['date']])
+
+caar_test_file <- read.csv(file = paste0(d_root,
+                                         d_geo,
+                                         d_caar,
+                                         market_names[[1]],
+                                         ".csv")) %>%
+  as.data.frame()
+colnames(caar_test_file)[[1]] <- 'date'
+caar_test_file[['date']] <- as.Date(caar_test_file[['date']])
+
+library(ggplot2)
+
+p1 = ggplot(data = aar_test_file,
+            mapping = aes(x = date,
+                          y = KOSPI.Index)) +
+  geom_line(colour = "red",
+            show.legend = TRUE) +
+  geom_smooth(formula = y~x, data = aar_test_file, show.legend = TRUE) +
+  geom_line(data = caar_test_file,
+            mapping = aes(x = date,
+                          y = KOSPI.Index),
+            show.legend = TRUE) +
+  theme_bw() +
+  labs(title = paste("Average Abnormal Returns:",
+                     names(aar_test_file)[2]),
+       )
+
+a_frame <- merge.data.frame(aar_test_file,
+                            caar_test_file,
+                            by = "date") %>%
+  set_names(c('Date', "AAR", "CAAR"))
+ggplot(a_frame) +
+  geom_line(mapping = aes(x = Date,
+                          y = AAR),
+            show.legend = TRUE) +
+  geom_line(a_frame, mapping = aes(x = Date,
+                                   y = CAAR))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
