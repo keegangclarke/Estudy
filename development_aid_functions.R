@@ -100,3 +100,54 @@ store_results <- function(results,
     }
   }
 }
+fetch_data <-
+  function(directory_list,
+           lst = NULL,
+           file_type = NULL,
+           colNames = TRUE,
+           make.df = TRUE) {
+    # function ingests a list of absolute directories to files.
+    # function then reads in the files and stores them in the storage-list 'lst'
+    if (is.null(lst) == TRUE) {
+      message("Please provide a storage list with length of directory list.")
+    } else if (make.df == TRUE) {
+      if ((file_type == "csv") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- read.csv(directory_list[[i]],
+                               header = colNames)
+        }
+      } else if ((file_type == "excel") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- readxl::read_excel(path = directory_list[[i]],
+                                         col_names = colNames)
+        }
+      } else if ((file_type == "txt") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- read.table(directory_list[[i]],
+                                 header = colNames)
+        }
+      } else if (is.null(file_type) == TRUE) {
+        message("Please specify file-type. Support for 'csv' and 'excel' file-types.")
+      }
+    } else {
+      if ((file_type == "csv") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- read.csv(directory_list[[i]],
+                               header = colNames)
+        }
+      } else if ((file_type == "excel") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- readxl::read_excel(path = directory_list[[i]],
+                                         col_names = colNames)
+        }
+      } else if ((file_type == "txt") == TRUE) {
+        for (i in seq_along(directory_list)) {
+          lst[[i]] <- read.table(directory_list[[i]],
+                                 header = colNames)
+        }
+      } else if (is.null(file_type) == TRUE) {
+        message("Please specify file-type. Support for 'csv' and 'excel' file-types.")
+      }
+    }
+    return(lst)
+  }
