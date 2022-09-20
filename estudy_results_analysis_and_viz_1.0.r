@@ -12,6 +12,7 @@ d_aar <- "aar/"
 d_car <- "car/"
 d_caar <- "caar/"
 d_id <- "id/"
+d_res_pres <- "results_presentation/"
 
 # Load id info
 market_names <- paste0(d_root,
@@ -67,6 +68,12 @@ caar_test_file <- read.csv(file = paste0(d_root,
 colnames(caar_test_file)[[1]] <- 'date'
 caar_test_file[['date']] <- as.Date(caar_test_file[['date']])
 
+# Read in some identifying information
+regions <- readxl::read_xlsx(path = paste0(d_root,
+                                           d_res_pres,
+                                           "table_region_classification_simplified.xlsx")) %>% 
+  as.data.frame()
+
 library(ggplot2)
 
 p1 = ggplot(data = aar_test_file,
@@ -74,7 +81,9 @@ p1 = ggplot(data = aar_test_file,
                           y = KOSPI.Index)) +
   geom_line(colour = "red",
             show.legend = TRUE) +
-  geom_smooth(formula = y~x, data = aar_test_file, show.legend = TRUE) +
+  geom_smooth(formula = y~x,
+              data = aar_test_file,
+              show.legend = TRUE) +
   geom_line(data = caar_test_file,
             mapping = aes(x = date,
                           y = KOSPI.Index),
@@ -88,25 +97,34 @@ a_frame <- merge.data.frame(aar_test_file,
                             caar_test_file,
                             by = "date") %>%
   set_names(c('Date', "AAR", "CAAR"))
-ggplot(a_frame) +
+p2 <- ggplot(a_frame) +
   geom_line(mapping = aes(x = Date,
-                          y = AAR),
+                          y = AAR, color = AAR),
             show.legend = TRUE) +
   geom_line(a_frame, mapping = aes(x = Date,
                                    y = CAAR))
 
+p3 <- ggplot(a_frame,
+             aes(x = Date, y = AAR))
+p3 + geom_point(pch = 21, size = log((a_frame$AAR)^2), fill = I("darkorchid1"))
 
 
+p4 <- ggplot(a_frame,
+             aes(x = Date, y = AAR))
+p4 + geom_point()
 
+caar_d_geo <- vector(mode = "character",
+                           length = length(market_names))
+for (i in seq_along(caar_directories)) {
+  caar_d_geo[[i]] <- paste0(d_root,
+                            d_geo,
+                            d_caar,
+                            market_names[[i]],
+                            ".csv")
+}
+caars_geo <- vector(mode = "list",
+                    length(caar_d_geo))
 
-
-
-
-
-
-
-
-
-
+caars_geo <- fetch_data(caar_d_geo, lst = caars_geo, file_type = "csv")
 
 
