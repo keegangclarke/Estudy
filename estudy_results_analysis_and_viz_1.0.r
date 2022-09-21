@@ -76,18 +76,25 @@ regions <- readxl::read_xlsx(path = paste0(d_root,
 
 library(ggplot2)
 
-p1 = ggplot(data = aar_test_file,
+ggplot() +
+  geom_line(data = aar_test_file,
             mapping = aes(x = date,
-                          y = KOSPI.Index)) +
-  geom_line(colour = "red",
+                          y = KOSPI.Index,
+                          size = 0.1),
+            colour = "black",
             show.legend = TRUE) +
-  geom_smooth(formula = y~x,
-              data = aar_test_file,
-              show.legend = TRUE) +
+  # geom_smooth(formula = y~x,
+  #             data = aar_test_file,
+  #             show.legend = TRUE) +
   geom_line(data = caar_test_file,
             mapping = aes(x = date,
                           y = KOSPI.Index),
-            show.legend = TRUE) +
+            show.legend = TRUE,
+            colour = "blue") +
+  geom_ribbon(#data=subset(x, 2 <= x & x <= 3),
+              aes(ymin=aar_test_file$KOSPI.Index,
+                  ymax=caar_test_file$KOSPI.Index),
+              fill="blue", alpha=0.1)
   theme_bw() +
   labs(title = paste("Average Abnormal Returns:",
                      names(aar_test_file)[2]),
@@ -105,17 +112,17 @@ p2 <- ggplot(a_frame) +
                                    y = CAAR))
 
 p3 <- ggplot(a_frame,
-             aes(x = Date, y = AAR))
-p3 + geom_point(pch = 21, size = log((a_frame$AAR)^2), fill = I("darkorchid1"))
+             aes(x = Date, y = AAR))+
+  geom_point(pch = 21, size = log((a_frame$AAR)^2), fill = I("darkorchid1"))
 
 
 p4 <- ggplot(a_frame,
-             aes(x = Date, y = AAR))
-p4 + geom_point()
+             aes(x = Date, y = AAR))+
+  geom_point()
 
 caar_d_geo <- vector(mode = "character",
                            length = length(market_names))
-for (i in seq_along(caar_directories)) {
+for (i in seq_along(caar_d_geo)) {
   caar_d_geo[[i]] <- paste0(d_root,
                             d_geo,
                             d_caar,
@@ -125,6 +132,34 @@ for (i in seq_along(caar_directories)) {
 caars_geo <- vector(mode = "list",
                     length(caar_d_geo))
 
-caars_geo <- fetch_data(caar_d_geo, lst = caars_geo, file_type = "csv")
+caars_geo <- fetch_data(caar_d_geo, lst = caars_geo, file_type = "csv") %>%
+  setNames(market_names)
+
+for (i in seq_along(caars_geo)) {
+  names(caars_geo[[i]])[[1]] <- "Date"
+}
 
 
+p5 <- ggplot(data = a_frame) +
+  geom_line(mapping = aes(x = Date,
+                          y = AAR),
+            colour = "navyblue",
+            show.legend = TRUE) +
+  geom_line(mapping = aes(x = Date,
+                          y = CAAR),
+            show.legend = TRUE,
+            colour = "darkred") +
+  geom_hline(yintercept = 0,
+             size = 0.3)+
+  geom_ribbon(#data=subset(x, 2 <= x & x <= 3),
+    aes(x = Date,
+        ymin=AAR,
+        ymax=CAAR),
+    fill="navyblue", alpha=0.1)
+  theme_bw() +
+  labs(title = paste("Average Abnormal Returns:",
+                     names(aar_test_file)[2]),
+  )
+
+ggsave(p5, filename = 'nhtemp_with_cairo.png', dpi = 300, type = 'cairo',
+         width = 8, height = 4, units = 'in')
