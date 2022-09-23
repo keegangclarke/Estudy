@@ -38,6 +38,19 @@ df_sector_id <- paste0(d_root,
                        "sector_data.csv") %>%
   read.csv(header = TRUE)
 
+# Specify patterns
+pattern_list <- c(" ", "/", "-", "\\*", "&")
+# Load regional data
+df_region <- readxl::read_xlsx(paste0(d_root,
+                                      d_res_pres,
+                                      d_tables,
+                                      "table_2_data.xlsx")) %>%
+  lapply(stringr::str_replace_all,
+         pattern = paste0(pattern_list,
+         collapse = "|"), replacement = ".") %>%
+  lapply(as.factor) %>% 
+  as.data.frame()
+
 # Load test files
 # PERIODIC ABNORMAL RETURNS
 ar_test_file <- read.csv(file = paste0(d_root,
