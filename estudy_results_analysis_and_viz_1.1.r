@@ -77,6 +77,7 @@ car_test_file[['date']] <- as.Date(car_test_file[['date']])
 regions <- readxl::read_xlsx(
   path = paste0(d_root,
                 d_res_pres,
+                d_tables,
                 "table_region_classification_simplified.xlsx")) %>% 
   as.data.frame()
 
@@ -87,7 +88,7 @@ aar_d_geo <- vector(mode = "character",
 for (i in seq_along(aar_d_geo)) {
   aar_d_geo[[i]] <- paste0(d_root,
                            d_geo,
-                           d_caar,
+                           d_aar,
                            market_names[[i]],
                            ".csv")
 }
@@ -150,10 +151,13 @@ for (i in seq_along(market_names)) {
 
 library(ggplot2)
 
+indices <- names(aars_geo)
+indx <- indices[[1]]
+
 # PROTOTYPE AAR CAAR PLOT ####
-ave_frame <- merge.data.frame(aars_geo[["KOSPI.Index"]],
-                              caars_geo[["KOSPI.Index"]],
-                              by = "date") %>%
+ave_frame <- merge.data.frame(aars_geo[[indx]],
+                              caars_geo[[indx]],
+                              by = "Date") %>%
   set_names(c('Date', "AAR", "CAAR"))
 
 p_ave <- ggplot(data = ave_frame) +
@@ -166,15 +170,15 @@ p_ave <- ggplot(data = ave_frame) +
             show.legend = TRUE,
             colour = "darkred") +
   geom_hline(yintercept = 0,
-             size = 0.3)+
+             size = 0.3) +
   geom_ribbon(aes(x = Date,
                   ymin=AAR,
                   ymax=CAAR),
               fill="navyblue", 
-              alpha=0.1)+
+              alpha=0.1) +
   theme_bw() +
   labs(title = paste("Average Abnormal Returns:",
-                     names(aar_test_file)[2]),
+                    indx),
   )
 
 # Store plot
