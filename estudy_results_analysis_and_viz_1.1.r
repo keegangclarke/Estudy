@@ -150,41 +150,51 @@ for (i in seq_along(market_names)) {
 }
 
 library(ggplot2)
+# library(ggthemes)
+# theme_wsj() +
+# theme_calc() +
+# theme_hc()+
 
-indices <- names(aars_geo)
-indx <- indices[[1]]
-
-# PROTOTYPE AAR CAAR PLOT ####
-ave_frame <- merge.data.frame(aars_geo[[indx]],
-                              caars_geo[[indx]],
-                              by = "Date") %>%
-  set_names(c('Date', "AAR", "CAAR"))
-
-p_ave <- ggplot(data = ave_frame) +
-  geom_line(mapping = aes(x = Date,
-                          y = AAR),
-            colour = "navyblue",
-            show.legend = TRUE) +
-  geom_line(mapping = aes(x = Date,
-                          y = CAAR),
-            show.legend = TRUE,
-            colour = "darkred") +
-  geom_hline(yintercept = 0,
-             size = 0.3) +
-  geom_ribbon(aes(x = Date,
-                  ymin=AAR,
-                  ymax=CAAR),
-              fill="navyblue", 
-              alpha=0.1) +
-  theme_bw() +
-  labs(title = paste("Average Abnormal Returns:",
-                    indx),
-  )
-
-# Store plot
-ggsave(
+for (i in seq_along(market_names)) {
+  indx <- market_names[[i]]
+  # AAR vs CAAR PLOT ####
+  p_ave <-
+    ggplot(data = ave_lst[[indx]]) +
+    geom_line(
+      mapping = aes(x = Event.Time,
+                    y = AAR),
+      colour = "navyblue",
+      show.legend = TRUE
+    ) +
+    geom_line(
+      mapping = aes(x = Event.Time,
+                    y = CAAR),
+      colour = "darkred",
+      show.legend = TRUE
+    ) +
+    scale_x_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
+                                          max(ave_lst[[indx]]$Event.Time),
+                                          by = 10),
+                                      1)) +
+    scale_y_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
+                                          max(ave_lst[[indx]]$Event.Time),
+                                          by = 10),
+                                      1)) +
+    geom_hline(yintercept = 0,
+               size = 0.3) +
+    geom_ribbon(aes(x = Event.Time,
+                    ymin = AAR,
+                    ymax = CAAR),
+                fill = "navyblue",
+                alpha = 0.1) +
+    theme_bw() +
+    labs(title = paste("Average Abnormal Returns:",
+                       indx),)
+  
+  # Store plot
+  ggsave(
     p_ave,
-    filename = 'prototype_aar_caar.png',
+    filename = paste0(indx, "_aar_caar.png"),
     path = paste0(d_root,
                   d_res_pres,
                   d_plot,
@@ -194,3 +204,40 @@ ggsave(
     height = 4,
     units = 'in'
   )
+}
+
+# FOR EXPERIMENTS ####
+indx <- market_names[[i]]
+# AAR vs CAAR PLOT ####
+p_ave <-
+  ggplot(data = ave_lst[[indx]]) +
+  geom_line(
+    mapping = aes(x = Event.Time,
+                  y = AAR),
+    colour = "navyblue",
+    show.legend = TRUE
+  ) +
+  geom_line(
+    mapping = aes(x = Event.Time,
+                  y = CAAR),
+    colour = "darkred",
+    show.legend = TRUE
+  ) +
+  scale_x_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
+                                        max(ave_lst[[indx]]$Event.Time),
+                                        by = 10),
+                                    1)) +
+  scale_y_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
+                                        max(ave_lst[[indx]]$Event.Time),
+                                        by = 10),
+                                    1)) +
+  geom_hline(yintercept = 0,
+             size = 0.3) +
+  geom_ribbon(aes(x = Event.Time,
+                  ymin = AAR,
+                  ymax = CAAR),
+              fill = "navyblue",
+              alpha = 0.1) +
+  theme_bw() +
+  labs(title = paste("Average Abnormal Returns:",
+                     indx),)
