@@ -529,7 +529,8 @@ if (dupe_yesno == 1) {
 }
 
 end_time <- Sys.time()
-paste("OLS model creation and storage complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
+paste("OLS model creation and storage complete. Time elapsed: ")
+print(round(end_time - start_time, digits = 4))
 
 # 2. Load Sector Identification data ####
 start_time <- Sys.time()
@@ -582,9 +583,8 @@ for (i in 1:length(pat)) {
 }
 print("REGEX patterns constructed for name (string) cleaning")
 end_time <- Sys.time()
-paste("Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+paste("Time elapsed: ")
+print(round(end_time - start_time, digits = 4))
 # Unlist the 'list of lists of lists' into a 'list of lists'
 lol <- unlist(reg_results_list, recursive = FALSE)
 
@@ -673,9 +673,15 @@ subsector <- sub_list(sector_data, subsector, focus = "ICB.Subsector.Name")
 
 print("Creation of Storage Objects complete.")
 end_time <- Sys.time()
-paste("Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
+paste("Time elapsed: ")
+round(end_time - start_time, digits = 4)
+
+# find total number of qualifying shares for Industry & Supersector
+industry_stocks_total <- length(unique(sector_data$ICB.Industry.Name))
+paste("Total industries:", industry_stocks_total)
+supersector_stock_total <- length(unique(sector_data$ICB.Supersector.Name))
+paste("Total supersectors:", supersector_stock_total)
+
 
 start_time <- Sys.time()
 print("Reconfiguring storage objects to contain specified named-references.")
@@ -789,6 +795,37 @@ end_time <- Sys.time()
 paste("Model allocation complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
+
+# find total number of stocks per industry & supersector category ####
+count_indu <- vector(mode = "list",
+                     length = length(unique(sector_data$ICB.Industry.Name))) %>%
+                       set_names(unique(sector_data$ICB.Industry.Name))
+count_supe <- vector(mode = "list",
+                     length = length(unique(sector_data$ICB.Supersector.Name))) %>%
+                       set_names(unique(sector_data$ICB.Supersector.Name))
+indu_g <- unique(sector_data$ICB.Industry.Name) %>% as.character()
+for (i in seq_along(indu_g)) {
+  group <- indu_g[[i]]
+  count_indu[[group]] <- length(industry[[group]])
+}
+
+supe_g <- unique(sector_data$ICB.Supersector.Name) %>% as.character()
+for (i in seq_along(supe_g)) {
+  group <- supe_g[[i]]
+  count_supe[[group]] <- length(supersector[[group]])
+}
+
+count_indu <- count_indu %>% as.data.frame %>% t %>% set_colnames(c("Count"))
+count_supe <- count_supe %>% as.data.frame %>% t %>% set_colnames(c("Count"))
+
+d_tables <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/results_presentation/tables"
+
+write.csv(count_indu,
+          file = paste0(d_tables,
+                        "/table_3a_industry_count.csv"))
+write.csv(count_supe,
+          file = paste0(d_tables,
+                        "/table_3b_supersector_count.csv"))
 
 # 8. Preparation for calculation of test results ####
 start_time <- Sys.time()
