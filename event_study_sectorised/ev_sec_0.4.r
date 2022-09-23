@@ -827,6 +827,55 @@ write.csv(count_supe,
           file = paste0(d_tables,
                         "/table_3b_supersector_count.csv"))
 
+# Wrangle data to make tables where tickers are sorted by the indu & supe groupings 
+# INDUSTRY
+industry_components <- industry
+# make list of data.frames containing grouped ticker data
+for (i in seq_along(industry_components)) {
+  industry_components[[i]] <- industry[[i]] %>%
+    names %>%
+    as.data.frame() %>%
+    set_colnames(names(industry)[[i]]) %>% 
+    umx::umx_pad(n=max(count_indu))
+}
+# create empty data.frame with right colnames and right nrow
+df_i <- as.data.frame(matrix(NA,
+                             nrow = max(count_indu),
+                             ncol = length(unique(sector_data$ICB.Industry.Name)))) %>%
+  set_colnames(unique(sector_data$ICB.Industry.Name))
+# replace empty columns with data
+for (i in seq_along(industry_components)) {
+  tic <- unique(sector_data$ICB.Industry.Name)[[i]]
+    df_i[[tic]] <- industry_components[[tic]] %>% unlist %>% as.character()
+}
+write.csv(x = df_i,
+          file = "C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/sample_data/table_4a_industry_tickers.csv",
+          na = "")
+
+# SUPERSECTOR
+supersector_components <- supersector
+# make list of data.frames containing grouped ticker data
+for (i in seq_along(supersector_components)) {
+  supersector_components[[i]] <- supersector[[i]] %>%
+    names %>%
+    as.data.frame() %>%
+    set_colnames(names(supersector)[[i]]) %>% 
+    umx::umx_pad(n=max(count_supe))
+}
+# create empty data.frame with right colnames and right nrow
+df_s <- as.data.frame(matrix(NA,
+                             nrow = max(count_supe),
+                             ncol = length(unique(sector_data$ICB.Supersector.Name)))) %>%
+  set_colnames(unique(sector_data$ICB.Supersector.Name))
+# replace empty columns with data
+for (i in seq_along(supersector_components)) {
+  tic <- unique(sector_data$ICB.Supersector.Name)[[i]]
+  df_s[[tic]] <- supersector_components[[tic]] %>% unlist %>% as.character()
+}
+write.csv(x = df_s,
+          file = "C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/sample_data/table_4b_supersector_tickers.csv",
+          na = "")
+
 # 8. Preparation for calculation of test results ####
 start_time <- Sys.time()
 print("Applying event-study statistical process to stored models and recording results.")
