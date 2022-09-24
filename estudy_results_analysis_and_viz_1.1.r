@@ -182,18 +182,19 @@ merge_caar_aar <-
     for (i in seq_along(name_lst)) {
       nam <- name_lst[[i]]
       
-      storage_lst[[i]] <- merge.data.frame(aar_lst[[nam]],
+      storage_lst[[nam]] <- merge.data.frame(aar_lst[[nam]],
                                            caar_lst[[nam]],
                                            by = "Date") %>%
         set_names(c('Date', "AAR", "CAAR"))
       # adds event time column but calculates on logical basis an int vector which sets 0 to 'event_day'
       # negative ints for days before 'event_day'
       # postive ints for days after 'event_day'
-      storage_lst[[nam]][["Event.Time"]] <-
+      storage_lst[[nam]]$Event.Time <-
         -nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] < evt_day),]):nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] > evt_day),])
     }
     return(storage_lst)
   }
+
 # Merge AAR & CAAR data.frames ####
 # GEOGRAPHIC
 ave_lst_geo <-
@@ -220,7 +221,91 @@ ave_lst_supe <- merge_caar_aar(storage_lst = ave_lst_supe,
                                caar_lst = caar_supe)
 
 
-# PLOT AARs V CAARs ####
+# PLOT AARs V CAARs
+aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
+  for (i in seq_along(name_lst)) {
+    nam <- name_lst[[i]]
+    # AAR vs CAAR PLOT ####
+    p_ave <-
+      ggplot(data = aar_caar_df_lst[[nam]]) +
+      geom_line(
+        mapping = aes(x = Event.Time,
+                      y = AAR),
+        colour = "navyblue",
+        show.legend = TRUE
+      ) +
+      geom_line(
+        mapping = aes(x = Event.Time,
+                      y = CAAR),
+        colour = "darkred",
+        show.legend = TRUE
+      ) +
+      scale_x_continuous(breaks = round(seq(min(aar_caar_df_lst[[nam]]$Event.Time),
+                                            max(aar_caar_df_lst[[nam]]$Event.Time),
+                                            by = 10),
+                                        1)) +
+      scale_y_continuous(breaks = round(seq(min(aar_caar_df_lst[[nam]]$Event.Time),
+                                            max(aar_caar_df_lst[[nam]]$Event.Time),
+                                            by = 10),
+                                        1)) +
+      geom_hline(yintercept = 0,
+                 size = 0.3) +
+      geom_ribbon(aes(x = Event.Time,
+                      ymin = AAR,
+                      ymax = CAAR),
+                  fill = "navyblue",
+                  alpha = 0.1) +
+      theme_bw() +
+      labs(title = paste("Average Abnormal Returns:",
+                         nam),)
+    
+    # Store plot
+    ggsave(
+      p_ave,
+      filename = paste0(nam, "_aar_caar.png"),
+      path = PATH,
+      dpi = 320,
+      width = 8,
+      height = 4,
+      units = 'in'
+    )
+  }
+}
+
+# GEOGRAPHIC
+aar_caar_plot(
+  name_lst = geo_fac,
+  aar_caar_df_lst = ave_lst_geo,
+  PATH = paste0(d_root,
+                d_res_pres,
+                d_plot,
+                d_geo,
+                "aar_caar/")
+)
+# INDUSTRY
+aar_caar_plot(
+  name_lst = indu_fac,
+  aar_caar_df_lst = ave_lst_indu,
+  PATH = paste0(d_root,
+                d_res_pres,
+                d_plot,
+                d_icb,
+                d_indu,
+                "aar_caar/")
+)
+# SUPERSECTOR
+aar_caar_plot(
+  name_lst = indu_fac,
+  aar_caar_df_lst = ave_lst_indu,
+  PATH = paste0(d_root,
+                d_res_pres,
+                d_plot,
+                d_icb,
+                d_supe,
+                "aar_caar/")
+)
+
+# PLOT ARs ####
 for (i in seq_along(geo_fac)) {
   indx <- geo_fac[[i]]
   # AAR vs CAAR PLOT ####
@@ -276,7 +361,39 @@ for (i in seq_along(geo_fac)) {
 # FOR EXPERIMENTS ####
 indx <- geo_fac[[i]]
 # AAR vs CAAR PLOT ####
-p_ave <-
+p1 <-
+  ggplot(data = ave_lst_geo[[indx]]) +
+  geom_line(
+    mapping = aes(x = Event.Time,
+                  y = AAR),
+    colour = "navyblue",
+    show.legend = TRUE
+  ) +
+  geom_line(
+    mapping = aes(x = Event.Time,
+                  y = CAAR),
+    colour = "darkred",
+    show.legend = TRUE
+  ) +
+  scale_x_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                        max(ave_lst_geo[[indx]]$Event.Time),
+                                        by = 10),
+                                    1)) +
+  scale_y_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                        max(ave_lst_geo[[indx]]$Event.Time),
+                                        by = 10),
+                                    1)) +
+  geom_hline(yintercept = 0,
+             size = 0.3) +
+  geom_ribbon(aes(x = Event.Time,
+                  ymin = AAR,
+                  ymax = CAAR),
+              fill = "navyblue",
+              alpha = 0.1) +
+  theme_bw() +
+  labs(title = paste("Average Abnormal Returns:",
+                     indx),)
+p2 <-
   ggplot(data = ave_lst_geo[[indx]]) +
   geom_line(
     mapping = aes(x = Event.Time,
