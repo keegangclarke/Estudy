@@ -1,5 +1,6 @@
 # Load packages & functions
 library(magrittr)
+library(ggplot2)
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
 # Parameters ####
@@ -27,10 +28,10 @@ d_proto <- "prototypes/"
 
 # Load id info ####
 geo_fac <- paste0(d_root,
-                       d_id,
-                       d_geo,
-                       "market_names.txt") %>% 
-  read.table(header = FALSE) %>% 
+                  d_id,
+                  d_geo,
+                  "market_names.txt") %>%
+  read.table(header = FALSE) %>%
   unlist %>%
   as.vector(mode = "character")
 
@@ -66,75 +67,83 @@ df_region <- readxl::read_xlsx(paste0(d_root,
   lapply(as.factor) %>% 
   as.data.frame()
 
-# Load test files ####
-# PERIODIC ABNORMAL RETURNS
-ar_test_file <- read.csv(file = paste0(d_root,
-                                       d_geo,
-                                       d_ar,
-                                       geo_fac[[1]],
-                                       ".csv")) %>%
-  as.data.frame()
-colnames(ar_test_file)[[1]] <- 'date'
-ar_test_file[['date']] <- as.Date(ar_test_file[['date']])
-
-# CUMULATIVE ABNORMAL RETURNS
-car_test_file <- read.csv(file = paste0(d_root,
-                                        d_geo,
-                                        d_car,
-                                        geo_fac[[1]],
-                                        ".csv")) %>%
-  as.data.frame()
-colnames(car_test_file)[[1]] <- 'date'
-car_test_file[['date']] <- as.Date(car_test_file[['date']])
-
-
-# Read in some identifying information
-regions <- readxl::read_xlsx(
-  path = paste0(d_root,
-                d_res_pres,
-                d_tables,
-                "table_region_classification_simplified.xlsx")) %>% 
-  as.data.frame()
-
-# FUNCTION TO FETCH AAR & CAAR DATA ####
-fetch_ave_ars <- function(name_lst, directory) {
+# FUNCTION TO GET ABNORMAL RETURN DATA ####
+fetch_rtns <- function(name_lst, directory) {
   d <- vector(mode = "character",
-                   length = length(name_lst))
+              length = length(name_lst))
   for (i in seq_along(d)) {
     d[[i]] <- paste0(directory,
-                          name_lst[[i]],
-                          ".csv")
+                     name_lst[[i]],
+                     ".csv")
   }
   # create storage list
   storage_lst <- vector(mode = "list",
-                     length(d))
+                        length(d))
   # retrieve data
   storage_lst <- fetch_data(d,
-                         lst = storage_lst,
-                         file_type = "csv") %>%
+                            lst = storage_lst,
+                            file_type = "csv") %>%
     setNames(name_lst)
   # wrangle to be suitable
   for (i in seq_along(storage_lst)) {
     names(storage_lst[[i]])[[1]] <- "Date"
-    storage_lst[[i]][["Date"]] <- storage_lst[[i]][["Date"]] %>% as.Date()
+    storage_lst[[i]][["Date"]] <-
+      storage_lst[[i]][["Date"]] %>% as.Date()
   }
   return(storage_lst)
 }
+# ARs & CARs: Retrieve data ####
+# GEOGRAPHIC
+ar_geo <- fetch_ars(name_lst = geo_fac,
+                    directory = paste0(d_root,
+                                       d_geo,
+                                       d_ar))
+# INDUSTRY
+ar_indu <- fetch_ars(name_lst = indu_fac,
+                    directory = paste0(d_root,
+                                       d_icb,
+                                       d_indu,
+                                       d_ar))
+# SUPERSECTOR
+ar_supe <- fetch_ars(name_lst = supe_fac,
+                    directory = paste0(d_root,
+                                       d_icb,
+                                       d_supe,
+                                       d_ar))
+
+# CUMULATIVE ABNORMAL RETURNS
+# GEOGRAPHIC
+car_geo <- fetch_ars(name_lst = geo_fac,
+                    directory = paste0(d_root,
+                                       d_geo,
+                                       d_car))
+# INDUSTRY
+car_indu <- fetch_ars(name_lst = indu_fac,
+                     directory = paste0(d_root,
+                                        d_icb,
+                                        d_indu,
+                                        d_car))
+# SUPERSECTOR
+car_supe <- fetch_ars(name_lst = supe_fac,
+                     directory = paste0(d_root,
+                                        d_icb,
+                                        d_supe,
+                                        d_car))
 
 # AARs: RETRIEVE ALL AAR DATA ####
 # GEOGRAPHIC
-aar_geo <- fetch_ave_ars(name_lst = geo_fac,
+aar_geo <- fetch_rtns(name_lst = geo_fac,
                          directory = paste0(d_root,
                                             d_geo,
                                             d_aar))
 # INDUSTRY
-aar_indu <- fetch_ave_ars(name_lst = indu_fac,
+aar_indu <- fetch_rtns(name_lst = indu_fac,
                           directory = paste0(d_root,
                                              d_icb,
                                              d_indu,
                                              d_aar))
 # SUPERSECTOR
-aar_supe <- fetch_ave_ars(name_lst = supe_fac,
+aar_supe <- fetch_rtns(name_lst = supe_fac,
                           directory = paste0(d_root,
                                              d_icb,
                                              d_supe,
@@ -142,18 +151,18 @@ aar_supe <- fetch_ave_ars(name_lst = supe_fac,
 
 # CAARs: RETRIEVE ALL CAAR DATA ####
 # GEOGRAPHIC
-caar_geo <- fetch_ave_ars(name_lst = geo_fac,
+caar_geo <- fetch_rtns(name_lst = geo_fac,
                         directory = paste0(d_root,
                                            d_geo,
                                            d_caar))
 # INDUSTRY
-caar_indu <- fetch_ave_ars(name_lst = indu_fac,
+caar_indu <- fetch_rtns(name_lst = indu_fac,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_indu,
                                             d_caar))
 # SUPERSECTOR
-caar_supe <- fetch_ave_ars(name_lst = supe_fac,
+caar_supe <- fetch_rtns(name_lst = supe_fac,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_supe,
@@ -210,13 +219,8 @@ ave_lst_supe <- merge_caar_aar(storage_lst = ave_lst_supe,
                                aar_lst = aar_supe,
                                caar_lst = caar_supe)
 
-# Begin Plotting process ####
-library(ggplot2)
-# library(ggthemes)
-# theme_wsj() +
-# theme_calc() +
-# theme_hc()+
 
+# PLOT AARs V CAARs ####
 for (i in seq_along(geo_fac)) {
   indx <- geo_fac[[i]]
   # AAR vs CAAR PLOT ####
