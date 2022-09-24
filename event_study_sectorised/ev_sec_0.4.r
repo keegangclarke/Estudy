@@ -128,6 +128,11 @@ keys <- colnames(name_dict)
 # Replace spaces with '.' to be able to select columns from data.frame
 keys <- as.vector(gsub(" ", ".", keys))
 
+write.table(keys,
+            file = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/id/geographic_region/market_names.txt",
+            row.names = FALSE,
+            col.names = FALSE)
+
 # Initialise empty lists with required length indice_list <- vector(mode = 'list', length = n)
 stock_list <- vector(mode = "list", length = length(df3))
 market_list <- vector(mode = "list", length = length(df3))
