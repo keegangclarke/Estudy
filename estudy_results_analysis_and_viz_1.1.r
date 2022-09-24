@@ -2,16 +2,18 @@
 library(magrittr)
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
-# 0. Load basic components ####
-# Parameters
+# Parameters ####
 event_day <- as.Date("2020-01-22")
 
-# Directory components
+# Directory components ####
 d_root <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/"
 d_geo <- "geographic_region/"
 d_icb <- "industry_classification/"
 d_res_pres <- "results_presentation/"
+
 d_id <- "id/"
+d_supe <- "supersector/"
+d_indu <- "industry/"
 
 d_plot <- "plots/"
 d_tables <- "tables/"
@@ -23,8 +25,8 @@ d_caar <- "caar/"
 
 d_proto <- "prototypes/"
 
-# Load id info
-market_names <- paste0(d_root,
+# Load id info ####
+geo_fac <- paste0(d_root,
                        d_id,
                        d_geo,
                        "market_names.txt") %>% 
@@ -37,6 +39,19 @@ df_sector_id <- paste0(d_root,
                        d_icb,
                        "sector_data.csv") %>%
   read.csv(header = TRUE)
+# Create industry ID variables
+industry <- df_sector_id[,1:2] %>%
+  as.data.frame
+indu_fac <- industry[,2] %>%
+  unique %>%
+  as.factor
+# Create supersector ID variables
+supersector <- cbind.data.frame(df_sector_id[,1], df_sector_id[,3]) %>% 
+  set_colnames(c(names(df_sector_id)[[1]],
+                 names(df_sector_id)[[3]]))
+supe_fac <- supersector[,2] %>%
+  unique %>%
+  as.factor
 
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
@@ -51,12 +66,12 @@ df_region <- readxl::read_xlsx(paste0(d_root,
   lapply(as.factor) %>% 
   as.data.frame()
 
-# Load test files
+# Load test files ####
 # PERIODIC ABNORMAL RETURNS
 ar_test_file <- read.csv(file = paste0(d_root,
                                        d_geo,
                                        d_ar,
-                                       market_names[[1]],
+                                       geo_fac[[1]],
                                        ".csv")) %>%
   as.data.frame()
 colnames(ar_test_file)[[1]] <- 'date'
@@ -66,7 +81,7 @@ ar_test_file[['date']] <- as.Date(ar_test_file[['date']])
 car_test_file <- read.csv(file = paste0(d_root,
                                         d_geo,
                                         d_car,
-                                        market_names[[1]],
+                                        geo_fac[[1]],
                                         ".csv")) %>%
   as.data.frame()
 colnames(car_test_file)[[1]] <- 'date'
@@ -81,85 +96,132 @@ regions <- readxl::read_xlsx(
                 "table_region_classification_simplified.xlsx")) %>% 
   as.data.frame()
 
-# AARs: RETRIEVE ALL AAR DATA ####
-# create list of directories
-aar_d_geo <- vector(mode = "character",
-                    length = length(market_names))
-for (i in seq_along(aar_d_geo)) {
-  aar_d_geo[[i]] <- paste0(d_root,
-                           d_geo,
-                           d_aar,
-                           market_names[[i]],
-                           ".csv")
+# FUNCTION TO FETCH AAR & CAAR DATA ####
+fetch_ave_ars <- function(name_lst, directory) {
+  d <- vector(mode = "character",
+                   length = length(name_lst))
+  for (i in seq_along(d)) {
+    d[[i]] <- paste0(directory,
+                          name_lst[[i]],
+                          ".csv")
+  }
+  # create storage list
+  storage_lst <- vector(mode = "list",
+                     length(d))
+  # retrieve data
+  storage_lst <- fetch_data(d,
+                         lst = storage_lst,
+                         file_type = "csv") %>%
+    setNames(name_lst)
+  # wrangle to be suitable
+  for (i in seq_along(storage_lst)) {
+    names(storage_lst[[i]])[[1]] <- "Date"
+    storage_lst[[i]][["Date"]] <- storage_lst[[i]][["Date"]] %>% as.Date()
+  }
+  return(storage_lst)
 }
-# create storage list
-aars_geo <- vector(mode = "list",
-                    length(aar_d_geo))
-# wrangle to be suitable
-aars_geo <- fetch_data(aar_d_geo,
-                       lst = aars_geo,
-                       file_type = "csv") %>%
-  setNames(market_names)
 
-for (i in seq_along(aars_geo)) {
-  names(aars_geo[[i]])[[1]] <- "Date"
-  aars_geo[[i]][["Date"]] <- aars_geo[[i]][["Date"]] %>% as.Date()
-}
+# AARs: RETRIEVE ALL AAR DATA ####
+# GEOGRAPHIC
+aar_geo <- fetch_ave_ars(name_lst = geo_fac,
+                         directory = paste0(d_root,
+                                            d_geo,
+                                            d_aar))
+# INDUSTRY
+aar_indu <- fetch_ave_ars(name_lst = indu_fac,
+                          directory = paste0(d_root,
+                                             d_icb,
+                                             d_indu,
+                                             d_aar))
+# SUPERSECTOR
+aar_supe <- fetch_ave_ars(name_lst = supe_fac,
+                          directory = paste0(d_root,
+                                             d_icb,
+                                             d_supe,
+                                             d_aar))
 
 # CAARs: RETRIEVE ALL CAAR DATA ####
-# create list of directories
-caar_d_geo <- vector(mode = "character",
-                     length = length(market_names))
-for (i in seq_along(caar_d_geo)) {
-  caar_d_geo[[i]] <- paste0(d_root,
-                            d_geo,
-                            d_caar,
-                            market_names[[i]],
-                            ".csv")
-}
-# create storage list
-caars_geo <- vector(mode = "list",
-                    length(caar_d_geo))
-# retrieve data
-caars_geo <- fetch_data(caar_d_geo,
-                        lst = caars_geo,
-                        file_type = "csv") %>%
-  setNames(market_names)
-# wrangle to be suitable
-for (i in seq_along(caars_geo)) {
-  names(caars_geo[[i]])[[1]] <- "Date"
-  caars_geo[[i]][["Date"]] <- caars_geo[[i]][["Date"]] %>% as.Date()
-}
+# GEOGRAPHIC
+caar_geo <- fetch_ave_ars(name_lst = geo_fac,
+                        directory = paste0(d_root,
+                                           d_geo,
+                                           d_caar))
+# INDUSTRY
+caar_indu <- fetch_ave_ars(name_lst = indu_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_indu,
+                                            d_caar))
+# SUPERSECTOR
+caar_supe <- fetch_ave_ars(name_lst = supe_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_supe,
+                                            d_caar))
 
-# Merge AAR & CAAR data.frames, 
-ave_lst <-
-  vector(mode = "list", length(market_names)) %>% set_names(market_names)
-for (i in seq_along(market_names)) {
-  indx <- market_names[[i]]
-  
-  ave_lst[[i]] <- merge.data.frame(aars_geo[[indx]],
-                                   caars_geo[[indx]],
-                                   by = "Date") %>%
-    set_names(c('Date', "AAR", "CAAR"))
-  # adds event time column but calculates on logical basis an int vector which sets 0 to 'event_day'
-  # negative ints for days before 'event_day'
-  # postive ints for days after 'event_day'
-  ave_lst[[indx]][["Event.Time"]] <-
-    -nrow(aars_geo[[indx]][(aars_geo[[indx]][["Date"]] < event_day),]):nrow(aars_geo[[indx]][(aars_geo[[indx]][["Date"]] > event_day),])
-  
-}
+# FUNCTION TO MERGE CAAR & AAR DATA LISTS TOGETHER FOR PLOTS ####
+merge_caar_aar <-
+  function(storage_lst,
+           name_lst,
+           aar_lst,
+           caar_lst,
+           evt_day = event_day) {
+    # "storage_lst" == empty list of correct length to store merged data.frames
+    # "name_lst" == list of names of groupings
+    # "aar_lst" & "caar_lst" == lists of AARs and CAARs
+    # "evt_day" == event day by which 'Event.Time' will be calculated
+    for (i in seq_along(name_lst)) {
+      nam <- name_lst[[i]]
+      
+      storage_lst[[i]] <- merge.data.frame(aar_lst[[nam]],
+                                           caar_lst[[nam]],
+                                           by = "Date") %>%
+        set_names(c('Date', "AAR", "CAAR"))
+      # adds event time column but calculates on logical basis an int vector which sets 0 to 'event_day'
+      # negative ints for days before 'event_day'
+      # postive ints for days after 'event_day'
+      storage_lst[[nam]][["Event.Time"]] <-
+        -nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] < evt_day),]):nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] > evt_day),])
+    }
+    return(storage_lst)
+  }
+# Merge AAR & CAAR data.frames ####
+# GEOGRAPHIC
+ave_lst_geo <-
+  vector(mode = "list", length(geo_fac)) %>% set_names(geo_fac)
+ave_lst_geo <- merge_caar_aar(storage_lst = ave_lst_geo,
+                               name_lst = geo_fac,
+                               aar_lst = aar_geo,
+                               caar_lst = caar_geo)
+# INDUSTRY
+ave_lst_indu <- vector(mode = "list",
+                       length(indu_fac)) %>%
+  set_names(indu_fac)
+ave_lst_indu <- merge_caar_aar(storage_lst = ave_lst_indu,
+                               name_lst = indu_fac,
+                               aar_lst = aar_indu,
+                               caar_lst = caar_indu)
+# SUPERSECTOR
+ave_lst_supe <- vector(mode = "list",
+                       length(supe_fac)) %>%
+  set_names(supe_fac)
+ave_lst_supe <- merge_caar_aar(storage_lst = ave_lst_supe,
+                               name_lst = supe_fac,
+                               aar_lst = aar_supe,
+                               caar_lst = caar_supe)
 
+# Begin Plotting process ####
 library(ggplot2)
 # library(ggthemes)
 # theme_wsj() +
 # theme_calc() +
 # theme_hc()+
 
-for (i in seq_along(market_names)) {
-  indx <- market_names[[i]]
+for (i in seq_along(geo_fac)) {
+  indx <- geo_fac[[i]]
   # AAR vs CAAR PLOT ####
   p_ave <-
-    ggplot(data = ave_lst[[indx]]) +
+    ggplot(data = ave_lst_geo[[indx]]) +
     geom_line(
       mapping = aes(x = Event.Time,
                     y = AAR),
@@ -172,12 +234,12 @@ for (i in seq_along(market_names)) {
       colour = "darkred",
       show.legend = TRUE
     ) +
-    scale_x_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
-                                          max(ave_lst[[indx]]$Event.Time),
+    scale_x_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                          max(ave_lst_geo[[indx]]$Event.Time),
                                           by = 10),
                                       1)) +
-    scale_y_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
-                                          max(ave_lst[[indx]]$Event.Time),
+    scale_y_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                          max(ave_lst_geo[[indx]]$Event.Time),
                                           by = 10),
                                       1)) +
     geom_hline(yintercept = 0,
@@ -198,8 +260,9 @@ for (i in seq_along(market_names)) {
     path = paste0(d_root,
                   d_res_pres,
                   d_plot,
-                  d_proto),
-    dpi = 300,
+                  d_geo,
+                  "aar_caar/"),
+    dpi = 320,
     width = 8,
     height = 4,
     units = 'in'
@@ -207,10 +270,10 @@ for (i in seq_along(market_names)) {
 }
 
 # FOR EXPERIMENTS ####
-indx <- market_names[[i]]
+indx <- geo_fac[[i]]
 # AAR vs CAAR PLOT ####
 p_ave <-
-  ggplot(data = ave_lst[[indx]]) +
+  ggplot(data = ave_lst_geo[[indx]]) +
   geom_line(
     mapping = aes(x = Event.Time,
                   y = AAR),
@@ -223,12 +286,12 @@ p_ave <-
     colour = "darkred",
     show.legend = TRUE
   ) +
-  scale_x_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
-                                        max(ave_lst[[indx]]$Event.Time),
+  scale_x_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                        max(ave_lst_geo[[indx]]$Event.Time),
                                         by = 10),
                                     1)) +
-  scale_y_continuous(breaks = round(seq(min(ave_lst[[indx]]$Event.Time),
-                                        max(ave_lst[[indx]]$Event.Time),
+  scale_y_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                        max(ave_lst_geo[[indx]]$Event.Time),
                                         by = 10),
                                     1)) +
   geom_hline(yintercept = 0,
