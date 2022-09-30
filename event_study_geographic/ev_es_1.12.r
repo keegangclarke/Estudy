@@ -1,4 +1,4 @@
-# 1. User defined functions and package (library) imports #########################
+# 0. User defined functions and package (library) imports ####
 print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
@@ -41,6 +41,45 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
+
+# 1. Parameters ####
+# list to store all event params
+all_e <- vector(mode = 'list', length = 4)
+
+event_spec <- function(df_market,
+                       df_stocks,
+                       NAME = "",
+                       DATE = NULL,
+                       WINDOW = NULL,
+                       EST = NULL) {
+  if ((NAME == "") == TRUE) {
+    message("Please specify event name as string.")
+  } else if (is.null(DATE) == TRUE) {
+    message("Please specify event date.")
+  } else if ((class(DATE) != "Date") == TRUE) {
+    message("Please ensure event date is 'as.Date'")
+  } else if (is.null(WINDOW) == TRUE) {
+    message("Please specify event window.")
+  } else if (is.null(EST) == TRUE) {
+    message("Please specify estimation window.")
+  } else {
+  
+    event_window <- seq.Date(from = DATE - abs(WINDOW[1]),
+                             to = DATE + WINDOW[2],
+                             by = 'day')
+    estimation_window <- seq.Date(from = DATE - abs(WINDOW[1]) - abs(EST[1]),
+                                  to = DATE + WINDOW[1] + EST[2],
+                                  by = 'day')
+    df_market <- df_market[]
+    df_stocks
+  }
+}
+
+e1 <- list()
+e2 <- 
+
+
+all_e[1]
 # 2. Data Loading #####
 # Get directories of files
 print("Fetching data...")
