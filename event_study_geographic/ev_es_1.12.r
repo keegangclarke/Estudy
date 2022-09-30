@@ -44,42 +44,82 @@ paste("Complete. Time elapsed: ",
 
 # 1. Parameters ####
 # list to store all event params
-all_e <- vector(mode = 'list', length = 4)
+all_events <- vector(mode = 'list', length = 4)
 
-event_spec <- function(df_market,
-                       df_stocks,
-                       NAME = "",
-                       DATE = NULL,
-                       WINDOW = NULL,
-                       EST = NULL) {
-  if ((NAME == "") == TRUE) {
+event_spec <- function(name = "",
+                       edate = NULL,
+                       bounds = NULL,
+                       est_len = NULL) {
+  if ((name == "") == TRUE) {
     message("Please specify event name as string.")
-  } else if (is.null(DATE) == TRUE) {
+  } else if (is.null(edate) == TRUE) {
     message("Please specify event date.")
-  } else if ((class(DATE) != "Date") == TRUE) {
+  } else if ((class(edate) != "Date") == TRUE) {
     message("Please ensure event date is 'as.Date'")
-  } else if (is.null(WINDOW) == TRUE) {
-    message("Please specify event window.")
-  } else if (is.null(EST) == TRUE) {
-    message("Please specify estimation window.")
+  } else if (is.null(bounds) == TRUE) {
+    message("Please specify event bounds.")
+  } else if (is.null(est_len) == TRUE) {
+    message("Please specify estimation length.")
   } else {
-  
-    event_window <- seq.Date(from = DATE - abs(WINDOW[1]),
-                             to = DATE + WINDOW[2],
+    event_window <- seq.Date(from = edate - abs(bounds[1]),
+                             to = edate + bounds[2],
                              by = 'day')
-    estimation_window <- seq.Date(from = DATE - abs(WINDOW[1]) - abs(EST[1]),
-                                  to = DATE + WINDOW[1] + EST[2],
-                                  by = 'day')
-    df_market <- df_market[]
-    df_stocks
+    estimation_window <-
+      seq.Date(
+        from = edate - abs(bounds[1]) - abs(est_len + 1),
+        to = edate + bounds[1] - 1 ,
+        by = 'day'
+      )
+    
+    event_specification <- vector(mode = 'list', length = 4)
+    event_specification[[1]] <- name
+    event_specification[[2]] <- edate
+    event_specification[[3]] <- event_window
+    event_specification[[4]] <- estimation_window
+    
+    event_specification <-
+      setNames(
+        event_specification,
+        c(
+          "event_name",
+          "event_date",
+          "event_window",
+          "estimation_window"
+        )
+      )
+    
+    class(event_specification) <- "event_spec"
+    return(event_specification)
   }
 }
 
-e1 <- list()
-e2 <- 
+all_events[[1]] <- event_spec(
+  "Event1",
+  edate = as.Date("2020-01-13"),
+  bounds = c(-5, 5),
+  est_len = 250
+)
+all_events[[2]] <- event_spec(
+  "Event2",
+  edate = as.Date("2020-01-24"),
+  bounds = c(-2, 8),
+  est_len = 250
+)
+all_events[[3]] <- event_spec(
+  "Event3",
+  edate = as.Date("2020-02-24"),
+  bounds = c(-1, 9),
+  est_len = 250
+)
+all_events[[4]] <- event_spec(
+  "Event4",
+  edate = as.Date("2020-03-09"),
+  bounds = c(-1, 9),
+  est_len = 250
+)
 
+all_events <- all_events %>% set_names(c("Event1","Event2","Event3","Event4"))
 
-all_e[1]
 # 2. Data Loading #####
 # Get directories of files
 print("Fetching data...")
@@ -132,11 +172,11 @@ rownames(df2) <- as.Date(df2$date, format = "%Y-%m-%d")
 rownames(df3) <- as.Date(df3$date, format = "%Y-%m-%d")
 
 # Subset data.frames to the right size of usable data
-df2 <- subset(df2, rownames(df2) > as.Date("2019-03-29"))
-df3 <- subset(df3, rownames(df3) > as.Date("2019-03-29"))
+df2 <- subset(df2, rownames(df2) > as.Date("2019-01-29"))
+df3 <- subset(df3, rownames(df3) > as.Date("2019-01-29"))
 
-df2 <- subset(df2, rownames(df2) < as.Date("2020-05-01"))
-df3 <- subset(df3, rownames(df3) < as.Date("2020-05-01"))
+df2 <- subset(df2, rownames(df2) < as.Date("2020-06-01"))
+df3 <- subset(df3, rownames(df3) < as.Date("2020-06-01"))
 
 # Store 'date' column
 dates2 <- c(as.Date(df2$date))
