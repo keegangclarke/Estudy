@@ -100,6 +100,52 @@ store_results <- function(results,
     }
   }
 }
+store_results2 <- function(results,
+                           directory,
+                           icb_level = "",
+                           return_type = "",
+                           type = c("data", "directory"),
+                           mode = "csv",
+                           rowNames = TRUE,
+                           colNames = TRUE) {
+  # function writes results in individual ".csv" files
+  # retrieves sub-grouping
+  keys <- names(results)
+  if (type == "data") {
+    if (mode == "csv") {
+      # STORE THE RESULTS
+      for (i in seq_along(results)) {
+        write.csv(results[[i]],
+                  file = paste0(directory, keys[[i]], ".csv"),
+                  row.names = rowNames)
+      }
+    } else if (mode == "zoo") {
+      # STORE THE RESULTS
+      for (i in seq_along(results)) {
+        zoo::write.zoo(
+          results[[i]],
+          file = paste0(directory, keys[[i]], ".csv"),
+          row.names = rowNames,
+          col.names = colNames
+        )
+      }
+    } else if (type == "directory") {
+      d_list <- vector(mode = "character", length = length(results))
+      # fills "d_list" with directories
+      for (i in seq_along(results)) {
+        d_list[[i]] <- paste0(directory, keys[[i]], ".csv")
+      }
+      # writes "d_list" as .txt file
+      write.table(
+        d_list,
+        file = paste0(directory, "_cd.txt"),
+        quote = TRUE,
+        row.names = FALSE,
+        col.names = FALSE
+      )
+    }
+  }
+}
 fetch_data <-
   function(directory_list,
            lst = NULL,
