@@ -4,6 +4,7 @@ start_time <- Sys.time()
 
 library(magrittr)
 
+
 fun_insert <- function(x, pos, insert) {
   # Create own function
   gsub(paste0("^(.{", pos, "})(.*)$"),
@@ -41,6 +42,15 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
+
+# Source "apply_market_model_gls.R"####
+source(
+  "C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R"
+)
+# Source development aid functions ####
+source(
+  "C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R"
+)
 
 # 1. Parameters ####
 # list to store all event params
@@ -94,31 +104,31 @@ event_spec <- function(name = "",
 }
 
 all_events[[1]] <- event_spec(
-  "Event1",
+  "event1",
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
   est_len = 250
 )
 all_events[[2]] <- event_spec(
-  "Event2",
+  "event2",
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
   est_len = 250
 )
 all_events[[3]] <- event_spec(
-  "Event3",
+  "event3",
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
   est_len = 250
 )
 all_events[[4]] <- event_spec(
-  "Event4",
+  "event4",
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
   est_len = 250
 )
 
-all_events <- all_events %>% set_names(c("Event1","Event2","Event3","Event4"))
+all_events <- all_events %>% set_names(c("event1","event2","event3","event4"))
 
 # 2. Data Loading #####
 # Get directories of files
@@ -137,7 +147,7 @@ cds <- list()
 for (i in files) {
   string <- paste(cd, i, sep = "")
   # print(string)
-  cds <- append(cds, string,)
+  cds <- append(cds, string, )
 }
 
 # Read in data
@@ -187,8 +197,8 @@ df2 <- subset(df2, select = -date)
 df3 <- subset(df3, select = -date)
 
 # Remove remaining rows where all data points = NaN
-df2 <- df2[rowSums(is.na(df2)) != ncol(df2), ]
-df3 <- df3[rowSums(is.na(df3)) != ncol(df3), ]
+df2 <- df2[rowSums(is.na(df2)) != ncol(df2),]
+df3 <- df3[rowSums(is.na(df3)) != ncol(df3),]
 # NOTE: Does not remove all remaining NaNs because of 'date' col
 # have not tested if the above two lines can be removed without effects
 
@@ -254,6 +264,7 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
+
 # 5. Creation of list of market-index data.frames ##############################
 
 print("Making list of market data.frame")
@@ -291,7 +302,7 @@ for (i in 1:length(keys)) {
     
     # remove NA rows from data.frame
     stock_series <-
-      stock_series[rowSums(is.na(stock_series)) != ncol(stock_series), ]
+      stock_series[rowSums(is.na(stock_series)) != ncol(stock_series),]
     
     # stores data in dictionary of index constituent pd.DataFrame --> Index name is key
     stock_list[[keys[[i]]]] <- stock_series
@@ -305,45 +316,10 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 7. Recording of problem data for inspection. STATUS = INACTIVE ########
-# write problem data to csv to view in excel
-# problem_list <-
-#   c(
-#     "KOSPI.Index",
-#     "JCI.Index",
-#     "SPX.Index",
-#     "SHSZ300.Index",
-#     "SPTSX.Index",
-#     "SASEIDX.Index",
-#     "AS51.Index",
-#     "JALSH.Index",
-#     "XU100.Index",
-#     "N100.Index",
-#     "HSI.Index"
-#   )
-# write filenames
-# cd_prob <- "C:/Users/Keegan/Desktop/staging/problem_stocks/"
-# problem_filenames <- vector(mode = "character",length=length(problem_list))
-# for (i in 1:length(problem_list)) {
-#   fname <- paste0(problem_list[[i]],".csv")
-#   directory <- paste0(cd_prob,fname)
-#   problem_filenames[[i]] = directory
-#   rm(fname)
-#   rm(directory)
-# }
-
-# Writes problem data in specified place in order to visually inspect
-# problem_stocks <- stock_list[problem_list]
-# for (i in 1:length(problem_list)) {
-#   temp_selector <- problem_stocks[[i]]
-#   write.csv(temp_selector,
-#             file = problem_filenames[[i]]
-#             )
-# }
-
+# 7. No.7 no longer exists but kept so that history is clearer ####
 # 8. Removal of remaining NAs #####
-  # Process first drops rows where all observations are NAs (public holidays, etc.)
-  # Process then drops remaining columns that still include AT LEAST 1 NA 
+# Process first drops rows where all observations are NAs (public holidays, etc.)
+# Process then drops remaining columns that still include AT LEAST 1 NA
 cat(
   "Removing NANs for data.frames in lists:",
   "\n",
@@ -371,7 +347,8 @@ for (i in 1:length(market_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
+  selector <-
+    selector[rowSums(is.na(selector)) != ncol(selector), ]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
@@ -393,7 +370,8 @@ for (i in 1:length(stock_list)) {
   # drop the 'date' column
   selector <- subset(selector, select = -c(date))
   # remove rows where all observations = 'NA'
-  selector <- selector[rowSums(is.na(selector)) != ncol(selector),]
+  selector <-
+    selector[rowSums(is.na(selector)) != ncol(selector), ]
   # remove columns where at least 1 observation = 'NA'
   selector <- selector[, colSums(is.na(selector)) == 0]
   # add back the date column
@@ -456,308 +434,376 @@ paste("Complete. Time elapsed: ",
       round(end_time - start_time, digits = 4),
       "seconds")
 
-# 9. Pre-initialize objects for later loop ####
-start_time <- Sys.time()
-# Create data storage lists
-reg_results_list <-
-  vector(mode = "list", length = length(market_list))
-names(reg_results_list) <- keys
-# abnormal return
-ar_test_results_list <-
-  vector(mode = "list", length = length(market_list))
-names(ar_test_results_list) <- keys
-# cumulative abnormal return
-car_test_results_list <-
-  vector(mode = "list", length = length(market_list))
-names(car_test_results_list) <- keys
+# START OF META-FOR LOOP ####
 
-# Source "apply_market_model_gls.R"####
-source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
-# Source development aid functions ####
-source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
-
-# 10.Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions ####
-for (i in 1:length(market_list)) {
+for (event_number in seq_along(all_events)) {
   tryCatch({
-    print(paste("Getting rates from prices for", keys[[i]]))
-    rates <- estudy2::get_rates_from_prices(
-      stock_list[[i]],
-      quote = "Close",
-      multi_day = TRUE,
-      compounding = "continuous"
-    )
     
-    rates_indx <- estudy2::get_rates_from_prices(
-      market_list[[i]],
-      quote = "Close",
-      multi_day = TRUE,
-      compounding = "continuous"
-    )
+    # CREATION OF OUTER-LOOP-VARIABLES
+    EVENT_START <- all_events[[event_number]]$event_window[[1]]
+    EVENT_END <- all_events[[event_number]]$event_window[[length(all_events[[event_number]]$event_window)]]
     
-    # FIX DTYPES OF COLUMN PRIOR TO TESTING
-    rates <- transform.data.frame(rates, date = as.Date(date))
-    rates_indx <-
-      transform.data.frame(rates_indx, date = as.Date(date))
-    print("Done. Applying single-index market model.")
+    ESTIMATION_START <- all_events[[event_number]]$estimation_window[[1]]
+    ESTIMATION_END <- all_events[[event_number]]$estimation_window[[length(all_events[[event_number]]$estimation_window)]]
     
-    # apply single-index market model to get ARs
-    securities_returns <- apply_market_model.data.frame(
-      rates = rates,
-      regressor = rates_indx,
-      same_regressor_for_all = TRUE,
-      market_model = "sim",
-      estimation_method = "gls",
-      estimation_start = as.Date("2019-04-01"),
-      estimation_end = as.Date("2020-03-13")
-    )
     
-    print("Done. Applying parametric and non-parametric tests to abnormal returns...")
-    # ABNORMAL RETURN TESTS
-    # Parametric tests
-    ar_para <- data.frame(
-      estudy2::parametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    ar_non_para <- data.frame(
-      estudy2::nonparametric_tests(
-        list_of_returns = securities_returns,
-        event_start = as.Date("2020-03-16"),
-        event_end = as.Date("2020-03-20")
-      )
-    )
-    # CUMULATIVE ABNORMAL RETURN TESTS
-    # Parametric tests
-    car_para <- data.frame(
-      estudy2::car_parametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    # Non-parametric tests
-    car_non_para <- data.frame(
-      estudy2::car_nonparametric_tests(
-        list_of_returns = securities_returns,
-        car_start = as.Date("2020-03-16"),
-        car_end = as.Date("2020-03-20")
-      )
-    )
-    print(paste("Merging results.", keys[[i]]))
-    # Stage results for storage
-    ar_results <-
-      data.frame(merge(ar_para, ar_non_para, by = "date"))
-    car_results <- dplyr::bind_rows(car_para, car_non_para)
-    # Clean up 'ar_results'
-    ar_results <- subset(ar_results, select = -c(weekday.y))
-    ar_results <-
-      dplyr::rename(
-        ar_results,
-        weekday = weekday.x,
-        pct.para = percentage.x,
-        pct.nonpara = percentage.y
-      )
-    # Store results for later recording
-    ar_test_results_list[[keys[[i]]]] <- ar_results
-    car_test_results_list[[keys[[i]]]] <- car_results
-    reg_results_list[[keys[[i]]]] <- securities_returns
-    # Explicit memory cleanup
-    rm(ar_results)
-    rm(car_results)
-  }, error = function(e) {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
-  })
-}
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ",
-      round(end_time - start_time, digits = 4),
-      "seconds")
-
-# 11. Recording of results in new '.csv' data-files #####
-start_time <- Sys.time()
-
-# WRITE RESULTS
-cd_ar <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/ar_res/"
-cd_car <-
-  "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/car_res/"
-ar_results_filenames <-
-  vector(mode = "character", length = length(ar_test_results_list))
-car_results_filenames <-
-  vector(mode = "character", length = length(car_test_results_list))
-# Create file-directory strings
-# AR DIRECTORIES
-for (i in 1:length(ar_test_results_list)) {
-  directory <- paste0(cd_ar, paste0(keys[[i]], ".csv"))
-  ar_results_filenames[[i]] = directory
-  rm(directory)
-}
-# CAR DIRECTORIES
-for (i in 1:length(car_test_results_list)) {
-  directory <- paste0(cd_car, paste0(keys[[i]], ".csv"))
-  car_results_filenames[[i]] = directory
-  rm(directory)
-}
-# Writes results data in specified place
-# AR RESULTS
-for (i in 1:length(ar_test_results_list)) {
-  write.csv(ar_test_results_list[[i]],
-            file = ar_results_filenames[[i]])
-}
-# CAR RESULTS
-for (i in 1:length(car_test_results_list)) {
-  write.csv(car_test_results_list[[i]],
-            file = car_results_filenames[[i]])
-}
-
-# Records absolute directories for later
-write.table(ar_results_filenames,
-            file = paste0(cd_ar,"geo_ar_cd.txt"),
-            quote = TRUE,
-            row.names = FALSE,
-            col.names = FALSE)
-write.table(car_results_filenames,
-            file = paste0(cd_car,"geo_car_cd.txt"),
-            quote = TRUE,
-            row.names = FALSE,
-            col.names = FALSE)
-
-end_time <- Sys.time()
-paste("Complete. Time elapsed: ")
-round(end_time - start_time, digits = 4)
-
-# 12.1. Extract and store AR data from 'reg_results_list' ####
-start_time <- Sys.time()
-print("Extracting abnormal returns.")
-
-# Extract and store ARs in list
-ar_data <- reg_results_list 
-for (i in 1:length(ar_data)) {
-  tryCatch({
-  indx <- keys[[i]]
-  ticks <- names(stock_list[[indx]][-1]) # minus one to skip first row "date"
-  names(ar_data[[indx]]) <- ticks
-  
-  ar_data_copy <- ar_data
-  for (j in 1:length(ticks)) {
-    tic <- ticks[[j]]
-    ar_data[[indx]][[tic]] <- ar_data_copy[[indx]][[tic]]$abnormal
-  }
-  rm(ar_data_copy)
-  }, error = function(e)
-  {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-  })
-}
-
-end_time <- Sys.time()
-print("Extraction complete.")
-round(end_time - start_time, digits = 4) %>%  print()
-
-# 12.2 Reconfigure into lists of merged data.frame objects ####
-start_time <- Sys.time()
-# AR and CAR calculation
-ar_data_merged <- ar_data
-for (i in seq_along(ar_data)) {
-  tryCatch({
-    indx <- keys[[i]]
-    ar_data_merged[[indx]] <- do.call(zoo::merge.zoo,
-                                               ar_data[[indx]]
-    ) %>% as.data.frame
-  }, error = function(e)
-  {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-  })
-}
-# 12.3 Calculation of CARS ####
-car_data_merged <- ar_data_merged
-for (i in seq_along(ar_data_merged)) {
-  tryCatch({
-    indx <- keys[[i]]
-    ticks <- names(ar_data_merged[[indx]])
-    for (j in 1:ncol(ar_data_merged[[indx]])) {
+    # 9. Pre-initialize objects for later loop ####
+    start_time <- Sys.time()
+    # Create data storage lists
+    reg_results_list <-
+      vector(mode = "list", length = length(market_list))
+    names(reg_results_list) <- keys
+    # abnormal return
+    ar_test_results_list <-
+      vector(mode = "list", length = length(market_list))
+    names(ar_test_results_list) <- keys
+    # cumulative abnormal return
+    car_test_results_list <-
+      vector(mode = "list", length = length(market_list))
+    names(car_test_results_list) <- keys
+    
+    # 10.Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions ####
+    for (i in 1:length(market_list)) {
       tryCatch({
-        # Get name
-        tic <- ticks[[j]]
-        # Slice out series
-        s1 <- ar_data_merged[[indx]][, tic]
-        s2 <- s1
-        # Accumulate returns, ignoring NAs
-        s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
-        # store returns in order
-        car_data_merged[[indx]][, tic] <- s2
-        rm(s1, s2)
+        print(paste("Getting rates from prices for", keys[[i]]))
+        rates <- estudy2::get_rates_from_prices(
+          stock_list[[i]],
+          quote = "Close",
+          multi_day = TRUE,
+          compounding = "continuous"
+        )
+        
+        rates_indx <- estudy2::get_rates_from_prices(
+          market_list[[i]],
+          quote = "Close",
+          multi_day = TRUE,
+          compounding = "continuous"
+        )
+        
+        # FIX DTYPES OF COLUMN PRIOR TO TESTING
+        rates <- transform.data.frame(rates, date = as.Date(date))
+        rates_indx <-
+          transform.data.frame(rates_indx, date = as.Date(date))
+        print("Done. Applying single-index market model.")
+        
+        # apply single-index market model to get ARs
+        securities_returns <- apply_market_model.data.frame(
+          rates = rates,
+          regressor = rates_indx,
+          same_regressor_for_all = TRUE,
+          market_model = "sim",
+          estimation_method = "gls",
+          estimation_start = as.Date(ESTIMATION_START),
+          estimation_end = as.Date(ESTIMATION_END)
+        )
+        
+        print("Done. Applying parametric and non-parametric tests to abnormal returns...")
+        # ABNORMAL RETURN TESTS
+        # Parametric tests
+        ar_para <- data.frame(
+          estudy2::parametric_tests(
+            list_of_returns = securities_returns,
+            event_start = as.Date(EVENT_START),
+            event_end = as.Date(EVENT_END)
+          )
+        )
+        # Non-parametric tests
+        ar_non_para <- data.frame(
+          estudy2::nonparametric_tests(
+            list_of_returns = securities_returns,
+            event_start = as.Date(EVENT_START),
+            event_end = as.Date(EVENT_END)
+          )
+        )
+        # CUMULATIVE ABNORMAL RETURN TESTS
+        # Parametric tests
+        car_para <- data.frame(
+          estudy2::car_parametric_tests(
+            list_of_returns = securities_returns,
+            car_start = as.Date(EVENT_START),
+            car_end = as.Date(EVENT_END)
+          )
+        )
+        # Non-parametric tests
+        car_non_para <- data.frame(
+          estudy2::car_nonparametric_tests(
+            list_of_returns = securities_returns,
+            car_start = as.Date(EVENT_START),
+            car_end = as.Date(EVENT_END)
+          )
+        )
+        print(paste("Merging results.", keys[[i]]))
+        # Stage results for storage
+        ar_results <-
+          data.frame(merge(ar_para, ar_non_para, by = "date"))
+        car_results <- dplyr::bind_rows(car_para, car_non_para)
+        # Clean up 'ar_results'
+        ar_results <- subset(ar_results, select = -c(weekday.y))
+        ar_results <-
+          dplyr::rename(
+            ar_results,
+            weekday = weekday.x,
+            pct.para = percentage.x,
+            pct.nonpara = percentage.y
+          )
+        # Store results for later recording
+        ar_test_results_list[[keys[[i]]]] <- ar_results
+        car_test_results_list[[keys[[i]]]] <- car_results
+        reg_results_list[[keys[[i]]]] <- securities_returns
+        # Explicit memory cleanup
+        rm(ar_results)
+        rm(car_results)
+      }, error = function(e) {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i , "\n"))
+      })
+    }
+    
+    end_time <- Sys.time()
+    paste("Complete. Time elapsed: ",
+          round(end_time - start_time, digits = 4),
+          "seconds")
+    
+    # 11. Recording of results in new '.csv' data-files #####
+    start_time <- Sys.time()
+    
+    # WRITE RESULTS
+    cd_ar <-
+      paste0(
+        "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/",
+        all_events[[event_number]]$event_name,
+        "/ar_res/"
+      )
+    cd_car <-
+      paste0(
+        "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/",
+        all_events[[event_number]]$event_name,
+        "/car_res/"
+      )
+    ar_results_filenames <-
+      vector(mode = "character", length = length(ar_test_results_list))
+    car_results_filenames <-
+      vector(mode = "character", length = length(car_test_results_list))
+    # Create file-directory strings
+    # AR DIRECTORIES
+    for (i in 1:length(ar_test_results_list)) {
+      directory <- paste0(cd_ar, paste0(keys[[i]], ".csv"))
+      ar_results_filenames[[i]] = directory
+      rm(directory)
+    }
+    # CAR DIRECTORIES
+    for (i in 1:length(car_test_results_list)) {
+      directory <- paste0(cd_car, paste0(keys[[i]], ".csv"))
+      car_results_filenames[[i]] = directory
+      rm(directory)
+    }
+    # Writes results data in specified place
+    # AR RESULTS
+    for (i in 1:length(ar_test_results_list)) {
+      write.csv(ar_test_results_list[[i]],
+                file = ar_results_filenames[[i]])
+    }
+    # CAR RESULTS
+    for (i in 1:length(car_test_results_list)) {
+      write.csv(car_test_results_list[[i]],
+                file = car_results_filenames[[i]])
+    }
+    
+    # Records absolute directories for later
+    write.table(
+      ar_results_filenames,
+      file = paste0(cd_ar, "geo_ar_cd.txt"),
+      quote = TRUE,
+      row.names = FALSE,
+      col.names = FALSE
+    )
+    write.table(
+      car_results_filenames,
+      file = paste0(cd_car, "geo_car_cd.txt"),
+      quote = TRUE,
+      row.names = FALSE,
+      col.names = FALSE
+    )
+    
+    end_time <- Sys.time()
+    paste("Complete. Time elapsed: ")
+    round(end_time - start_time, digits = 4)
+    
+    # 12.1. Extract and store AR data from 'reg_results_list' ####
+    start_time <- Sys.time()
+    print("Extracting abnormal returns.")
+    
+    # Extract and store ARs in list
+    ar_data <- reg_results_list
+    for (i in 1:length(ar_data)) {
+      tryCatch({
+        indx <- keys[[i]]
+        ticks <-
+          names(stock_list[[indx]][-1]) # minus one to skip first row "date"
+        names(ar_data[[indx]]) <- ticks
+        
+        ar_data_copy <- ar_data
+        for (j in 1:length(ticks)) {
+          tic <- ticks[[j]]
+          ar_data[[indx]][[tic]] <-
+            ar_data_copy[[indx]][[tic]]$abnormal
+        }
+        rm(ar_data_copy)
       }, error = function(e)
       {
         message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
       })
     }
-    ar_data_merged[[indx]] <- as.data.frame(ar_data_merged[[indx]])
-  }, error = function(e)
+    # stop()
+    end_time <- Sys.time()
+    print("Extraction complete.")
+    round(end_time - start_time, digits = 4) %>%  print()
+    
+    # 12.2 Reconfigure into lists of merged data.frame objects ####
+    start_time <- Sys.time()
+    # AR and CAR calculation
+    ar_data_merged <- ar_data
+    for (i in seq_along(ar_data)) {
+      tryCatch({
+        indx <- keys[[i]]
+        ar_data_merged[[indx]] <- do.call(zoo::merge.zoo,
+                                          ar_data[[indx]]) %>% as.data.frame
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
+    }
+    # 12.3 Calculation of CARS ####
+    car_data_merged <- ar_data_merged
+    for (i in seq_along(ar_data_merged)) {
+      tryCatch({
+        indx <- keys[[i]]
+        ticks <- names(ar_data_merged[[indx]])
+        for (j in 1:ncol(ar_data_merged[[indx]])) {
+          tryCatch({
+            # Get name
+            tic <- ticks[[j]]
+            # Slice out series
+            s1 <- ar_data_merged[[indx]][, tic]
+            s2 <- s1
+            # Accumulate returns, ignoring NAs
+            s2[!is.na(s1)] <- cumsum(s2[!is.na(s1)])
+            # store returns in order
+            car_data_merged[[indx]][, tic] <- s2
+            rm(s1, s2)
+          }, error = function(e)
+          {
+            message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+          })
+        }
+        ar_data_merged[[indx]] <-
+          as.data.frame(ar_data_merged[[indx]])
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
+    }
+    
+    # 12.3 Store ARs and CARs ####
+    d_base <-
+      # "C:/User/s/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/"
+      "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/geographic_region/"
+    # store_results(
+    #   results = ar_data_merged,
+    #   icb_level = "geographic_region",
+    #   cd_root = d_base,
+    #   return_type = "ar",
+    #   type = "data",
+    #   rowNames = TRUE
+    # )
+    store_results2(
+      results = ar_data_merged,
+      directory = paste0(d_base,
+                         all_events[[event_number]]$event_name,
+                         "/ar/"),
+      return_type = "ar",
+      type = "data",
+      rowNames = TRUE
+    )
+    # store_results(
+    #   results = car_data_merged,
+    #   icb_level = "geographic_region",
+    #   cd_root = d_base,
+    #   return_type = "car",
+    #   type = "data",
+    #   rowNames = TRUE
+    # )
+    store_results2(
+      results = car_data_merged,
+      directory = paste0(d_base,
+                         all_events[[event_number]]$event_name,
+                         "/car/"),
+      return_type = "car",
+      type = "data",
+      rowNames = TRUE
+    )
+    paste("Complete.")
+    round(end_time - start_time, digits = 4) %>%  print()
+    
+    # 12.4. Calculate average abnormal returns ####
+    start_time <- Sys.time()
+    print("Calculating average ARs and CARS.")
+    
+    aar_data_merged <- ar_data_merged
+    caar_data_merged <- car_data_merged
+    for (i in seq_along(ar_data)) {
+      indx <- keys[[i]]
+      aar_data_merged[[indx]] <- rowMeans(ar_data_merged[[indx]],
+                                          na.rm = TRUE) %>%
+        as.data.frame() %>%
+        set_rownames(row.names(ar_data_merged[[indx]])) %>%
+        set_colnames(indx)
+      caar_data_merged[[indx]] <- cumsum(aar_data_merged[[indx]])
+    }
+    
+    # 12.5 Store AARs and CAARs  ####
+    # store_results(
+    #   results = aar_data_merged,
+    #   icb_level = "geographic_region",
+    #   cd_root = d_base,
+    #   return_type = "aar",
+    #   type = "data",
+    #   rowNames = TRUE
+    # )
+    store_results2(
+      results = aar_data_merged,
+      directory = paste0(d_base,
+                         all_events[[event_number]]$event_name,
+                         "/aar/"),
+      return_type = "aar",
+      type = "data",
+      rowNames = TRUE
+    )
+    # store_results(
+    #   results = caar_data_merged,
+    #   icb_level = "geographic_region",
+    #   cd_root = d_base,
+    #   return_type = "caar",
+    #   type = "data",
+    #   rowNames = TRUE
+    # )
+    store_results2(
+      results = caar_data_merged,
+      directory = paste0(d_base,
+                         all_events[[event_number]]$event_name,
+                         "/caar/"),
+      return_type = "caar",
+      type = "data",
+      rowNames = TRUE
+    )
+    paste("Complete.")
+    round(end_time - start_time, digits = 4) %>%  print()
+    
+    print("Process complete.")
+    
+    # END OF LOOP ####
+  },
+  error = function(e)
   {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
-
-# 12.3 Store ARs and CARs ####
-d_base <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/"
-store_results(
-  results = ar_data_merged,
-  icb_level = "geographic_region",
-  cd_root = d_base,
-  return_type = "ar",
-  type = "data",
-  rowNames = TRUE
-)
-store_results(
-  results = car_data_merged,
-  icb_level = "geographic_region",
-  cd_root = d_base,
-  return_type = "car",
-  type = "data",
-  rowNames = TRUE
-)
-paste("Complete.")
-round(end_time - start_time, digits = 4) %>%  print()
-
-# 12.4. Calculate average abnormal returns ####
-start_time <- Sys.time()
-print("Calculating average ARs and CARS.")
-
-aar_data_merged <- ar_data_merged
-caar_data_merged <- car_data_merged
-for (i in seq_along(ar_data)) {
-  indx <- keys[[i]]
-  aar_data_merged[[indx]] <- rowMeans(ar_data_merged[[indx]],
-                                      na.rm = TRUE) %>% 
-    as.data.frame() %>% 
-    set_rownames(row.names(ar_data_merged[[indx]])) %>% 
-    set_colnames(indx)
-  caar_data_merged[[indx]] <- cumsum(aar_data_merged[[indx]])
-}
-
-# 12.5 Store AARs and CAARs  ####
-store_results(
-  results = aar_data_merged,
-  icb_level = "geographic_region",
-  cd_root = d_base,
-  return_type = "aar",
-  type = "data",
-  rowNames = TRUE
-)
-store_results(
-  results = caar_data_merged,
-  icb_level = "geographic_region",
-  cd_root = d_base,
-  return_type = "caar",
-  type = "data",
-  rowNames = TRUE
-)
-paste("Complete.")
-round(end_time - start_time, digits = 4) %>%  print()
-
-print("Script complete.")
