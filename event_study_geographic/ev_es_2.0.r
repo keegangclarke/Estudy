@@ -704,9 +704,15 @@ for (event_number in seq_along(all_events)) {
         indx <- keys[[i]]
         ar_data_merged[[indx]] <- do.call(zoo::merge.zoo,
                                           ar_data[[indx]]) %>% as.data.frame
+        
         # Subset and remove the estimation window data from the ARs and CARs
+        EVENT_WINDOW_START <- all_events[[event_number]]$event_window[[1]]
+        EVENT_WINDOW_END <- all_events[[event_number]]$event_window[[length(all_events[[event_number]]$event_window)]]
+        
         ar_data_merged[[indx]] <- subset(ar_data_merged[[indx]],
-                                         rownames(ar_data_merged[[indx]]) >= as.Date(all_events[[event_number]]$event_date))
+                                         (rownames(ar_data_merged[[indx]]) >= as.Date(EVENT_WINDOW_START)) &
+                                           (rownames(ar_data_merged[[indx]]) <= as.Date(EVENT_WINDOW_END))) 
+        
       }, error = function(e)
       {
         message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
