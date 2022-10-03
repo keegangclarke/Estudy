@@ -462,6 +462,12 @@ for (event_number in seq_along(all_events)) {
       vector(mode = "list", length = length(market_list))
     names(car_test_results_list) <- keys
     
+    # cumulative abnormal return
+    removed_names <-
+      vector(mode = "list", length = length(market_list))
+    names(removed_names) <- keys
+    
+    
     # 10.Large loop that applies Estudy process over the large dataset for GEOGRAPHIC regions ####
     for (i in 1:length(market_list)) {
       tryCatch({
@@ -484,15 +490,19 @@ for (event_number in seq_along(all_events)) {
         # If tests eval TRUE, then the offending column's name is stored
         # after the loop is complete, the offending columns are removed
         to_remove <- vector(mode = "list", length = length(rates))
-        for (j in seq_along(rates)) {
-          rn <- names(rates)[[j]]
-          if (all(rates[[rn]] == 0)) {
+        test_rates <- rates[-1]
+        for (j in seq_along(test_rates)) {
+          rn <- names(test_rates)[[j]]
+          if (all(test_rates[[rn]] == 0)) {
             to_remove[[j]] <- rn
             
-          } else if (all(is.na(rates[[rn]]))) {
+          } else if (sum(test_rates[[j]][100:length(test_rates[[j]])])==0) {
             to_remove[[j]] <- rn
             
-          } else if (all(is.null(rates[[rn]]))) {
+          } else if (all(is.na(test_rates[[rn]]))) {
+            to_remove[[j]] <- rn
+            
+          } else if (all(is.null(test_rates[[rn]]))) {
             to_remove[[j]] <- rn
           }
         }
@@ -569,6 +579,7 @@ for (event_number in seq_along(all_events)) {
         ar_test_results_list[[keys[[i]]]] <- ar_results
         car_test_results_list[[keys[[i]]]] <- car_results
         reg_results_list[[keys[[i]]]] <- securities_returns
+        removed_names[[keys[[i]]]] <- to_remove
         # Explicit memory cleanup
         rm(ar_results)
         rm(car_results)
@@ -658,13 +669,20 @@ for (event_number in seq_along(all_events)) {
         indx <- keys[[i]]
         ticks <-
           names(stock_list[[indx]][-1]) # minus one to skip first row "date"
+        # need to account for the rows removed in the estudy process
+        ticks <- ticks[!ticks %in% removed_names[[indx]]]
         names(ar_data[[indx]]) <- ticks
         
         ar_data_copy <- ar_data
         for (j in 1:length(ticks)) {
+          tryCatch({
           tic <- ticks[[j]]
           ar_data[[indx]][[tic]] <-
             ar_data_copy[[indx]][[tic]]$abnormal
+          }, error = function(e)
+          {
+            message(cat("ERROR: ", conditionMessage(e), "i = ", j, "\n"))
+          })
         }
         rm(ar_data_copy)
       }, error = function(e)
@@ -686,11 +704,15 @@ for (event_number in seq_along(all_events)) {
         indx <- keys[[i]]
         ar_data_merged[[indx]] <- do.call(zoo::merge.zoo,
                                           ar_data[[indx]]) %>% as.data.frame
+        # Subset and remove the estimation window data from the ARs and CARs
+        ar_data_merged[[indx]] <- subset(ar_data_merged[[indx]],
+                                         rownames(ar_data_merged[[indx]]) >= as.Date(all_events[[event_number]]$event_date))
       }, error = function(e)
       {
         message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
       })
     }
+    
     # 12.3 Calculation of CARS ####
     car_data_merged <- ar_data_merged
     for (i in seq_along(ar_data_merged)) {
