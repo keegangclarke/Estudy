@@ -182,8 +182,8 @@ rownames(df2) <- as.Date(df2$date, format = "%Y-%m-%d")
 rownames(df3) <- as.Date(df3$date, format = "%Y-%m-%d")
 
 # Subset data.frames to the right size of usable data
-df2 <- subset(df2, rownames(df2) > as.Date("2019-01-29"))
-df3 <- subset(df3, rownames(df3) > as.Date("2019-01-29"))
+df2 <- subset(df2, rownames(df2) > as.Date("2019-04-29"))
+df3 <- subset(df3, rownames(df3) > as.Date("2019-04-29"))
 
 df2 <- subset(df2, rownames(df2) < as.Date("2020-06-01"))
 df3 <- subset(df3, rownames(df3) < as.Date("2020-06-01"))
@@ -480,6 +480,25 @@ for (event_number in seq_along(all_events)) {
           compounding = "continuous"
         )
         
+        # This loop checks if the values in the columns of 'rates' are NOT INVALID
+        # If tests eval TRUE, then the offending column's name is stored
+        # after the loop is complete, the offending columns are removed
+        to_remove <- vector(mode = "list", length = length(rates))
+        for (j in seq_along(rates)) {
+          rn <- names(rates)[[j]]
+          if (all(rates[[rn]] == 0)) {
+            to_remove[[j]] <- rn
+            
+          } else if (all(is.na(rates[[rn]]))) {
+            to_remove[[j]] <- rn
+            
+          } else if (all(is.null(rates[[rn]]))) {
+            to_remove[[j]] <- rn
+          }
+        }
+        to_remove <- unlist(to_remove)
+        rates <- rates[, !names(rates) %in% to_remove]
+        
         # FIX DTYPES OF COLUMN PRIOR TO TESTING
         rates <- transform.data.frame(rates, date = as.Date(date))
         rates_indx <-
@@ -497,7 +516,7 @@ for (event_number in seq_along(all_events)) {
           estimation_end = as.Date(ESTIMATION_END)
         )
         
-        print("Done. Applying parametric and non-parametric tests to abnormal returns...")
+         print("Done. Applying parametric and non-parametric tests to abnormal returns...")
         # ABNORMAL RETURN TESTS
         # Parametric tests
         ar_para <- data.frame(
