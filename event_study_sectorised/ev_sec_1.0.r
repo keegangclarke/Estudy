@@ -573,6 +573,29 @@ for (event_number in seq_along(all_events)) {
             compounding = "continuous"
           )
         
+        # This loop checks if the values in the columns of 'r8tes' are NOT INVALID
+        # If tests eval TRUE, then the offending column's name is stored
+        # After the loop is complete, all offending columns are removed
+        to_remove <- vector(mode = "list", length = length(rates))
+        test_rates <- r8tes[-1]
+        for (j in seq_along(test_rates)) {
+          rn <- names(test_rates)[[j]]
+          if (all(test_rates[[rn]] == 0)) {
+            to_remove[[j]] <- rn
+            
+          } else if (sum(test_rates[[j]][100:length(test_rates[[j]])])==0) {
+            to_remove[[j]] <- rn
+            
+          } else if (all(is.na(test_rates[[rn]]))) {
+            to_remove[[j]] <- rn
+            
+          } else if (all(is.null(test_rates[[rn]]))) {
+            to_remove[[j]] <- rn
+          }
+        }
+        to_remove <- unlist(to_remove)
+        r8tes <- rates[, !names(rates) %in% to_remove]
+        
         # FIX DTYPES OF COLUMN PRIOR TO TESTING
         r8tes <- transform.data.frame(r8tes, date = as.Date(date))
         r8tes_indx <-
@@ -1056,7 +1079,7 @@ for (event_number in seq_along(all_events)) {
     names(car_subsector) <- names(subsector)
     
     
-    # 9. Large loops that apply Estudy process over the large dataset for ICB groupings: ####
+    # 9. Loops that apply statistical Estudy tests over the large dataset for ICB groupings: ####
     
     # 9.1 INDUSTRY ####
     start_time <- Sys.time()
@@ -1160,16 +1183,16 @@ for (event_number in seq_along(all_events)) {
         ar_para <- data.frame(
           estudy2::parametric_tests(
             list_of_returns = securities_returns,
-            event_start = as.Date("2020-03-16"),
-            event_end = as.Date("2020-03-20")
+            event_start = as.Date(EVENT_START),
+            event_end = as.Date(EVENT_END)
           )
         )
         # Non-parametric tests
         ar_non_para <- data.frame(
           estudy2::nonparametric_tests(
             list_of_returns = securities_returns,
-            event_start = as.Date("2020-03-16"),
-            event_end = as.Date("2020-03-20")
+            event_start = as.Date(EVENT_START),
+            event_end = as.Date(EVENT_END)
           )
         )
         # CUMULATIVE ABNORMAL RETURN TESTS
@@ -1177,16 +1200,16 @@ for (event_number in seq_along(all_events)) {
         car_para <- data.frame(
           estudy2::car_parametric_tests(
             list_of_returns = securities_returns,
-            car_start = as.Date("2020-03-16"),
-            car_end = as.Date("2020-03-20")
+            car_start = as.Date(EVENT_START),
+            car_end = as.Date(EVENT_END)
           )
         )
         # Non-parametric tests
         car_non_para <- data.frame(
           estudy2::car_nonparametric_tests(
             list_of_returns = securities_returns,
-            car_start = as.Date("2020-03-16"),
-            car_end = as.Date("2020-03-20")
+            car_start = as.Date(EVENT_START),
+            car_end = as.Date(EVENT_END)
           )
         )
         print(paste("Merging results.", keyss[[i]], "n = ", i))
@@ -1230,13 +1253,14 @@ for (event_number in seq_along(all_events)) {
     cd_base <-
       "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/industry_classification/"
     
-    # C:\Users\Keegan\OneDrive\1 Studies\2021 - 2022\5003W\3 - Dissertation\5-Data\results\estudy\industry_classification\industry\event1\ar
     d_ar <- 'ar/'
     d_aar <- 'aar/'
     d_ar_res <- 'ar_res/'
+    
     d_car <- 'car/'
     d_caar <- 'caar/'
     d_car_res <- 'car_res/'
+    
     d_industry <- 'industry/'
     d_supersector <- 'supersector/'
     
@@ -1297,36 +1321,7 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_supersector, all_events[[event_number]]$event_name, "/", d_car_res),
       type = "data"
     )
-    # store_results(
-    #   results = ar_industry,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "abnormal",
-    #   type = "data"
-    # )
-    # store_results(
-    #   results = car_industry,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "cumulative_abnormal",
-    #   type = "data"
-    # )
-    # 
-    # store_results(
-    #   results = ar_supersector,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "abnormal",
-    #   type = "data"
-    # )
-    # store_results(
-    #   results = car_supersector,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "cumulative_abnormal",
-    #   type = "data"
-    # )
-    
+
     end_time <- Sys.time()
     paste("Complete.")
     round(end_time - start_time, digits = 4) %>%  print()
@@ -1580,22 +1575,7 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_industry, all_events[[event_number]]$event_name, "/", d_car),
       type = "data"
     )
-    # store_results(
-    #   results = ar_data_industry_merged,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "ar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
-    # store_results(
-    #   results = car_data_industry_merged,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "car",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
+
     # SUPERSECTOR
     store_results2(
       results = ar_data_supersector_merged,
@@ -1607,23 +1587,7 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_supersector, all_events[[event_number]]$event_name, "/", d_car),
       type = "data"
     )
-    # store_results(
-    #   results = ar_data_supersector_merged,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "ar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
-    # store_results(
-    #   results = car_data_supersector_merged,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "car",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
-    # 
+
     paste("Complete.")
     round(end_time - start_time, digits = 4) %>%  print()
     
@@ -1670,22 +1634,6 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_industry, all_events[[event_number]]$event_name, "/", d_caar),
       type = "data"
     )
-    # store_results(
-    #   results = aar_data_industry_merged,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "aar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
-    # store_results(
-    #   results = caar_data_industry_merged,
-    #   icb_level = "industry",
-    #   cd_root = cd_base,
-    #   return_type = "caar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
     # SUPERSECTOR
     store_results2(
       results = aar_data_supersector_merged,
@@ -1697,22 +1645,6 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_supersector, all_events[[event_number]]$event_name, "/", d_caar),
       type = "data"
     )
-    # store_results(
-    #   results = aar_data_supersector_merged,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "aar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
-    # store_results(
-    #   results = caar_data_supersector_merged,
-    #   icb_level = "supersector",
-    #   cd_root = cd_base,
-    #   return_type = "caar",
-    #   type = "data",
-    #   rowNames = TRUE
-    # )
     
 # END OF LOOP ####
   },
