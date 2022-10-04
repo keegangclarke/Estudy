@@ -1,6 +1,6 @@
 # Script will perform Sectorised Case-study 
 # DATA WRANGLING: CLEANING #### 
-# 1. User defined functions and package (library) imports ####
+# 0. User defined functions and package (library) imports ####
 print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
@@ -42,6 +42,86 @@ name_as_string <- function(x)
 
 end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
+
+# 1. Parameters ####
+# list to store all event params
+all_events <- vector(mode = 'list', length = 4)
+
+event_spec <- function(name = "",
+                       edate = NULL,
+                       bounds = NULL,
+                       est_len = NULL) {
+  if ((name == "") == TRUE) {
+    message("Please specify event name as string.")
+  } else if (is.null(edate) == TRUE) {
+    message("Please specify event date.")
+  } else if ((class(edate) != "Date") == TRUE) {
+    message("Please ensure event date is 'as.Date'")
+  } else if (is.null(bounds) == TRUE) {
+    message("Please specify event bounds.")
+  } else if (is.null(est_len) == TRUE) {
+    message("Please specify estimation length.")
+  } else {
+    event_window <- seq.Date(from = edate - abs(bounds[1]),
+                             to = edate + bounds[2],
+                             by = 'day')
+    estimation_window <-
+      seq.Date(
+        from = edate - abs(bounds[1]) - abs(est_len + 1),
+        to = edate + bounds[1] - 1 ,
+        by = 'day'
+      )
+    
+    event_specification <- vector(mode = 'list', length = 4)
+    event_specification[[1]] <- name
+    event_specification[[2]] <- edate
+    event_specification[[3]] <- event_window
+    event_specification[[4]] <- estimation_window
+    
+    event_specification <-
+      setNames(
+        event_specification,
+        c(
+          "event_name",
+          "event_date",
+          "event_window",
+          "estimation_window"
+        )
+      )
+    
+    class(event_specification) <- "event_spec"
+    return(event_specification)
+  }
+}
+
+all_events[[1]] <- event_spec(
+  "event1",
+  edate = as.Date("2020-01-13"),
+  bounds = c(-5, 5),
+  est_len = 250
+)
+all_events[[2]] <- event_spec(
+  "event2",
+  edate = as.Date("2020-01-24"),
+  bounds = c(-2, 8),
+  est_len = 250
+)
+all_events[[3]] <- event_spec(
+  "event3",
+  edate = as.Date("2020-02-24"),
+  bounds = c(-1, 9),
+  est_len = 250
+)
+all_events[[4]] <- event_spec(
+  "event4",
+  edate = as.Date("2020-03-09"),
+  bounds = c(-1, 9),
+  est_len = 250
+)
+
+all_events <- all_events %>% set_names(c("event1","event2","event3","event4"))
+
+
 # 2. Data Loading ##### 
 # Get directories of files
 print("Fetching data...")
