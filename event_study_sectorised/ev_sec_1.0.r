@@ -533,8 +533,8 @@ for (event_number in seq_along(all_events)) {
       all_events[[event_number]]$estimation_window[[length(all_events[[event_number]]$estimation_window)]]
     
     # 1. OLS/GLS model creation and storage loop ####
-    
     # Creates OLS models on their market specified indices
+    
     # Stores models for reorganisation
     start_time <- Sys.time()
     
@@ -552,7 +552,6 @@ for (event_number in seq_along(all_events)) {
     
     # Loop estimates estudy ols/gls objects
     # dependency of para and nonpara tests
-    
     removed <- 0
     for (i in 1:length(market_list))
     {
@@ -576,7 +575,7 @@ for (event_number in seq_along(all_events)) {
         # This loop checks if the values in the columns of 'r8tes' are NOT INVALID
         # If tests eval TRUE, then the offending column's name is stored
         # After the loop is complete, all offending columns are removed
-        to_remove <- vector(mode = "list", length = length(rates))
+        to_remove <- vector(mode = "list", length = length(r8tes))
         test_rates <- r8tes[-1]
         for (j in seq_along(test_rates)) {
           rn <- names(test_rates)[[j]]
@@ -594,7 +593,7 @@ for (event_number in seq_along(all_events)) {
           }
         }
         to_remove <- unlist(to_remove)
-        r8tes <- rates[, !names(rates) %in% to_remove]
+        r8tes <- r8tes[, !names(r8tes) %in% to_remove]
         
         # FIX DTYPES OF COLUMN PRIOR TO TESTING
         r8tes <- transform.data.frame(r8tes, date = as.Date(date))
@@ -1263,42 +1262,6 @@ for (event_number in seq_along(all_events)) {
     
     d_industry <- 'industry/'
     d_supersector <- 'supersector/'
-    
-    store_results <- function(results,
-                              cd_root,
-                              icb_level = "",
-                              return_type = "",
-                              type = c("data", "directory"),
-                              rowNames = TRUE) {
-      # function writes results in individual ".csv" files
-      # constructs the basic directory
-      cd_trunk <- paste0(cd_root, icb_level, "/", return_type, "/")
-      # retrieves sub-grouping
-      keys <- names(results)
-      if (type == "data") {
-        # STORE THE RESULTS
-        for (i in seq_along(results)) {
-          write.csv(results[[i]],
-                    file = paste0(cd_trunk, keys[[i]], ".csv"),
-                    row.names = rowNames)
-        }
-      } else if (type == "directory") {
-        d_list <- vector(mode = "character", length = length(results))
-        # fills "d_list" with directories
-        for (i in seq_along(results)) {
-          d_list[[i]] <- paste0(cd_trunk, keys[[i]], ".csv")
-        }
-        # writes "d_list" as .txt file
-        write.table(
-          d_list,
-          file = paste0(cd_trunk, icb_level, "_", return_type, "_", "cd.txt"),
-          quote = TRUE,
-          row.names = FALSE,
-          col.names = FALSE
-        )
-      }
-      
-    }
     
     # Store results of statistical tests ####
     store_results2(
