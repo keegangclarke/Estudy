@@ -521,7 +521,8 @@ paste("Complete. Time elapsed: ",
 # START OF META-FOR LOOP ####
 
 for (event_number in seq_along(all_events)) {
-  tryCatch({
+  # tryCatch({
+    
     # CREATION OF OUTER-LOOP-VARIABLES
     EVENT_START <- all_events[[event_number]]$event_window[[1]]
     EVENT_END <-
@@ -1610,11 +1611,11 @@ for (event_number in seq_along(all_events)) {
     )
     
 # END OF LOOP ####
-  },
-  error = function(e)
-  {
-    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-  })
+  # },
+  # error = function(e)
+  # {
+  #   message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  # })
 }
 
 paste("Complete.")
