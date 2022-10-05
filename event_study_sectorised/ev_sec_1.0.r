@@ -551,12 +551,13 @@ for (event_number in seq_along(all_events)) {
     names(rates_list) <- keys
     names(rates_indx_list) <- keys
     
+    removed_ticks <- vector(mode = "list", length = length(market_list))
+    
     # Loop estimates estudy ols/gls objects
     # dependency of para and nonpara tests
     removed <- 0
-    for (i in 1:length(market_list))
-    {
-      tryCatch({
+    for (i in 1:length(market_list)) {
+      # tryCatch({
         print(paste("Getting rates from prices for", keys[[i]]))
         r8tes <- estudy2::get_rates_from_prices(
           stock_list[[i]],
@@ -622,16 +623,18 @@ for (event_number in seq_along(all_events)) {
         # Record name data in list for later referencing
         temp_keys <- names(r8tes)
         names(reg_results_list[[keys[[i]]]]) <- temp_keys[-1]
+        removed_ticks[[i]] <- to_remove
         removed <- removed + 1
         # Explicit memory cleanup
         rm(r8tes)
         rm(r8tes_indx)
         rm(reg_model_results)
         rm(temp_keys)
-      }, error = function(e)
-      {
-        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-      })
+        rm(to_remove)
+      # }, error = function(e)
+      # {
+      #   message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      # })
     }
     # check lengths
     length_checker(
@@ -772,6 +775,8 @@ for (event_number in seq_along(all_events)) {
     print("Subsetting OLS model data according to inner join with ICB identification data.")
     # Get reference names
     usable_ticks <- intersect(sector_data[["Ticker"]], fixed_names)
+    removed_ticks <- unlist(removed_ticks)
+    usable_ticks <- usable_ticks[!(usable_ticks %in% removed_ticks)]
     
     len3 <- nrow(sector_data)
     # Remove irrelevant names
