@@ -44,10 +44,13 @@ end_time <- Sys.time()
 paste("Complete. Time elapsed: ", round(end_time - start_time, digits = 4), "seconds")
 
 
-# Source "apply_market_model_gls.R"####
+# SOURCE "apply_market_model_gls.R"####
 source("C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R")
-# Source "development_aid_functions.R" ####
+# SOURCE "development_aid_functions.R" ####
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
+# SOURCE: "reconfig.R" ####
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/reconfig.R")
+
 # 1. Parameters ####
 # list to store all event params
 all_events <- vector(mode = 'list', length = 4)
@@ -676,7 +679,7 @@ for (event_number in seq_along(all_events)) {
     end_time <- Sys.time()
     paste("OLS model creation and storage complete. Time elapsed: ")
     print(round(end_time - start_time, digits = 4))
-    
+
     # 2. Load Sector Identification data ####
     start_time <- Sys.time()
     print("Loading ICB classification data.")
@@ -739,7 +742,7 @@ for (event_number in seq_along(all_events)) {
     print(round(end_time - start_time, digits = 4))
     # Unlist the 'list of lists of lists' into a 'list of lists'
     lol <- unlist(reg_results_list, recursive = FALSE)
-    
+
     # 4. Fix names using regex ####
     start_time <- Sys.time()
     print('Cleaning string data.')
@@ -770,7 +773,7 @@ for (event_number in seq_along(all_events)) {
     # Rename items in list
     names(lol) <- fixed_names
     
-    # 5. Subset ID and Model data in order for inner join match ####
+    # 5 Subset ID and Model data in order for inner join match ####
     start_time <- Sys.time()
     print("Subsetting OLS model data according to inner join with ICB identification data.")
     # Get reference names
@@ -909,7 +912,7 @@ for (event_number in seq_along(all_events)) {
           round(end_time - start_time, digits = 4),
           "seconds")
     
-    # 7. Allocate data to pre-allocated storage objects ####
+    # 7.1 Allocate data to pre-allocated storage objects ####
     # ALLOCATE REGRESSION MODEL DATA AND INFO TO PREALLOCATED LOCATION
     start_time <- Sys.time()
     print("Regrouping calculated models according ICB classifications. Allocating.")
@@ -965,8 +968,23 @@ for (event_number in seq_along(all_events)) {
       round(end_time - start_time, digits = 4),
       "seconds"
     )
+    # 7.2 Reconfigure allocated regression models data class == 'returns' ####
+    print("Reconfiguring allocated INDUSTRY data.")
+    start_time <- Sys.time()
+    for (i in seq_along(industry)) {
+      indu <- industry_names[[i]]
+      industry[[indu]] <- reconfig(industry[[indu]], dropNA = TRUE)
+    }
+    print("Complete. Reconfiguring allocated SUPERSECTOR data.")
+    for (i in seq_along(supersector)) {
+      supe <- supersector_names[[i]]
+      supersector[[supe]] <- reconfig(supersector[[supe]], dropNA = TRUE)
+    }
+    print('Complete.')
+    end_time <- Sys.time()
+    print(end_time-start_time)
     
-    # find total number of stocks per industry & supersector category ####
+    # Find total number of stocks per industry & supersector category ####
     count_indu <- vector(mode = "list",
                          length = length(unique(sector_data$ICB.Industry.Name))) %>%
       set_names(unique(sector_data$ICB.Industry.Name))
@@ -1001,7 +1019,7 @@ for (event_number in seq_along(all_events)) {
               file = paste0(d_tables,
                             "/table_3b_supersector_count.csv"))
     
-    # Wrangle data to make tables where tickers are sorted by the indu & supe groupings
+    # Wrangle data to make tables where tickers are sorted by the indu & supe groupings 
     # INDUSTRY
     industry_components <- industry
     # make list of data.frames containing grouped ticker data
