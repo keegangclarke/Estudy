@@ -1324,20 +1324,19 @@ for (event_number in seq_along(all_events)) {
     # Create new storage lists
     # need to pre-allocate the length of the subcomponents of the lists
     # ARs
-    ar_data_industry <- vector(mode = "list",
-                               length = length(unique(sector_data$ICB.Industry.Name)))
-    names(ar_data_industry) <- unique(sector_data$ICB.Industry.Name)
+    ar_data_industry <- make_list(length(unique(sector_data$ICB.Industry.Name)),
+                                  unique(sector_data$ICB.Industry.Name))
     indu_i <- ar_data_industry # copy list for later counter
-    ar_data_industry <-
-      sub_list(sector_data, ar_data_industry, focus = "ICB.Industry.Name")
+    ar_data_industry <- sub_list(sector_data,
+                                 ar_data_industry,
+                                 focus = "ICB.Industry.Name")
     
-    ar_data_supersector <- vector(mode = "list",
-                                  length = length(unique(sector_data$ICB.Supersector.Name)))
-    names(ar_data_supersector) <-
-      unique(sector_data$ICB.Supersector.Name)
+    ar_data_supersector <- make_list(length(unique(sector_data$ICB.Supersector.Name)),
+                                     unique(sector_data$ICB.Supersector.Name))
     supe_i <- ar_data_supersector # copy list for later counter
-    ar_data_supersector <-
-      sub_list(sector_data, ar_data_supersector, focus = "ICB.Supersector.Name")
+    ar_data_supersector <- sub_list(sector_data,
+                                    ar_data_supersector,
+                                    focus = "ICB.Supersector.Name")
     
     end_time <- Sys.time()
     print("Creation of Storage Objects complete.")
@@ -1433,19 +1432,19 @@ for (event_number in seq_along(all_events)) {
         ar_data_industry[[indu]][[tick]] <-
           subset(ar_data_industry[[indu]][[tick]],
                  (
-                   rownames(ar_data_industry[[indu]][[tick]]) >= as.Date(EVENT_WINDOW_START)
+                   zoo::index(ar_data_industry[[indu]][[tick]]) >= as.Date(EVENT_WINDOW_START)
                  ) &
                    (
-                     rownames(ar_data_industry[[indu]][[tick]]) <= as.Date(EVENT_WINDOW_END)
+                     zoo::index(ar_data_industry[[indu]][[tick]]) <= as.Date(EVENT_WINDOW_END)
                    ))
         
         ar_data_supersector[[supe]][[tick]] <-
           subset(ar_data_supersector[[supe]][[tick]],
                  (
-                   rownames(ar_data_supersector[[supe]][[tick]]) >= as.Date(EVENT_WINDOW_START)
+                   zoo::index(ar_data_supersector[[supe]][[tick]]) >= as.Date(EVENT_WINDOW_START)
                  ) &
                    (
-                     rownames(ar_data_supersector[[supe]][[tick]]) <= as.Date(EVENT_WINDOW_END)
+                     zoo::index(ar_data_supersector[[supe]][[tick]]) <= as.Date(EVENT_WINDOW_END)
                    ))
       }, error = function(e)
       {
@@ -1550,8 +1549,7 @@ for (event_number in seq_along(all_events)) {
     end_time <- Sys.time()
     paste("Complete.")
     round(end_time - start_time, digits = 4) %>%  print()
-    
-    t <- ar_data_industry_merged[[1]] %>% as.data.frame()
+
     # Store AR and CAR results ####
     # INDUSTRY
     store_results2(
