@@ -1,14 +1,8 @@
-# recombine, reconfigure & reconstruct func
 # OBJECTIVE:
-# INPUT: 'list of lists of lists' object, levels are descending in hierarchy
-# FUNC:   
-      # recombine into 'list of lists', matching item for item on the 3rd level of the object, class('returns')
-      # reconfigure so that constituents are of the smallest length, & params are set to the smallest one
-      # re-list the 3rd level into 'returns' objects
-# OUTPUT: 'list of lists of lists' object
+# INPUT/OUTPUT: 'list of lists of lists' object
+# FUNC: Extract sub-lists of list of list, combine (where necessary) & reconfigure, returning list in same structure
 require(zoo)
 require(magrittr)
-source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
 # ASSITANT FUNCTIONS
 merge_zoo_list <- function(zoo_list) {
@@ -132,7 +126,6 @@ reconfig <- function(lolol, dropNA = TRUE) {
     regressor <- na.omit(regressor)
   }
   
-  
   # RECOMBINATION PROCESS ####
   # create identical storage structure
   # empty so that it throws errors if recombination fails
@@ -179,5 +172,22 @@ reconfig <- function(lolol, dropNA = TRUE) {
     # CLEAN-UP
     rm(rets)
   }
+  # CLEAN-UP
+  rm(
+    observed,
+    predicted,
+    lower95CI,
+    upper95CI,
+    abnormal,
+    regressor,
+    estimation_length,
+    estimation_start,
+    estimation_end,
+    market_model,
+    full_name_market_model,
+    estimation_method,
+    full_name_estimation_method,
+    coefficients
+  )
   return (lolol.out)
 }
