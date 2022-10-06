@@ -524,7 +524,7 @@ paste("Complete. Time elapsed: ",
 # START OF META-FOR LOOP ####
 
 for (event_number in seq_along(all_events)) {
-  # tryCatch({
+  tryCatch({
     
     # CREATION OF OUTER-LOOP-VARIABLES
     EVENT_START <- all_events[[event_number]]$event_window[[1]]
@@ -560,7 +560,7 @@ for (event_number in seq_along(all_events)) {
     # dependency of para and nonpara tests
     removed <- 0
     for (i in 1:length(market_list)) {
-      # tryCatch({
+      tryCatch({
         print(paste("Getting rates from prices for", keys[[i]]))
         r8tes <- estudy2::get_rates_from_prices(
           stock_list[[i]],
@@ -634,10 +634,10 @@ for (event_number in seq_along(all_events)) {
         rm(reg_model_results)
         rm(temp_keys)
         rm(to_remove)
-      # }, error = function(e)
-      # {
-      #   message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-      # })
+      }, error = function(e)
+      {
+        message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+      })
     }
     # check lengths
     length_checker(
@@ -969,6 +969,8 @@ for (event_number in seq_along(all_events)) {
       "seconds"
     )
     # 7.2 Reconfigure allocated regression models data class == 'returns' ####
+    industry_names <- names(industry)
+    supersector_names <- names(supersector)
     print("Reconfiguring allocated INDUSTRY data.")
     start_time <- Sys.time()
     for (i in seq_along(industry)) {
@@ -1632,15 +1634,13 @@ for (event_number in seq_along(all_events)) {
       directory = paste0(cd_base, d_supersector, all_events[[event_number]]$event_name, "/", d_caar),
       type = "data"
     )
-    
-# END OF LOOP ####
-  # },
-  # error = function(e)
-  # {
-  #   message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
-  # })
+  },
+  error = function(e)
+  {
+    message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
+  })
 }
-
+# END OF LOOP ####
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
 
