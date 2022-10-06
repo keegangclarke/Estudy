@@ -1,15 +1,18 @@
 # recombine, reconfigure & reconstruct func
 # OBJECTIVE:
-# INPUT: 'list of lists of lists' object, levels are decending in hieracrchy
+# INPUT: 'list of lists of lists' object, levels are descending in hierarchy
 # FUNC:   
       # recombine into 'list of lists', matching item for item on the 3rd level of the object, class('returns')
       # reconfigure so that constituents are of the smallest length, & params are set to the smallest one
       # re-list the 3rd level into 'returns' objects
 # OUTPUT: 'list of lists of lists' object
-library(zoo)
-library(magrittr)
+require(zoo)
+require(magrittr)
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
+reconfig <- function(lolol, dropNA = TRUE) {
+  
+}
 lolol <- securities_returns
 
 tickers <- names(securities_returns)
@@ -20,8 +23,6 @@ samp2 <- lolol$X4523.JT.Equity
 
 observed1 <- samp1$observed
 observed2 <- samp2$observed
-
-synth <- list(observed1,observed2,observed1,observed2) %>% set_names(c("1","2","three","4"))
 
 merge_zoo_list <- function(zoo_list) {
   # Record names
@@ -85,15 +86,14 @@ for (i in seq_along(lolol)) {
   full_name_estimation_method <- rets$full_name_estimation_method
   # DATEs
   # aggregate as lists
-  estimation_start <- rets$estimation_start
-  estimation_end <- rets$estimation_end
+  estimation_start[[i]] <- rets$estimation_start
+  estimation_end[[i]] <- rets$estimation_end
   # MISC
   # list of numeric vectors
-  coefficients <- rets$coefficients
+  coefficients[[i]] <- rets$coefficients
   # Numeric vector
-  estimation_length <- rets$estimation_length
+  estimation_length[[i]] <- rets$estimation_length
 }
-
 # COMBINE ZOOs
 # aggregate as ZOOs
 observed <- merge_zoo_list(observed)
@@ -102,3 +102,28 @@ lower95CI <- merge_zoo_list(lower95CI)
 upper95CI <- merge_zoo_list(upper95CI)
 abnormal <- merge_zoo_list(abnormal)
 regressor <- merge_zoo_list(regressor)
+
+# UNLIST STORAGE LISTS
+estimation_length <- estimation_length %>% unlist
+# SPECIFY FINAL VARIABLE
+estimation_start <- estimation_start %>% unlist %>% as.Date
+if (all(estimation_start %in% estimation_start[[1]])) {
+  estimation_start <- estimation_start[[1]]
+} else {
+  estimation_start <-  max(estimation_start)
+}
+estimation_end <- estimation_end %>% unlist %>% as.Date
+if (all(estimation_end %in% estimation_end[[1]])) {
+  estimation_end <- estimation_end[[1]]
+} else {
+  estimation_end <-  min(estimation_end)
+}
+
+if (dropNA == TRUE) {
+  observed <- na.omit(observed)
+  predicted <- na.omit(predicted)
+  lower95CI <- na.omit(lower95CI)
+  upper95CI <- na.omit(upper95CI)
+  abnormal <- na.omit(abnormal)
+  regressor <- na.omit(regressor)
+}
