@@ -169,6 +169,109 @@ fetch_rtns <- function(name_lst, directory) {
   return(storage_lst)
 }
 
+# FUNCTION TO MERGE CAAR & AAR DATA LISTS TOGETHER FOR PLOTS ####
+merge_caar_aar <-
+  function(storage_lst,
+           name_lst,
+           aar_lst,
+           caar_lst,
+           evt_day = NULL) {
+    
+    count <- 0
+    # "storage_lst" == empty list of correct length to store merged data.frames
+    # "name_lst" == list of names of groupings
+    # "aar_lst" & "caar_lst" == lists of AARs and CAARs
+    # "evt_day" == event day by which 'Event.Time' will be calculated
+    if (is.null(evt_day)) {
+      message("No event day specified. Please specify an event day in standard format.")
+      
+    } else {
+      for (i in seq_along(name_lst)) {
+        name <- name_lst[[i]]
+        
+        tempDF <- merge.data.frame(aar_lst[[name]],
+                                   caar_lst[[name]],
+                                   by = "Date") %>%
+          set_names(c('Date', "AAR", "CAAR"))
+        # adds event time column but calculates on logical basis an int vector which sets 0 to 'E_DAY'
+        # negative ints for days before 'E_DAY'
+        # postive ints for days after 'E_DAY'
+        e_time<- as.integer(
+          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ])
+        )
+        
+        # Specifies expected event time, for positive and negative time
+        # NOTE: ignore 0 as unnecessary for testing. 0 == event day and is included later
+        neg <- -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):-1
+        pos <-  1:nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),])
+        # Calcs actual length of obs that are present in df
+        neg_row <- sum(as.integer(tempDF$Date < evt_day))
+        pos_row <- sum(as.integer(tempDF$Date > evt_day))
+        # Tests if lengths are identical or not
+        t_neg <- identical(length(neg), neg_row)
+        t_pos <- identical(length(pos), pos_row)
+        
+        # logic that then adjusts 'neg' & 'pos' prior to creating 'e_time'
+        if (t_neg & t_pos) {
+          if ((evt_day %in% tempDF$Date)==FALSE) {
+            e_time <- union(neg, pos)
+          } else{
+            e_time <- union(union(neg, 0), pos)
+          }
+          
+          # adds event time to df
+          tempDF$Event.Time <- e_time
+          storage_lst[[name]] <- tempDF
+          
+        } else if ((t_neg == FALSE) & (t_pos == TRUE)) {
+          dif <- neg_row - length(neg)
+          neg <- tail(neg, diff)
+          
+          if ((evt_day %in% tempDF$Date)==FALSE) {
+            e_time <- union(neg, pos)
+          } else{
+            e_time <- union(union(neg, 0), pos)
+          }
+          
+          # adds event time to df
+          tempDF$Event.Time <- e_time
+          storage_lst[[name]] <- tempDF
+          
+        } else if ((t_neg == TRUE) & (t_pos == FALSE)) {
+          dif <- pos_row - length(pos)
+          pos <- head(pos, diff)
+          
+          if ((evt_day %in% tempDF$Date)==FALSE) {
+            e_time <- union(neg, pos)
+          } else{
+            e_time <- union(union(neg, 0), pos)
+          }
+          
+          # adds event time to df
+          tempDF$Event.Time <- e_time
+          storage_lst[[name]] <- tempDF
+          
+        } else {
+          message("Could not achieve correct event-time for item")
+          print(i)
+          print(name)
+          message("Please debug as event-time was subsequently not specified.")
+        }
+        count <- count + 1
+      }
+    }
+    
+    if (count == length(storage_lst)) {
+      print("Merger complete.")
+    } else {
+      message("Something went wrong. Insufficient elements modified.")
+      print(cat("Total modified: ", i))
+    }
+    
+    return(storage_lst)
+  }
+
+
 ## META LOOP L1 ####
 # Cycles through whole process for "geo" and "ICB"
 for (type in 1:2) {
@@ -176,14 +279,14 @@ for (type in 1:2) {
 }
 
 # META LOOP L2 ####
-for (i in seq_along(all_events)) {
+for (EVT in seq_along(all_events)) {
   # SPECIFY PARAMS
-  E_NAME <- all_events[[i]]$event_name
-  E_DAY <- all_events[[i]]$event_date
-  E_WIND <- all_events[[i]]$event_window
-  EST_WIND <- all_events[[i]]$estimation_window
+  E_NAME <- all_events[[EVT]]$event_name
+  E_DAY <- all_events[[EVT]]$event_date
+  E_WIND <- all_events[[EVT]]$event_window
+  EST_WIND <- all_events[[EVT]]$estimation_window
   
-  E_DIR <- paste0(all_events[[i]]$event_name,"/")
+  E_DIR <- paste0(all_events[[EVT]]$event_name,"/")
 
 }
 
@@ -274,53 +377,6 @@ caar_supe <- fetch_rtns(name_lst = supe_fac,
                                             d_supe,
                                             E_DIR,
                                             d_caar))
-
-# FUNCTION TO MERGE CAAR & AAR DATA LISTS TOGETHER FOR PLOTS ####
-merge_caar_aar <-
-  function(storage_lst,
-           name_lst,
-           aar_lst,
-           caar_lst,
-           evt_day = NULL) {
-    # "storage_lst" == empty list of correct length to store merged data.frames
-    # "name_lst" == list of names of groupings
-    # "aar_lst" & "caar_lst" == lists of AARs and CAARs
-    # "evt_day" == event day by which 'Event.Time' will be calculated
-    if (is.null(evt_day)) {
-      message("No event day specified. Please specify an event day in standard format.")
-    } else {
-      for (i in seq_along(name_lst)) {
-        name <- name_lst[[i]]
-        
-        storage_lst[[name]] <- merge.data.frame(aar_lst[[name]],
-                                               caar_lst[[name]],
-                                               by = "Date") %>%
-          set_names(c('Date', "AAR", "CAAR"))
-        # adds event time column but calculates on logical basis an int vector which sets 0 to 'E_DAY'
-        # negative ints for days before 'E_DAY'
-        # postive ints for days after 'E_DAY'
-        storage_lst[[name]]$Event.Time <-
-          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ])
-      }
-      return(storage_lst)
-    }
-    return(storage_lst)
-  }
-
-for (i in seq_along(name_lst)) {
-  print(i)
-  nam <- name_lst[[i]]
-  
-  storage_lst[[nam]] <- merge.data.frame(aar_lst[[nam]],
-                                         caar_lst[[nam]],
-                                         by = "Date") %>%
-    set_names(c('Date', "AAR", "CAAR"))
-  # adds event time column but calculates on logical basis an int vector which sets 0 to 'E_DAY'
-  # negative ints for days before 'E_DAY'
-  # postive ints for days after 'E_DAY'
-  storage_lst[[nam]]$Event.Time <-
-    -nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] < evt_day), ]):nrow(aar_lst[[nam]][(aar_lst[[nam]][["Date"]] > evt_day), ])
-}
 
 
 # Merge AAR & CAAR data.frames ####
@@ -436,6 +492,7 @@ aar_caar_plot(
                 d_supe,
                 "aar_caar/")
 )
+
 
 # PLOT ARs ####
 for (i in seq_along(geo_fac)) {
