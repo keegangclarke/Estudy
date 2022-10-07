@@ -197,3 +197,11 @@ fetch_data <-
     }
     return(lst)
   }
+
+
+make_list <- function(Length, Names) {
+  # Reduces code to premake a list
+  vec <- vector(mode = 'list', length = Length)
+  names(vec) <- Names
+  return(vec)
+}
