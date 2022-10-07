@@ -199,9 +199,13 @@ fetch_data <-
   }
 
 
-make_list <- function(Length, Names) {
+make_list <- function(Length, Names=NULL) {
   # Reduces code to premake a list
   vec <- vector(mode = 'list', length = Length)
-  names(vec) <- Names
-  return(vec)
+  if (is.null(Names)) {
+    return(vec)
+  } else {
+    names(vec) <- Names
+    return(vec)
+  }
 }
