@@ -176,7 +176,6 @@ merge_caar_aar <-
            aar_lst,
            caar_lst,
            evt_day = NULL) {
-    
     count <- 0
     # "storage_lst" == empty list of correct length to store merged data.frames
     # "name_lst" == list of names of groupings
@@ -196,26 +195,36 @@ merge_caar_aar <-
         # adds event time column but calculates on logical basis an int vector which sets 0 to 'E_DAY'
         # negative ints for days before 'E_DAY'
         # postive ints for days after 'E_DAY'
-        e_time<- as.integer(
-          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ])
-        )
+        e_time <-
+          as.integer(-nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ]))
         
         # Specifies expected event time, for positive and negative time
         # NOTE: ignore 0 as unnecessary for testing. 0 == event day and is included later
-        neg <- -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):-1
-        pos <-  1:nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),])
+        neg <-
+          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):0
+        pos <-
+          1:nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),])
         # Calcs actual length of obs that are present in df
         neg_row <- sum(as.integer(tempDF$Date < evt_day))
         pos_row <- sum(as.integer(tempDF$Date > evt_day))
         # Tests if lengths are identical or not
-        t_neg <- identical(length(neg), neg_row)
+        if (neg == 0) {
+          t_neg <- identical(neg, neg_row)
+        } else {
+          t_neg <- identical(length(neg), neg_row)
+        }
         t_pos <- identical(length(pos), pos_row)
         
         # logic that then adjusts 'neg' & 'pos' prior to creating 'e_time'
         if (t_neg & t_pos) {
-          if ((evt_day %in% tempDF$Date)==FALSE) {
-            e_time <- union(neg, pos)
-          } else{
+          if ((evt_day %in% tempDF$Date) == FALSE) {
+            if (neg == 0) {
+              neg <- NULL
+              e_time <- union(neg, pos)
+            } else {
+              e_time <- union(neg, pos)
+            }
+          } else {
             e_time <- union(union(neg, 0), pos)
           }
           
@@ -227,7 +236,7 @@ merge_caar_aar <-
           dif <- neg_row - length(neg)
           neg <- tail(neg, diff)
           
-          if ((evt_day %in% tempDF$Date)==FALSE) {
+          if ((evt_day %in% tempDF$Date) == FALSE) {
             e_time <- union(neg, pos)
           } else{
             e_time <- union(union(neg, 0), pos)
@@ -238,10 +247,18 @@ merge_caar_aar <-
           storage_lst[[name]] <- tempDF
           
         } else if ((t_neg == TRUE) & (t_pos == FALSE)) {
-          dif <- pos_row - length(pos)
-          pos <- head(pos, diff)
+          if (neg == 0) {
+            neg <- NULL
+            dif <- pos_row - length(pos)
+            pos <- head(pos, diff)
+            
+            e_time <- union(neg, pos)
+          } else {
+            dif <- pos_row - length(pos)
+            pos <- head(pos, diff)
+          }
           
-          if ((evt_day %in% tempDF$Date)==FALSE) {
+          if ((evt_day %in% tempDF$Date) == FALSE) {
             e_time <- union(neg, pos)
           } else{
             e_time <- union(union(neg, 0), pos)
@@ -494,6 +511,8 @@ aar_caar_plot(
 )
 
 
+
+
 # PLOT ARs ####
 for (i in seq_along(geo_fac)) {
   indx <- geo_fac[[i]]
@@ -546,6 +565,60 @@ for (i in seq_along(geo_fac)) {
     units = 'in'
   )
 }
+
+
+for (i in seq_along(geo_fac)) {
+  indx <- geo_fac[[i]]
+  # AAR vs CAAR PLOT ####
+  p_ave <-
+    ggplot(data = ave_lst_geo[[indx]]) +
+    geom_line(
+      mapping = aes(x = Event.Time,
+                    y = AAR),
+      colour = "navyblue",
+      show.legend = TRUE
+    ) +
+    geom_line(
+      mapping = aes(x = Event.Time,
+                    y = CAAR),
+      colour = "darkred",
+      show.legend = TRUE
+    ) +
+    scale_x_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                          max(ave_lst_geo[[indx]]$Event.Time),
+                                          by = 10),
+                                      1)) +
+    scale_y_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
+                                          max(ave_lst_geo[[indx]]$Event.Time),
+                                          by = 10),
+                                      1)) +
+    geom_hline(yintercept = 0,
+               size = 0.3) +
+    geom_ribbon(aes(x = Event.Time,
+                    ymin = AAR,
+                    ymax = CAAR),
+                fill = "navyblue",
+                alpha = 0.1) +
+    theme_bw() +
+    labs(title = paste("Average Abnormal Returns:",
+                       indx),)
+  
+  # Store plot
+  ggsave(
+    p_ave,
+    filename = paste0(indx, "_aar_caar.png"),
+    path = paste0(d_root,
+                  d_res_pres,
+                  d_plot,
+                  d_geo,
+                  "aar_caar/"),
+    dpi = 320,
+    width = 8,
+    height = 4,
+    units = 'in'
+  )
+}
+
 
 # FOR EXPERIMENTS ####
 indx <- geo_fac[[i]]
