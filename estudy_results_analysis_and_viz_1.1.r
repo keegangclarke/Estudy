@@ -187,6 +187,8 @@ merge_caar_aar <-
     } else {
       for (i in seq_along(name_lst)) {
         name <- name_lst[[i]]
+        print(name)
+        print(i)
         
         tempDF <- merge.data.frame(aar_lst[[name]],
                                    caar_lst[[name]],
@@ -196,29 +198,30 @@ merge_caar_aar <-
         # negative ints for days before 'E_DAY'
         # postive ints for days after 'E_DAY'
         e_time <-
-          as.integer(-nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ]))
+          as.integer(-nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),]))
         
         # Specifies expected event time, for positive and negative time
         # NOTE: ignore 0 as unnecessary for testing. 0 == event day and is included later
         neg <-
-          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):0
+          -nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day), ]):0
         pos <-
-          1:nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),])
+          1:nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day), ])
         # Calcs actual length of obs that are present in df
         neg_row <- sum(as.integer(tempDF$Date < evt_day))
         pos_row <- sum(as.integer(tempDF$Date > evt_day))
         # Tests if lengths are identical or not
-        if (neg == 0) {
+        if (any((length(neg) == 1) & (neg == 0))) {
           t_neg <- identical(neg, neg_row)
         } else {
-          t_neg <- identical(length(neg), neg_row)
+          t_neg <- identical(length(head(neg,-1)), neg_row)
         }
+        
         t_pos <- identical(length(pos), pos_row)
         
         # logic that then adjusts 'neg' & 'pos' prior to creating 'e_time'
         if (t_neg & t_pos) {
           if ((evt_day %in% tempDF$Date) == FALSE) {
-            if (neg == 0) {
+            if (any((length(neg) == 1) & (neg == 0))) {
               neg <- NULL
               e_time <- union(neg, pos)
             } else {
@@ -247,7 +250,7 @@ merge_caar_aar <-
           storage_lst[[name]] <- tempDF
           
         } else if ((t_neg == TRUE) & (t_pos == FALSE)) {
-          if (neg == 0) {
+          if (any(neg == 0)) {
             neg <- NULL
             dif <- pos_row - length(pos)
             pos <- head(pos, diff)
@@ -289,13 +292,13 @@ merge_caar_aar <-
   }
 
 
-# FUNCTION TO PLOT AARS VS CAARS ####
+# FUNCTION TO PLOT AARs VS CAARs ####
 aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
   for (i in seq_along(name_lst)) {
-    nam <- name_lst[[i]]
+    name <- name_lst[[i]]
     # AAR vs CAAR PLOT ####
     p_ave <-
-      ggplot(data = aar_caar_df_lst[[nam]]) +
+      ggplot(data = aar_caar_df_lst[[name]]) +
       geom_line(
         mapping = aes(x = Event.Time,
                       y = AAR),
@@ -308,14 +311,7 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
         colour = "darkred",
         show.legend = TRUE
       ) +
-      scale_x_continuous(breaks = round(seq(min(aar_caar_df_lst[[nam]]$Event.Time),
-                                            max(aar_caar_df_lst[[nam]]$Event.Time),
-                                            by = 10),
-                                        1)) +
-      scale_y_continuous(breaks = round(seq(min(aar_caar_df_lst[[nam]]$Event.Time),
-                                            max(aar_caar_df_lst[[nam]]$Event.Time),
-                                            by = 10),
-                                        1)) +
+      scale_x_continuous(breaks = aar_caar_df_lst[[name]]$Event.Time) +
       geom_hline(yintercept = 0,
                  size = 0.3) +
       geom_ribbon(aes(x = Event.Time,
@@ -324,13 +320,15 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
                   fill = "navyblue",
                   alpha = 0.1) +
       theme_bw() +
-      labs(title = paste("Average Abnormal Returns:",
-                         nam),)
+      labs(title = name,
+           subtitle = "Average Abnormal Returns",
+           y = "Abnormal Return",
+           x = "Event day")
     
     # Store plot
     ggsave(
       p_ave,
-      filename = paste0(nam, "_aar_caar.png"),
+      filename = paste0(name, "_aar_caar.png"),
       path = PATH,
       dpi = 320,
       width = 8,
@@ -355,162 +353,167 @@ for (EVT in seq_along(all_events)) {
   E_WIND <- all_events[[EVT]]$event_window
   EST_WIND <- all_events[[EVT]]$estimation_window
   
-  E_DIR <- paste0(all_events[[EVT]]$event_name,"/")
-
-}
-
-# ARs & CARs: Retrieve data ####
-# GEOGRAPHIC
-ar_geo <- fetch_rtns(name_lst = geo_fac,
-                    directory = paste0(d_root,
-                                       d_geo,
-                                       E_DIR,
-                                       d_ar))
-# INDUSTRY
-ar_indu <- fetch_rtns(name_lst = indu_fac,
-                    directory = paste0(d_root,
-                                       d_icb,
-                                       d_indu,
-                                       E_DIR,
-                                       d_ar))
-# SUPERSECTOR
-ar_supe <- fetch_rtns(name_lst = supe_fac,
-                    directory = paste0(d_root,
-                                       d_icb,
-                                       d_supe,
-                                       E_DIR,
-                                       d_ar))
-
-# CUMULATIVE ABNORMAL RETURNS
-# GEOGRAPHIC
-car_geo <- fetch_rtns(name_lst = geo_fac,
-                    directory = paste0(d_root,
-                                       d_geo,
-                                       E_DIR,
-                                       d_car))
-# INDUSTRY
-car_indu <- fetch_rtns(name_lst = indu_fac,
-                     directory = paste0(d_root,
-                                        d_icb,
-                                        d_indu,
-                                        E_DIR,
-                                        d_car))
-# SUPERSECTOR
-car_supe <- fetch_rtns(name_lst = supe_fac,
-                     directory = paste0(d_root,
-                                        d_icb,
-                                        d_supe,
-                                        E_DIR,
-                                        d_car))
-
-# AARs: RETRIEVE ALL AAR DATA ####
-# GEOGRAPHIC
-aar_geo <- fetch_rtns(name_lst = geo_fac,
-                         directory = paste0(d_root,
-                                            d_geo,
-                                            E_DIR,
-                                            d_aar))
-# INDUSTRY
-aar_indu <- fetch_rtns(name_lst = indu_fac,
-                          directory = paste0(d_root,
-                                             d_icb,
-                                             d_indu,
-                                             E_DIR,
-                                             d_aar))
-# SUPERSECTOR
-aar_supe <- fetch_rtns(name_lst = supe_fac,
-                          directory = paste0(d_root,
-                                             d_icb,
-                                             d_supe,
-                                             E_DIR,
-                                             d_aar))
-
-# CAARs: RETRIEVE ALL CAAR DATA ####
-# GEOGRAPHIC
-caar_geo <- fetch_rtns(name_lst = geo_fac,
+  E_DIR <- paste0(all_events[[EVT]]$event_name, "/")
+  
+  print(E_NAME)
+  # ARs & CARs: Retrieve data ####
+  # GEOGRAPHIC
+  ar_geo <- fetch_rtns(name_lst = geo_fac,
+                       directory = paste0(d_root,
+                                          d_geo,
+                                          E_DIR,
+                                          d_ar))
+  # INDUSTRY
+  ar_indu <- fetch_rtns(name_lst = indu_fac,
+                        directory = paste0(d_root,
+                                           d_icb,
+                                           d_indu,
+                                           E_DIR,
+                                           d_ar))
+  # SUPERSECTOR
+  ar_supe <- fetch_rtns(name_lst = supe_fac,
+                        directory = paste0(d_root,
+                                           d_icb,
+                                           d_supe,
+                                           E_DIR,
+                                           d_ar))
+  
+  # CUMULATIVE ABNORMAL RETURNS
+  # GEOGRAPHIC
+  car_geo <- fetch_rtns(name_lst = geo_fac,
                         directory = paste0(d_root,
                                            d_geo,
                                            E_DIR,
-                                           d_caar))
-# INDUSTRY
-caar_indu <- fetch_rtns(name_lst = indu_fac,
+                                           d_car))
+  # INDUSTRY
+  car_indu <- fetch_rtns(name_lst = indu_fac,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_indu,
                                             E_DIR,
-                                            d_caar))
-# SUPERSECTOR
-caar_supe <- fetch_rtns(name_lst = supe_fac,
+                                            d_car))
+  # SUPERSECTOR
+  car_supe <- fetch_rtns(name_lst = supe_fac,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_supe,
                                             E_DIR,
+                                            d_car))
+  
+  # AARs: RETRIEVE ALL AAR DATA ####
+  # GEOGRAPHIC
+  aar_geo <- fetch_rtns(name_lst = geo_fac,
+                        directory = paste0(d_root,
+                                           d_geo,
+                                           E_DIR,
+                                           d_aar))
+  # INDUSTRY
+  aar_indu <- fetch_rtns(name_lst = indu_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_indu,
+                                            E_DIR,
+                                            d_aar))
+  # SUPERSECTOR
+  aar_supe <- fetch_rtns(name_lst = supe_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_supe,
+                                            E_DIR,
+                                            d_aar))
+  
+  # CAARs: RETRIEVE ALL CAAR DATA ####
+  # GEOGRAPHIC
+  caar_geo <- fetch_rtns(name_lst = geo_fac,
+                         directory = paste0(d_root,
+                                            d_geo,
+                                            E_DIR,
                                             d_caar))
-
-
-# Merge AAR & CAAR data.frames ####
-# GEOGRAPHIC
-ave_lst_geo <- make_list(length(geo_fac), geo_fac)
-ave_lst_geo <- merge_caar_aar(
-  storage_lst = ave_lst_geo,
-  name_lst = geo_fac,
-  aar_lst = aar_geo,
-  caar_lst = caar_geo,
-  evt_day = E_DAY
-)
-# INDUSTRY
-ave_lst_indu <- make_list(length(indu_fac), indu_fac)
-ave_lst_indu <- merge_caar_aar(
-  storage_lst = ave_lst_indu,
-  name_lst = indu_fac,
-  aar_lst = aar_indu,
-  caar_lst = caar_indu,
-  evt_day = E_DAY
-)
-# SUPERSECTOR
-ave_lst_supe <- make_list(length(supe_fac), supe_fac)
-ave_lst_supe <- merge_caar_aar(
-  storage_lst = ave_lst_supe,
-  name_lst = supe_fac,
-  aar_lst = aar_supe,
-  caar_lst = caar_supe,
-  evt_day = E_DAY
-)
-
-# PLOT AARs V CAARs ####
-# GEOGRAPHIC
-aar_caar_plot(
-  name_lst = geo_fac,
-  aar_caar_df_lst = ave_lst_geo,
-  PATH = paste0(d_root,
-                d_res_pres,
-                d_plot,
-                E_DIR,
-                d_geo,
-                "aar_caar/")
-)
-# INDUSTRY
-aar_caar_plot(
-  name_lst = indu_fac,
-  aar_caar_df_lst = ave_lst_indu,
-  PATH = paste0(d_root,
-                d_res_pres,
-                d_plot,
-                d_icb,
-                d_indu,
-                "aar_caar/")
-)
-# SUPERSECTOR
-aar_caar_plot(
-  name_lst = indu_fac,
-  aar_caar_df_lst = ave_lst_indu,
-  PATH = paste0(d_root,
-                d_res_pres,
-                d_plot,
-                d_icb,
-                d_supe,
-                "aar_caar/")
-)
+  # INDUSTRY
+  caar_indu <- fetch_rtns(name_lst = indu_fac,
+                          directory = paste0(d_root,
+                                             d_icb,
+                                             d_indu,
+                                             E_DIR,
+                                             d_caar))
+  # SUPERSECTOR
+  caar_supe <- fetch_rtns(name_lst = supe_fac,
+                          directory = paste0(d_root,
+                                             d_icb,
+                                             d_supe,
+                                             E_DIR,
+                                             d_caar))
+  
+  
+  # Merge AAR & CAAR data.frames ####
+  # GEOGRAPHIC
+  print("geo")
+  ave_lst_geo <- make_list(length(geo_fac), geo_fac)
+  ave_lst_geo <- merge_caar_aar(
+    storage_lst = ave_lst_geo,
+    name_lst = geo_fac,
+    aar_lst = aar_geo,
+    caar_lst = caar_geo,
+    evt_day = E_DAY
+  )
+  # INDUSTRY
+  print("indu")
+  ave_lst_indu <- make_list(length(indu_fac), indu_fac)
+  ave_lst_indu <- merge_caar_aar(
+    storage_lst = ave_lst_indu,
+    name_lst = indu_fac,
+    aar_lst = aar_indu,
+    caar_lst = caar_indu,
+    evt_day = E_DAY
+  )
+  # SUPERSECTOR
+  print("supe")
+  ave_lst_supe <- make_list(length(supe_fac), supe_fac)
+  ave_lst_supe <- merge_caar_aar(
+    storage_lst = ave_lst_supe,
+    name_lst = supe_fac,
+    aar_lst = aar_supe,
+    caar_lst = caar_supe,
+    evt_day = E_DAY
+  )
+  
+  # PLOT AARs V CAARs ####
+  # GEOGRAPHIC
+  aar_caar_plot(
+    name_lst = geo_fac,
+    aar_caar_df_lst = ave_lst_geo,
+    PATH = paste0(d_root,
+                  d_res_pres,
+                  d_plot,
+                  E_DIR,
+                  d_geo,
+                  "aar_caar/")
+  )
+  # INDUSTRY
+  aar_caar_plot(
+    name_lst = indu_fac,
+    aar_caar_df_lst = ave_lst_indu,
+    PATH = paste0(d_root,
+                  d_res_pres,
+                  d_plot,
+                  E_DIR,
+                  d_icb,
+                  d_indu,
+                  "aar_caar/")
+  )
+  # SUPERSECTOR
+  aar_caar_plot(
+    name_lst = indu_fac,
+    aar_caar_df_lst = ave_lst_indu,
+    PATH = paste0(d_root,
+                  d_res_pres,
+                  d_plot,
+                  E_DIR,
+                  d_icb,
+                  d_supe,
+                  "aar_caar/")
+  )
+}
 
 # PLOT ARs ####
 for (i in seq_along(geo_fac)) {
@@ -530,14 +533,6 @@ for (i in seq_along(geo_fac)) {
       colour = "darkred",
       show.legend = TRUE
     ) +
-    scale_x_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
-                                          max(ave_lst_geo[[indx]]$Event.Time),
-                                          by = 10),
-                                      1)) +
-    scale_y_continuous(breaks = round(seq(min(ave_lst_geo[[indx]]$Event.Time),
-                                          max(ave_lst_geo[[indx]]$Event.Time),
-                                          by = 10),
-                                      1)) +
     geom_hline(yintercept = 0,
                size = 0.3) +
     geom_ribbon(aes(x = Event.Time,
@@ -545,9 +540,12 @@ for (i in seq_along(geo_fac)) {
                     ymax = CAAR),
                 fill = "navyblue",
                 alpha = 0.1) +
+    scale_x_continuous(breaks = ave_lst_geo[[indx]]$Event.Time) +
     theme_bw() +
-    labs(title = paste("Average Abnormal Returns:",
-                       indx),)
+    labs(title = indx,
+         subtitle = "Average Abnormal Returns",
+         y = "Abnormal Return (%)",
+         x = "Event day")
   
   # Store plot
   ggsave(
