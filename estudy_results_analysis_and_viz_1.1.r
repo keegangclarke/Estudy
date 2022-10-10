@@ -132,6 +132,42 @@ supe_fac <- supersector[,2] %>%
   unique %>%
   as.factor
 
+# Get calendar infomation
+rm_idx <- c("\\.Index")
+cal_names <- paste0(d_root,
+                    d_id,
+                    d_geo,
+                    "market_names.txt") %>%
+  read.table(header = FALSE) %>%
+  lapply(stringr::str_replace_all,
+         pattern = rm_idx,
+         replacement = "") %>%
+  lapply(as.factor) %>% 
+  unlist() %>% 
+  set_names(NULL) %>% 
+  casefold()
+
+d_cals <- make_list(Length = length(cal_names), cal_names)
+for (o in seq_along(d_cals)) {
+  print(o)
+  cal <- cal_names[[o]]
+  d_cals[[cal]] <- paste0(d_calenders,
+                         cal, ".json")
+  j.cal <- rjson::fromJSON(file=d_cals[[cal]])
+  do.call(create.calendar,j.cal)
+  # bizdays::load_calender(d_cals[[cal]])
+}
+#PLAN
+# READ IN JSON FILES USING RJSON
+# THEN USE do.call TO CREATE THE CAL
+# NEED TO DEBUG the do.call
+
+
+
+load_calendar("C:/Users/Keegan/anaconda3/envs/ml/dev_files/calendars/hsi.json")
+d_calenders <- "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/"
+
+
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
 # Load regional data
@@ -175,12 +211,19 @@ merge_caar_aar <-
            name_lst,
            aar_lst,
            caar_lst,
+           event
            evt_day = NULL) {
     count <- 0
     # "storage_lst" == empty list of correct length to store merged data.frames
     # "name_lst" == list of names of groupings
     # "aar_lst" & "caar_lst" == lists of AARs and CAARs
     # "evt_day" == event day by which 'Event.Time' will be calculated
+    
+    evt_day <- event$event_date
+    e_time_df <- setNames(as.data.frame(event$event_window),"Date")
+    # calculates sequence of ints that represent the event-time
+    e_time_df$Event.Time <- -sum(as.integer(e_time_df[["Date"]] < evt_day)):sum(as.integer(e_time_df[["Date"]] > evt_day))
+    
     if (is.null(evt_day)) {
       message("No event day specified. Please specify an event day in standard format.")
       
@@ -194,9 +237,12 @@ merge_caar_aar <-
                                    caar_lst[[name]],
                                    by = "Date") %>%
           set_names(c('Date', "AAR", "CAAR"))
+        tempDF <- merge.data.frame(tempDF,e_time_df,by = "Date")
         # adds event time column but calculates on logical basis an int vector which sets 0 to 'E_DAY'
         # negative ints for days before 'E_DAY'
         # postive ints for days after 'E_DAY'
+        
+        
         e_time <-
           as.integer(-nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] < evt_day),]):nrow(aar_lst[[name]][(aar_lst[[name]][["Date"]] > evt_day),]))
         
