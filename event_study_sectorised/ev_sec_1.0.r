@@ -1151,8 +1151,6 @@ for (event_number in seq_along(all_events)) {
       tryCatch({
         print("Applying parametric and non-parametric tests to abnormal returns.")
         
-        keyss <- names(sector)
-        
         securities_returns <- supersector[[i]]
         
         if (length(securities_returns) < 2) {
@@ -1193,7 +1191,7 @@ for (event_number in seq_along(all_events)) {
             car_end = as.Date(EVENT_END)
           )
         )
-        print(paste("Merging results.", keyss[[i]], "n = ", i))
+        print(paste("Merging results.", supersector_names[[i]], "n = ", i))
         # Stage results for storage
         ar_results <-
           data.frame(merge(ar_para, ar_non_para, by = "date"))
@@ -1208,8 +1206,8 @@ for (event_number in seq_along(all_events)) {
             pct.nonpara = percentage.y
           )
         # Store results for later recording
-        ar_supersector[[keyss[[i]]]] <- ar_results
-        car_supersector[[keyss[[i]]]] <- car_results
+        ar_supersector[[supersector_names[[i]]]] <- ar_results
+        car_supersector[[supersector_names[[i]]]] <- car_results
         # Explicit memory cleanup
         rm(ar_results,
            car_results,
