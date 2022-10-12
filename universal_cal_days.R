@@ -533,12 +533,12 @@ write.table(
 )
 n_occur <- data.frame(table(holidays))
 n_occur <- n_occur[n_occur$Freq > 1,]
-universal <- as.data.frame(n_occur[,1])
+shared <- as.data.frame(n_occur[,1])
 
 write.table(
-  universal,
+  shared,
   row.names = FALSE,
   col.names = FALSE,
-  "C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/universal_holidays.txt",
+  "C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/shared_holidays.txt",
   eol = ","
 )
