@@ -222,3 +222,25 @@ make_list <- function(Length, Names=NULL, notList=NULL) {
   }
   return(vec)
 }
+
+# SUB-LIST CREATION FUNCTION
+sub_list <- function(dataa, llist, focus="") {
+  # function takes prespecified lists and replaces NULLs with NULL LISTS of required length
+  # i.e. makes NULL list of specified length in to list of NULL lists
+  # dataa == data.frame of string identification data
+  # llist == prespecified list of length required
+  # focus == string that is the name of the column selected from the data
+  iters <- 1:length(llist)
+  lens <- llist
+  for (i in iters) {
+    lens[[i]] <- sum(dataa[[focus]] == names(lens)[i])
+  }
+  for (i in iters) {
+    vec <- vector(mode="list", length = lens[[names(llist)[i]]])
+    names(vec) <- 
+      llist[[names(llist)[i]]] <- vec
+    rm(vec)
+  }
+  rm(lens)
+  invisible(llist)
+} 
