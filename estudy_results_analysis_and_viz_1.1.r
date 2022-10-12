@@ -58,14 +58,6 @@ supe_fac <- supersector[,2] %>%
   unique %>%
   as.factor
 
-
-all_events$event1$event_window[[1]]
-bizdays(from = all_events$event1$event_window[[1]],
-        to = all_events$event1$event_window[[11]],
-        cal = cal_names[[1]]
-        
-)
-
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
 # Load regional data
