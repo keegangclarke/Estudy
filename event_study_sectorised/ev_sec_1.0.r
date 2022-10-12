@@ -93,8 +93,6 @@ all_events[[4]] <- event_spec(
 
 all_events <- all_events %>% set_names(c("event1","event2","event3","event4"))
 
-
-
 # 2. Data Loading ##### 
 # Get directories of files
 print("Fetching data...")
@@ -933,12 +931,12 @@ for (event_number in seq_along(all_events)) {
     start_time <- Sys.time()
     for (i in seq_along(industry)) {
       indu <- industry_names[[i]]
-      industry[[indu]] <- reconfig(industry[[indu]], dropNA = TRUE)
+      industry[[indu]] <- reconfig(industry[[indu]], dropNA = FALSE)
     }
     print("Complete. Reconfiguring allocated SUPERSECTOR data.")
     for (i in seq_along(supersector)) {
       supe <- supersector_names[[i]]
-      supersector[[supe]] <- reconfig(supersector[[supe]], dropNA = TRUE)
+      supersector[[supe]] <- reconfig(supersector[[supe]], dropNA = FALSE)
     }
     print('Complete.')
     end_time <- Sys.time()
