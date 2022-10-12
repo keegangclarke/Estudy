@@ -522,12 +522,23 @@ holidays <- c(
   "2020-10-28",
   "2020-10-29"
 )
-universal <- sort(unique(holidays))
+all_holidays <- sort(unique(holidays))
+
+write.table(
+  all_holidays,
+  row.names = FALSE,
+  col.names = FALSE,
+  "C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/all_holidays.txt",
+  eol = ","
+)
+n_occur <- data.frame(table(holidays))
+n_occur <- n_occur[n_occur$Freq > 1,]
+universal <- as.data.frame(n_occur[,1])
 
 write.table(
   universal,
   row.names = FALSE,
   col.names = FALSE,
-  "C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/all_holidays.txt",
+  "C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/universal_holidays.txt",
   eol = ","
 )
