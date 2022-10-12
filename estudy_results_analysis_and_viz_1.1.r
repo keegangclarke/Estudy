@@ -318,32 +318,6 @@ for (geo in seq_along(geo_fac)) {
     calendar = CAL
   )
 }
-all_events[[1]] <- event_spec(
-  "event1",
-  edate = as.Date("2020-01-13"),
-  bounds = c(-5, 5),
-  est_len = 250
-)
-all_events[[2]] <- event_spec(
-  "event2",
-  edate = as.Date("2020-01-24"),
-  bounds = c(-2, 8),
-  est_len = 250
-)
-all_events[[3]] <- event_spec(
-  "event3",
-  edate = as.Date("2020-02-24"),
-  bounds = c(-1, 9),
-  est_len = 250
-)
-all_events[[4]] <- event_spec(
-  "event4",
-  edate = as.Date("2020-03-09"),
-  bounds = c(-1, 9),
-  est_len = 250
-)
-
-
 
 # FUNCTION TO GET ABNORMAL RETURN DATA ####
 fetch_rtns <- function(name_lst, directory) {
