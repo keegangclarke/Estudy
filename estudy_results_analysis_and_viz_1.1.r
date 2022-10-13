@@ -23,8 +23,11 @@ d_tables <- "tables/"
 
 d_ar <- "ar/"
 d_aar <- "aar/"
+d_ar_res <- "ar_res/"
+
 d_car <- "car/"
 d_caar <- "caar/"
+d_car_res <- "car_res/"
 
 d_proto <- "prototypes/"
 
@@ -120,7 +123,7 @@ for (d in seq_along(d_cals)) {
                   adjust.to = j.cal$adjust.to,
                   financial = j.cal$financial)
 }
-j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal.json")
+j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/anaconda3/envs/ml/dev_files/mlstruct/calendars/no_holidays.json")
 create.calendar(j.cal.uni$name,
                 holidays = j.cal.uni$holidays,
                 weekdays = j.cal.uni$weekdays,
@@ -321,7 +324,7 @@ e_meta[[1]] <- event_spec(
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
   est_len = 250,
-  calendar = "actual"
+  calendar = "no_holidays"
 )
 e_meta[[2]] <- event_spec(
   e_name = "event2",
@@ -329,7 +332,7 @@ e_meta[[2]] <- event_spec(
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
   est_len = 250,
-  calendar = "actual"
+  calendar = "no_holidays"
 )
 e_meta[[3]] <- event_spec(
   e_name = "event3",
@@ -337,7 +340,7 @@ e_meta[[3]] <- event_spec(
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "actual"
+  calendar = "no_holidays"
 )
 e_meta[[4]] <- event_spec(
   e_name = "event4",
@@ -345,7 +348,7 @@ e_meta[[4]] <- event_spec(
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "actual"
+  calendar = "no_holidays"
 )
 
 # FUNCTION TO GET ABNORMAL RETURN DATA ####
@@ -368,6 +371,29 @@ fetch_rtns <- function(name_lst, directory) {
     names(storage_lst[[i]])[[1]] <- "Date"
     storage_lst[[i]][["Date"]] <-
       storage_lst[[i]][["Date"]] %>% as.Date()
+  }
+  return(storage_lst)
+}
+
+# FUNCTION TO RETRIEVE STATISTICS ####
+fetch_stats <- function(name_lst, directory) {
+  d <- vector(mode = "character",
+              length = length(name_lst))
+  for (i in seq_along(d)) {
+    d[[i]] <- paste0(directory,
+                     name_lst[[i]],
+                     ".csv")
+  }
+  # create storage list
+  storage_lst <- make_list(length(d), name_lst)
+  # retrieve data
+  storage_lst <- fetch_data(d,
+                            lst = storage_lst,
+                            file_type = "csv")
+  for (j in seq_along(storage_lst)) {
+    # remove NAs
+    storage_lst[[j]][is.na(storage_lst[[j]])] = ""
+    storage_lst[[j]] <- subset(storage_lst[[j]], select=-c(X))
   }
   return(storage_lst)
 }
@@ -467,6 +493,38 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
   }
 }
 
+# USELESS FUNCTION TO SLICE LIST OF NAMES WITH INDICES IN REPEATED FASHION ####
+slice_names <- function(name_list, Names) {
+  lst <- vector(mode = "list", length = length(name_list))
+  for (i in seq_along(Names)) {
+    j <- which(scar_names == Names[[i]])
+    lst[[j]] <- name_list[which(scar_names == Names[[i]])]
+  }
+  lst <- unlist(lst)
+  return(lst)
+}
+# FUNCTION TO RECONFIGURE CARS SO THAT THEY ARE GROUPED BY STATISTIC ####
+car_stats_tables <- function(car_list, name_vec) {
+  df <- car_list[[1]]
+  df[["group"]] <- names(car_list)[[1]]
+  tmp_names <- name_vec[-1]
+  
+  for (i in seq_along(tmp_names)) {
+    name <- tmp_names[[i]]
+    df <- dplyr::full_join(df, car_list[[name]])
+    df[is.na(df)] = as.character(name)
+  }
+  stats_fac <- as.factor(unique(df$name))
+  store_lst <- make_list(length(stats_fac),
+                         stats_fac)
+  
+  for (fac in stats_fac) {
+    store_lst[[fac]] <- df %>%
+      dplyr::filter(name == fac) %>%
+      subset(select = -c(name))
+  }
+  return(store_lst)
+}
 #############
 ## META LOOP L1 ####
 # Cycles through whole process for "geo" and "ICB"
@@ -574,6 +632,55 @@ for (EVT in seq_along(e_meta)) {
                                              d_caar))
   
   
+  # ARs & CARs: Retrieve STATS data ####
+  # GEOGRAPHIC
+  sar_geo <- fetch_stats(name_lst = geo_fac,
+                       directory = paste0(d_root,
+                                          d_geo,
+                                          E_DIR,
+                                          d_ar_res))
+  # INDUSTRY
+  sar_indu <- fetch_stats(name_lst = indu_fac,
+                        directory = paste0(d_root,
+                                           d_icb,
+                                           d_indu,
+                                           E_DIR,
+                                           d_ar_res))
+  # SUPERSECTOR
+  sar_supe <- fetch_stats(name_lst = supe_fac,
+                        directory = paste0(d_root,
+                                           d_icb,
+                                           d_supe,
+                                           E_DIR,
+                                           d_ar_res))
+  sar_cols <- names(sar_geo[[1]])
+  
+  # CUMULATIVE ABNORMAL RETURNS
+  # GEOGRAPHIC
+  scar_geo <- fetch_stats(name_lst = geo_fac,
+                        directory = paste0(d_root,
+                                           d_geo,
+                                           E_DIR,
+                                           d_car_res)) %>% 
+    car_stats_tables(geo_fac)
+  # INDUSTRY
+  scar_indu <- fetch_stats(name_lst = indu_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_indu,
+                                            E_DIR,
+                                            d_car_res)) %>% 
+    car_stats_tables(indu_fac)
+  # SUPERSECTOR
+  scar_supe <- fetch_stats(name_lst = supe_fac,
+                         directory = paste0(d_root,
+                                            d_icb,
+                                            d_supe,
+                                            E_DIR,
+                                            d_car_res)) %>% 
+    car_stats_tables(supe_fac)
+  
+  scar_cols <- names(scar_geo[[1]])
   # Merge AAR & CAAR data.frames ####
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_fac), geo_fac)
@@ -646,6 +753,12 @@ for (EVT in seq_along(e_meta)) {
                   d_supe,
                   "aar_caar/")
   )
+  
+  # BUILD TABLES ####
+  
+  scar_indu <- car_stats_tables(scar_indu, indu_fac)
+  
+  
 }
 
 # PLOT ARs ####
