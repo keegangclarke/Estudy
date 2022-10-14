@@ -525,6 +525,29 @@ car_stats_tables <- function(car_list, name_vec) {
   }
   return(store_lst)
 }
+# FUNCTION TO REPLACE SIG. STRING VECTORS WITH INTERGER VECTORS ####
+# Replace significance strings with integers
+vec_replace <- function(vec, to_replace, replacement) {
+  if (length(to_replace) == length(replacement)) {
+    for (i in seq_along(to_replace)) {
+      vec <- replace(vec, which(vec == to_replace[[i]]), replacement[[i]])
+    }
+  } else {
+    stop("Please ensure replacement vector is of equal length to vector of values to replace.")
+  }
+  return(vec)
+}
+# FUNCTION TO DROP ALL THE UNWANTED COLUMNS FROM THE AR_STATISTIC TABLES ####
+drop_ar_stats <- function(ar_lst, to_keep) {
+  # func removes the unwanted cols
+  # NOTE: data structure of data.frames in ar_lst must be identical
+  keep_vec <- (names(ar_lst[[1]]) %in% to_keep)
+  
+  for (i in seq_along(ar_lst)) {
+    ar_lst[[i]] <- ar_lst[[i]][keep_vec]
+  }
+  return(ar_lst)
+}
 #############
 ## META LOOP L1 ####
 # Cycles through whole process for "geo" and "ICB"
@@ -633,6 +656,11 @@ for (EVT in seq_along(e_meta)) {
   
   
   # ARs & CARs: Retrieve STATS data ####
+  # DROP UNUSED STATS
+  ar_cols_to_keep <- c("date", "weekday", "pct.para", "mean", "bh_stat", "bh_signif", "pct.nonpara", "gsign_stat", "gsign_signif", "mrank_stat", "mrank_signif")
+  # rm_nonpara <- c("rank_test","sign_test", "corrado_sign_test", "wilcoxon_test")
+  # rm_para <- c('brown_warner_1980', 'brown_warner_1985', 't_test', 'patell', 'lamb')
+  # sar_geo$KOSPI.Index[(names(sar_geo$KOSPI.Index) %in% ar_cols_to_keep)]
   # GEOGRAPHIC
   sar_geo <- fetch_stats(name_lst = geo_fac,
                        directory = paste0(d_root,
@@ -663,6 +691,12 @@ for (EVT in seq_along(e_meta)) {
                                            E_DIR,
                                            d_car_res)) %>% 
     car_stats_tables(geo_fac)
+  for (i in 1:3) {
+    scar_geo[[i]]$significance <- vec_replace(scar_geo[[i]]$significance,
+                                              c("","*","**","***"),
+                                              0:3)
+  }
+  scar_geo
   # INDUSTRY
   scar_indu <- fetch_stats(name_lst = indu_fac,
                          directory = paste0(d_root,
@@ -671,6 +705,11 @@ for (EVT in seq_along(e_meta)) {
                                             E_DIR,
                                             d_car_res)) %>% 
     car_stats_tables(indu_fac)
+  for (i in 1:3) {
+    scar_indu[[i]]$significance <- vec_replace(scar_indu[[i]]$significance,
+                                              c("","*","**","***"),
+                                              0:3)
+  }
   # SUPERSECTOR
   scar_supe <- fetch_stats(name_lst = supe_fac,
                          directory = paste0(d_root,
@@ -679,8 +718,19 @@ for (EVT in seq_along(e_meta)) {
                                             E_DIR,
                                             d_car_res)) %>% 
     car_stats_tables(supe_fac)
-  
+  for (i in 1:3) {
+    scar_supe[[i]]$significance <- vec_replace(scar_supe[[i]]$significance,
+                                               c("","*","**","***"),
+                                               0:3)
+  }
   scar_cols <- names(scar_geo[[1]])
+  
+  print("All test-results retrieved successfully.")
+  
+  
+  
+  
+  
   # Merge AAR & CAAR data.frames ####
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_fac), geo_fac)
