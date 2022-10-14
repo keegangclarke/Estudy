@@ -571,6 +571,19 @@ for (type in 1:2) {
 }
 
 # META LOOP L2 ####
+# bin.ar.rtns <- make_list(4, c("event1", "event2", "event3", "event4"))
+# bin.car.rtns <- make_list(4, c("event1", "event2", "event3", "event4"))
+ar.stats <- make_list(4, c("event1", "event2", "event3", "event4"))
+car.stats <- make_list(4, c("event1", "event2", "event3", "event4"))
+
+for(b in seq_along(e_meta)) {
+  # bin.ar.rtns[[b]] <- make_list(3,c('geo','indu','supe'))
+  # bin.car.rtns[[b]] <- make_list(3,c('geo','indu','supe'))
+  
+  ar.stats[[b]] <- make_list(3,c('geo','indu','supe'))
+  car.stats[[b]] <- make_list(3,c('geo','indu','supe'))
+}
+
 for (EVT in seq_along(e_meta)) {
   # SPECIFY PARAMS
   E_NAME <- e_meta[[EVT]]$event_name
@@ -602,7 +615,7 @@ for (EVT in seq_along(e_meta)) {
                                            d_supe,
                                            E_DIR,
                                            d_ar))
-  
+
   # CUMULATIVE ABNORMAL RETURNS
   # GEOGRAPHIC
   car_geo <- fetch_rtns(name_lst = geo_fac,
@@ -624,7 +637,7 @@ for (EVT in seq_along(e_meta)) {
                                             d_supe,
                                             E_DIR,
                                             d_car))
-  
+
   # AARs: RETRIEVE ALL AAR DATA ####
   # GEOGRAPHIC
   aar_geo <- fetch_rtns(name_lst = geo_fac,
@@ -685,6 +698,8 @@ for (EVT in seq_along(e_meta)) {
                                           d_ar_res)) %>% 
     drop_ar_stats(ar_cols_to_keep)
   sar_geo <- ar_lst_signif_repl(sar_geo, ar_cols_to_keep)
+  ar.stats[[E_NAME]]$geo <- sar_geo
+  
   # INDUSTRY
   sar_indu <- fetch_stats(name_lst = indu_fac,
                         directory = paste0(d_root,
@@ -694,6 +709,8 @@ for (EVT in seq_along(e_meta)) {
                                            d_ar_res)) %>% 
     drop_ar_stats(ar_cols_to_keep)
   sar_indu <- ar_lst_signif_repl(sar_indu, ar_cols_to_keep)
+  ar.stats[[E_NAME]]$indu <- sar_indu
+  
   # SUPERSECTOR
   sar_supe <- fetch_stats(name_lst = supe_fac,
                         directory = paste0(d_root,
@@ -703,6 +720,8 @@ for (EVT in seq_along(e_meta)) {
                                            d_ar_res)) %>% 
     drop_ar_stats(ar_cols_to_keep)
   sar_supe <- ar_lst_signif_repl(sar_supe, ar_cols_to_keep)
+  ar.stats[[E_NAME]]$supe <- ar_supe
+  
   sar_cols <- names(sar_geo[[1]])
   
   # CUMULATIVE ABNORMAL RETURNS
@@ -718,6 +737,7 @@ for (EVT in seq_along(e_meta)) {
                                               c("","*","**","***"),
                                               0:3)
   }
+  car.stats[[E_NAME]]$geo <- scar_geo
   
   # INDUSTRY
   scar_indu <- fetch_stats(name_lst = indu_fac,
@@ -732,6 +752,8 @@ for (EVT in seq_along(e_meta)) {
                                               c("","*","**","***"),
                                               0:3)
   }
+  car.stats[[E_NAME]]$indu <- scar_indu
+  
   # SUPERSECTOR
   scar_supe <- fetch_stats(name_lst = supe_fac,
                          directory = paste0(d_root,
@@ -745,14 +767,11 @@ for (EVT in seq_along(e_meta)) {
                                                c("","*","**","***"),
                                                0:3)
   }
+  car.stats[[E_NAME]]$supe <- scar_supe
+
   scar_cols <- names(scar_geo[[1]])
-  
-  print("All test-results retrieved successfully.")
-  
-  
-  
-  
-  
+
+  toggle <- function() {
   # Merge AAR & CAAR data.frames ####
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_fac), geo_fac)
@@ -826,10 +845,15 @@ for (EVT in seq_along(e_meta)) {
                   "aar_caar/")
   )
   
-  # BUILD TABLES ####
+
   
-  scar_indu <- car_stats_tables(scar_indu, indu_fac)
   
+  }
+}
+
+# PLAN SLICE OUT SPECIFIC DATES AND COMBINE
+
+for (evt in seq_along(e_meta)) {
   
 }
 
