@@ -548,6 +548,21 @@ drop_ar_stats <- function(ar_lst, to_keep) {
   }
   return(ar_lst)
 }
+# FUNCTION TO REPLACE SIG. STRING VECTORS WITH INTERGER VACTORS ####
+ar_lst_signif_repl <- function(ar_lst, sig_cols) {
+  for (i in seq_along(ar_lst)) {
+    res_df <- ar_lst[[i]]
+    for (j in seq_along(sig_cols)) {
+      col <- sig_cols[[j]]
+      
+      res_df[[col]] <- vec_replace(res_df[[col]],
+                                   c("", "*", "**", "***"),
+                                   0:3)
+    }
+    ar_lst[[i]] <- res_df
+  }
+  return(ar_lst)
+}
 #############
 ## META LOOP L1 ####
 # Cycles through whole process for "geo" and "ICB"
@@ -658,6 +673,7 @@ for (EVT in seq_along(e_meta)) {
   # ARs & CARs: Retrieve STATS data ####
   # DROP UNUSED STATS
   ar_cols_to_keep <- c("date", "weekday", "pct.para", "mean", "bh_stat", "bh_signif", "pct.nonpara", "gsign_stat", "gsign_signif", "mrank_stat", "mrank_signif")
+  signif_cols <- c('bh_signif','gsign_signif','mrank_signif')
   # rm_nonpara <- c("rank_test","sign_test", "corrado_sign_test", "wilcoxon_test")
   # rm_para <- c('brown_warner_1980', 'brown_warner_1985', 't_test', 'patell', 'lamb')
   # sar_geo$KOSPI.Index[(names(sar_geo$KOSPI.Index) %in% ar_cols_to_keep)]
@@ -666,21 +682,27 @@ for (EVT in seq_along(e_meta)) {
                        directory = paste0(d_root,
                                           d_geo,
                                           E_DIR,
-                                          d_ar_res))
+                                          d_ar_res)) %>% 
+    drop_ar_stats(ar_cols_to_keep)
+  sar_geo <- ar_lst_signif_repl(sar_geo, ar_cols_to_keep)
   # INDUSTRY
   sar_indu <- fetch_stats(name_lst = indu_fac,
                         directory = paste0(d_root,
                                            d_icb,
                                            d_indu,
                                            E_DIR,
-                                           d_ar_res))
+                                           d_ar_res)) %>% 
+    drop_ar_stats(ar_cols_to_keep)
+  sar_indu <- ar_lst_signif_repl(sar_indu, ar_cols_to_keep)
   # SUPERSECTOR
   sar_supe <- fetch_stats(name_lst = supe_fac,
                         directory = paste0(d_root,
                                            d_icb,
                                            d_supe,
                                            E_DIR,
-                                           d_ar_res))
+                                           d_ar_res)) %>% 
+    drop_ar_stats(ar_cols_to_keep)
+  sar_supe <- ar_lst_signif_repl(sar_supe, ar_cols_to_keep)
   sar_cols <- names(sar_geo[[1]])
   
   # CUMULATIVE ABNORMAL RETURNS
@@ -696,7 +718,7 @@ for (EVT in seq_along(e_meta)) {
                                               c("","*","**","***"),
                                               0:3)
   }
-  scar_geo
+  
   # INDUSTRY
   scar_indu <- fetch_stats(name_lst = indu_fac,
                          directory = paste0(d_root,
