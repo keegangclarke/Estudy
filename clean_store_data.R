@@ -86,11 +86,6 @@ keys <- colnames(name_dict)
 # Replace spaces with '.' to be able to select columns from data.frame
 keys <- as.vector(gsub(" ", ".", keys))
 
-write.table(keys,
-            file = "C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/results/estudy/id/geographic_region/market_names.txt",
-            row.names = FALSE,
-            col.names = FALSE)
-
 # Initialise empty lists with required length indice_list <- vector(mode = 'list', length = n)
 stock_list <- vector(mode = "list", length = length(df3))
 market_list <- vector(mode = "list", length = length(df3))
@@ -226,6 +221,10 @@ store_results2(market_list,
                                   "market_indices/"),
                type = "data",
                rowNames = FALSE)
+write.csv(keys,
+          file = paste0(d_store,
+                        "market_indices/market_names.csv"),
+          row.names = FALSE)
 
 ## NOTE: THIS DOES NOT CLEAN THE STOCKS EFFECTIVELY WITHOUT THE SLICING
 # for the STOCKS (market-constituent) data
