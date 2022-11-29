@@ -564,6 +564,72 @@ ar_lst_signif_repl <- function(ar_lst, sig_cols) {
   }
   return(ar_lst)
 }
+# FUNCTION TO PLOT CAR STATISTICS ####
+plot_car_stats <- function(car_lst,
+                           grouping,
+                           Title = paste0(grouping, ": ", "Event Period ", EVT),
+                           Save=FALSE,
+                           Path=NULL,
+                           Filename=NULL,
+                           rank_sig) {
+  # get data
+  car_df <- car_lst$car_brown_warner_1985
+  # get rank significance
+  car_df <- dplyr::full_join(car_df,subset(car_lst$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
+  # Ensure correct dtypes 
+  car_df$significance <- factor(car_df$significance,
+                                levels = c("NA", "10%", "5%", "1%"),
+                                ordered = TRUE)
+  car_df$rank.sig <- factor(car_df$rank.sig,
+                            levels = c("NA", "10%", "5%", "1%"),
+                            ordered = TRUE)
+  car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
+  car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
+  car_df$car_mean <- as.numeric(car_df$car_mean)
+  # Reorder
+  car_df <- car_df[order(car_df$car_mean),]
+  p <-  ggplot(data = car_df) +
+    geom_bar(
+      mapping = aes(
+        y = group,
+        x = sort.int(car_mean * 100, decreasing = TRUE),
+        fill = significance,
+        colour = rank.sig
+      ),
+      size = 1,
+      stat = 'identity',
+      show.legend = TRUE
+    ) +
+    theme_bw() +
+    labs(
+      title = Title,
+      subtitle = "Cumulative Average Abnormal Returns",
+      x = "Cumulative Abnormal Return (%)",
+      y = "",
+      fill = "Significance"
+    ) +
+    scale_fill_manual(name = "Parametric \nSignificance",
+                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
+    scale_colour_manual(name = "Rank Test \nSignificance",
+                        values = RColorBrewer::brewer.pal(4, 'Oranges')) +
+    scale_y_discrete(limits = car_df$group,
+                     guide = guide_axis(n.dodge = 1)) +
+    scale_x_continuous(n.breaks = 20)
+  
+  if (Save) {
+    ggsave(
+      plot = p,
+      filename = Filename,
+      path = Path,
+      dpi = 600,
+      width = 8,
+      height = 4,
+      units = 'in'
+    )
+  }
+  
+  return(p)
+}
 #############
 ## META LOOP L1 ####
 # Cycles through whole process for "geo" and "ICB"
@@ -773,83 +839,16 @@ for (EVT in seq_along(e_meta)) {
   scar_cols <- names(scar_geo[[1]])
   
   # Plotting of CAR stats ####
-  # Function to make it easier
-  plot_car_stats <- function(car_lst,
-                             grouping,
-                             Title = paste0(grouping, ": ", "Event Period ", event),
-                             Save=FALSE,
-                             Path=NULL,
-                             Filename=NULL,
-                             rank_sig) {
-    # get data
-    car_df <- car_lst$car_brown_warner_1985
-    # get rank significance
-    car_df <- dplyr::full_join(car_df,subset(car_lst$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
-    # Ensure correct dtypes 
-    car_df$significance <- factor(car_df$significance,
-                                  levels = c("NA", "10%", "5%", "1%"),
-                                  ordered = TRUE)
-    car_df$rank.sig <- factor(car_df$rank.sig,
-                                  levels = c("NA", "10%", "5%", "1%"),
-                                  ordered = TRUE)
-    car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
-    car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
-    car_df$car_mean <- as.numeric(car_df$car_mean)
-    # Reorder
-    car_df <- car_df[order(car_df$car_mean),]
-    p <-  ggplot(data = car_df) +
-      geom_bar(
-        mapping = aes(
-          y = group,
-          x = sort.int(car_mean * 100, decreasing = TRUE),
-          fill = significance,
-          colour = rank.sig
-        ),
-        size = 1,
-        stat = 'identity',
-        show.legend = TRUE
-      ) +
-      theme_bw() +
-      labs(
-        title = Title,
-        subtitle = "Cumulative Average Abnormal Returns",
-        x = "Cumulative Abnormal Return (%)",
-        y = "",
-        fill = "Significance"
-      ) +
-      scale_fill_manual(name = "Parametric \nSignificance",
-                        values = RColorBrewer::brewer.pal(4, 'PuBu')) +
-      scale_colour_manual(name = "Rank Test \nSignificance",
-                          values = RColorBrewer::brewer.pal(4, 'Oranges')) +
-      scale_y_discrete(limits = car_df$group,
-                       guide = guide_axis(n.dodge = 1)) +
-      scale_x_continuous(n.breaks = 20)
-    
-    if (Save) {
-      ggsave(
-        plot = p,
-        filename = Filename,
-        path = Path,
-        dpi = 600,
-        width = 8,
-        height = 4,
-        units = 'in'
-      )
-    }
-    
-    return(p)
-  }
-  
   # Plot CAR results: B&W & RANK
-  plot_car_stats(car.stats[[event]][['geo']], 'Geographic')
-  plot_car_stats(car.stats[[event]][['indu']], 'Industry')
-  plot_car_stats(car.stats[[event]][['supe']], 'Supersector')
+  plot_car_stats(car.stats[[E_NAME]][['geo']], 'Geographic')
+  plot_car_stats(car.stats[[E_NAME]][['indu']], 'Industry')
+  plot_car_stats(car.stats[[E_NAME]][['supe']], 'Supersector')
 
   
   }
   
   # Select Data
-  temp_df <- car.stats[[event]]$supe$car_brown_warner_1985
+  temp_df <- car.stats[[E_NAME]]$supe$car_brown_warner_1985
   temp_df <- dplyr::full_join(temp_df,subset(scar_supe$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
   # Ensure correct dtypes 
   temp_df$significance <- factor(temp_df$significance,
@@ -881,7 +880,7 @@ for (EVT in seq_along(e_meta)) {
     ) +
     theme_bw() +
     labs(
-      title = 'Event period 4',
+      title = '<- period 4',
       subtitle = "Cumulative Average Abnormal Returns",
       x = "Cumulative Abnormal Return (%)",
       y = "",
