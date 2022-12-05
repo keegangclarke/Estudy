@@ -35,7 +35,7 @@ d_proto <- "prototypes/"
 
 # LOAD ID INFO ####
 # Static since variables not identical format
-geo_fac <- paste0(d_root,
+geo_names <- paste0(d_root,
                   d_id,
                   d_geo,
                   "market_names.txt") %>%
@@ -51,16 +51,16 @@ df_sector_id <- paste0(d_root,
 # Create industry ID variables
 industry <- df_sector_id[,1:2] %>%
   as.data.frame
-indu_fac <- industry[,2] %>%
+indu_names <- industry[,2] %>%
   unique %>%
-  as.factor
+  as.character
 # Create supersector ID variables
 supersector <- cbind.data.frame(df_sector_id[,1], df_sector_id[,3]) %>% 
   set_colnames(c(names(df_sector_id)[[1]],
                  names(df_sector_id)[[3]]))
-supe_fac <- supersector[,2] %>%
+supe_names <- supersector[,2] %>%
   unique %>%
-  as.factor
+  as.character
 
 # Specify patterns
 pattern_list <- c(" ", "/", "-", "\\*", "&")
@@ -92,7 +92,7 @@ cal_names <- paste0(d_root,
   casefold()
 
 rm_idx2 <- c("\\.index")
-temp_names <- geo_fac %>%
+temp_names <- geo_names %>%
   casefold %>%
   lapply(stringr::str_replace_all,
          pattern = rm_idx2,
@@ -105,7 +105,7 @@ if(!identical(cal_names, temp_names)) {
   rm(temp_names, rm_idx2)
 )
 # add str identifiers for later
-names(cal_names) <- geo_fac
+names(cal_names) <- geo_names
 
 d_cals <- make_list(Length = length(cal_names), cal_names)
 
@@ -274,14 +274,14 @@ event_spec <- function(e_name = "",
 # list to store all event params
 all_events <- make_list(4, 
                         c("event1", "event2", "event3", "event4"))
-groupings <- make_list(Length = length(geo_fac),
-                       geo_fac)
+groupings <- make_list(Length = length(geo_names),
+                       geo_names)
 
 for (event in seq_along(all_events)) {
   all_events[[event]] <- groupings
 }
-for (geo in seq_along(geo_fac)) {
-  group <- geo_fac[[geo]]
+for (geo in seq_along(geo_names)) {
+  group <- geo_names[[geo]]
   CAL <- cal_names[[geo]]
   
   all_events[[1]][[group]] <- event_spec(
@@ -352,7 +352,7 @@ e_meta[[4]] <- event_spec(
   calendar = "no_holidays"
 )
 
-# FUNCTION TO GET ABNORMAL RETURN DATA ####
+# F: fetch_rtns() # GET ABNORMAL RETURN DATA ####
 fetch_rtns <- function(name_lst, directory) {
   d <- vector(mode = "character",
               length = length(name_lst))
@@ -376,7 +376,7 @@ fetch_rtns <- function(name_lst, directory) {
   return(storage_lst)
 }
 
-# FUNCTION TO RETRIEVE STATISTICS ####
+# F: fetch_stats() # RETRIEVE STATISTICS ####
 fetch_stats <- function(name_lst, directory) {
   d <- vector(mode = "character",
               length = length(name_lst))
@@ -399,7 +399,7 @@ fetch_stats <- function(name_lst, directory) {
   return(storage_lst)
 }
 
-# FUNCTION TO MERGE CAAR & AAR DATA LISTS TOGETHER FOR PLOTS ####
+# F: merge_caar_aar() # MERGE CAAR & AAR DATA LISTS TOGETHER FOR PLOTS ####
 merge_caar_aar <-
   function(aar,
            caar,
@@ -448,7 +448,7 @@ merge_caar_aar <-
   }
 
 
-# FUNCTION TO PLOT AARs VS CAARs ####
+# F: aar_caar_plot() # PLOT AARs VS CAARs ####
 aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
   for (i in seq_along(name_lst)) {
     name <- name_lst[[i]]
@@ -494,7 +494,7 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
   }
 }
 
-# USELESS FUNCTION TO SLICE LIST OF NAMES WITH INDICES IN REPEATED FASHION ####
+# USELESS F: slice_names() # SLICE LIST OF NAMES WITH INDICES IN REPEATED FASHION ####
 slice_names <- function(name_list, Names) {
   lst <- vector(mode = "list", length = length(name_list))
   for (i in seq_along(Names)) {
@@ -504,29 +504,29 @@ slice_names <- function(name_list, Names) {
   lst <- unlist(lst)
   return(lst)
 }
-# FUNCTION TO RECONFIGURE CARS SO THAT THEY ARE GROUPED BY STATISTIC ####
+# F: car_stats_tables() # RECONFIGURE CARS SO THAT THEY ARE GROUPED BY STATISTIC ####
 car_stats_tables <- function(car_list, name_vec) {
   df <- car_list[[1]]
   df[["group"]] <- names(car_list)[[1]]
-  tmp_names <- name_vec[-1]
+  tmp_names <- name_vec #[-1]
   
   for (i in seq_along(tmp_names)) {
     name <- tmp_names[[i]]
     df <- dplyr::full_join(df, car_list[[name]])
     df[is.na(df)] = as.character(name)
   }
-  stats_fac <- as.factor(unique(df$name))
-  store_lst <- make_list(length(stats_fac),
-                         stats_fac)
+  stats_names <- as.character(unique(df$name))
+  store_lst <- make_list(length(stats_names),
+                         stats_names)
   
-  for (fac in stats_fac) {
+  for (fac in stats_names) {
     store_lst[[fac]] <- df %>%
       dplyr::filter(name == fac) %>%
       subset(select = -c(name))
   }
   return(store_lst)
 }
-# FUNCTION TO REPLACE SIG. STRING VECTORS WITH INTERGER VECTORS ####
+# F: vec_replace() # REPLACE SIG. STRING VECTORS WITH INTERGER VECTORS ####
 # Replace significance strings with integers
 vec_replace <- function(vec, to_replace, replacement) {
   if (length(to_replace) == length(replacement)) {
@@ -538,7 +538,7 @@ vec_replace <- function(vec, to_replace, replacement) {
   }
   return(vec)
 }
-# FUNCTION TO DROP ALL THE UNWANTED COLUMNS FROM THE AR_STATISTIC TABLES ####
+# F: drop_ar_stats() # DROP ALL THE UNWANTED COLUMNS FROM THE AR_STATISTIC TABLES ####
 drop_ar_stats <- function(ar_lst, to_keep) {
   # func removes the unwanted cols
   # NOTE: data structure of data.frames in ar_lst must be identical
@@ -549,7 +549,7 @@ drop_ar_stats <- function(ar_lst, to_keep) {
   }
   return(ar_lst)
 }
-# FUNCTION TO REPLACE SIG. STRING VECTORS WITH INTERGER VACTORS ####
+# F: ar_lst_signif_repl() # REPLACE SIG. STRING VECTORS WITH INTERGER VACTORS ####
 ar_lst_signif_repl <- function(ar_lst, sig_cols) {
   for (i in seq_along(ar_lst)) {
     res_df <- ar_lst[[i]]
@@ -564,16 +564,18 @@ ar_lst_signif_repl <- function(ar_lst, sig_cols) {
   }
   return(ar_lst)
 }
-# FUNCTION TO PLOT CAR STATISTICS ####
+# F: plot_car_stats() # PLOT CAR STATISTICS ####
 plot_car_stats <- function(car_lst,
                            grouping,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
-                           Save=FALSE,
-                           Path=NULL,
-                           Filename=NULL,
+                           ar_lst = NULL,
+                           Save = FALSE,
+                           Path = NULL,
+                           Filename = NULL,
                            rank_sig) {
   # get data
   car_df <- car_lst$car_brown_warner_1985
+
   # get rank significance
   car_df <- dplyr::full_join(car_df,subset(car_lst$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
   # Ensure correct dtypes 
@@ -583,16 +585,34 @@ plot_car_stats <- function(car_lst,
   car_df$rank.sig <- factor(car_df$rank.sig,
                             levels = c("NA", "10%", "5%", "1%"),
                             ordered = TRUE)
+
+  if (!is.null(ar_lst)) {
+    # counts the sample sizes used per group
+    sm <- ar_lst %>% sapply(length) %>% as.data.frame() %>% set_colnames('sample.size')
+    sm[['group']] <- rownames(sm)
+    rownames(sm) <- NULL
+
+    # add sample sizes # dplyr ran into some strange problems
+    car_df[['sample.size']] <- NA
+    for (i in 1:nrow(sm)) {
+      idx <- which(car_df$group == sm[i,]$group)
+      car_df[idx,]$sample.size <- sm[i,]$sample.size
+      
+    }
+  } else {}
+  # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
   car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
   car_df$car_mean <- as.numeric(car_df$car_mean)
   # Reorder
   car_df <- car_df[order(car_df$car_mean),]
-  p <-  ggplot(data = car_df) +
+
+  # p <-
+    ggplot(data = car_df) +
     geom_bar(
       mapping = aes(
         y = group,
-        x = sort.int(car_mean * 100, decreasing = TRUE),
+        x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
         fill = significance,
         colour = rank.sig
       ),
@@ -600,6 +620,11 @@ plot_car_stats <- function(car_lst,
       stat = 'identity',
       show.legend = TRUE
     ) +
+    if (exists('sm', envir = environment())) {
+      geom_text(mapping = aes(y = group,
+                              x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
+                              label = sample.size)) +
+    } else {}
     theme_bw() +
     labs(
       title = Title,
@@ -663,20 +688,20 @@ for (EVT in seq_along(e_meta)) {
   print(E_NAME)
   # ARs & CARs: Retrieve data ####
   # GEOGRAPHIC
-  ar_geo <- fetch_rtns(name_lst = geo_fac,
+  ar_geo <- fetch_rtns(name_lst = geo_names,
                        directory = paste0(d_root,
                                           d_geo,
                                           E_DIR,
                                           d_ar))
   # INDUSTRY
-  ar_indu <- fetch_rtns(name_lst = indu_fac,
+  ar_indu <- fetch_rtns(name_lst = indu_names,
                         directory = paste0(d_root,
                                            d_icb,
                                            d_indu,
                                            E_DIR,
                                            d_ar))
   # SUPERSECTOR
-  ar_supe <- fetch_rtns(name_lst = supe_fac,
+  ar_supe <- fetch_rtns(name_lst = supe_names,
                         directory = paste0(d_root,
                                            d_icb,
                                            d_supe,
@@ -685,20 +710,20 @@ for (EVT in seq_along(e_meta)) {
 
   # CUMULATIVE ABNORMAL RETURNS
   # GEOGRAPHIC
-  car_geo <- fetch_rtns(name_lst = geo_fac,
+  car_geo <- fetch_rtns(name_lst = geo_names,
                         directory = paste0(d_root,
                                            d_geo,
                                            E_DIR,
                                            d_car))
   # INDUSTRY
-  car_indu <- fetch_rtns(name_lst = indu_fac,
+  car_indu <- fetch_rtns(name_lst = indu_names,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_indu,
                                             E_DIR,
                                             d_car))
   # SUPERSECTOR
-  car_supe <- fetch_rtns(name_lst = supe_fac,
+  car_supe <- fetch_rtns(name_lst = supe_names,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_supe,
@@ -707,20 +732,20 @@ for (EVT in seq_along(e_meta)) {
 
   # AARs: RETRIEVE ALL AAR DATA ####
   # GEOGRAPHIC
-  aar_geo <- fetch_rtns(name_lst = geo_fac,
+  aar_geo <- fetch_rtns(name_lst = geo_names,
                         directory = paste0(d_root,
                                            d_geo,
                                            E_DIR,
                                            d_aar))
   # INDUSTRY
-  aar_indu <- fetch_rtns(name_lst = indu_fac,
+  aar_indu <- fetch_rtns(name_lst = indu_names,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_indu,
                                             E_DIR,
                                             d_aar))
   # SUPERSECTOR
-  aar_supe <- fetch_rtns(name_lst = supe_fac,
+  aar_supe <- fetch_rtns(name_lst = supe_names,
                          directory = paste0(d_root,
                                             d_icb,
                                             d_supe,
@@ -729,20 +754,20 @@ for (EVT in seq_along(e_meta)) {
   
   # CAARs: RETRIEVE ALL CAAR DATA ####
   # GEOGRAPHIC
-  caar_geo <- fetch_rtns(name_lst = geo_fac,
+  caar_geo <- fetch_rtns(name_lst = geo_names,
                          directory = paste0(d_root,
                                             d_geo,
                                             E_DIR,
                                             d_caar))
   # INDUSTRY
-  caar_indu <- fetch_rtns(name_lst = indu_fac,
+  caar_indu <- fetch_rtns(name_lst = indu_names,
                           directory = paste0(d_root,
                                              d_icb,
                                              d_indu,
                                              E_DIR,
                                              d_caar))
   # SUPERSECTOR
-  caar_supe <- fetch_rtns(name_lst = supe_fac,
+  caar_supe <- fetch_rtns(name_lst = supe_names,
                           directory = paste0(d_root,
                                              d_icb,
                                              d_supe,
@@ -758,8 +783,8 @@ for (EVT in seq_along(e_meta)) {
   # rm_para <- c('brown_warner_1980', 'brown_warner_1985', 't_test', 'patell', 'lamb')
   # sar_geo$KOSPI.Index[(names(sar_geo$KOSPI.Index) %in% ar_cols_to_keep)]
   # GEOGRAPHIC
-  sar_geo <- fetch_stats(name_lst = geo_fac,
-                       directory = paste0(d_root,
+  sar_geo <- fetch_stats(name_lst = geo_names,
+                         directory = paste0(d_root,
                                           d_geo,
                                           E_DIR,
                                           d_ar_res)) %>% 
@@ -768,8 +793,8 @@ for (EVT in seq_along(e_meta)) {
   ar.stats[[E_NAME]]$geo <- sar_geo
   
   # INDUSTRY
-  sar_indu <- fetch_stats(name_lst = indu_fac,
-                        directory = paste0(d_root,
+  sar_indu <- fetch_stats(name_lst = indu_names,
+                          directory = paste0(d_root,
                                            d_icb,
                                            d_indu,
                                            E_DIR,
@@ -779,8 +804,8 @@ for (EVT in seq_along(e_meta)) {
   ar.stats[[E_NAME]]$indu <- sar_indu
   
   # SUPERSECTOR
-  sar_supe <- fetch_stats(name_lst = supe_fac,
-                        directory = paste0(d_root,
+  sar_supe <- fetch_stats(name_lst = supe_names,
+                          directory = paste0(d_root,
                                            d_icb,
                                            d_supe,
                                            E_DIR,
@@ -793,12 +818,12 @@ for (EVT in seq_along(e_meta)) {
   
   # CUMULATIVE ABNORMAL RETURNS
   # GEOGRAPHIC
-  scar_geo <- fetch_stats(name_lst = geo_fac,
-                        directory = paste0(d_root,
+  scar_geo <- fetch_stats(name_lst = geo_names,
+                          directory = paste0(d_root,
                                            d_geo,
                                            E_DIR,
                                            d_car_res)) %>% 
-    car_stats_tables(geo_fac)
+    car_stats_tables(geo_names)
   for (i in 1:3) {
     scar_geo[[i]]$significance <- vec_replace(scar_geo[[i]]$significance,
                                               c("","*","**","***"),
@@ -807,13 +832,13 @@ for (EVT in seq_along(e_meta)) {
   car.stats[[E_NAME]]$geo <- scar_geo
   
   # INDUSTRY
-  scar_indu <- fetch_stats(name_lst = indu_fac,
-                         directory = paste0(d_root,
-                                            d_icb,
-                                            d_indu,
-                                            E_DIR,
-                                            d_car_res)) %>% 
-    car_stats_tables(indu_fac)
+  scar_indu <- fetch_stats(name_lst = indu_names,
+                           directory = paste0(d_root,
+                                              d_icb,
+                                              d_indu,
+                                              E_DIR,
+                                              d_car_res)) %>% 
+    car_stats_tables(indu_names)
   for (i in 1:3) {
     scar_indu[[i]]$significance <- vec_replace(scar_indu[[i]]$significance,
                                               c("","*","**","***"),
@@ -822,13 +847,13 @@ for (EVT in seq_along(e_meta)) {
   car.stats[[E_NAME]]$indu <- scar_indu
   
   # SUPERSECTOR
-  scar_supe <- fetch_stats(name_lst = supe_fac,
-                         directory = paste0(d_root,
-                                            d_icb,
-                                            d_supe,
-                                            E_DIR,
-                                            d_car_res)) %>% 
-    car_stats_tables(supe_fac)
+  scar_supe <- fetch_stats(name_lst = supe_names,
+                           directory = paste0(d_root,
+                                              d_icb,
+                                              d_supe,
+                                              E_DIR,
+                                              d_car_res)) %>% 
+    car_stats_tables(supe_names)
   for (i in 1:3) {
     scar_supe[[i]]$significance <- vec_replace(scar_supe[[i]]$significance,
                                                c("","*","**","***"),
@@ -849,7 +874,10 @@ for (EVT in seq_along(e_meta)) {
   
   # Select Data
   temp_df <- car.stats[[E_NAME]]$supe$car_brown_warner_1985
-  temp_df <- dplyr::full_join(temp_df,subset(scar_supe$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
+  temp_df <- dplyr::full_join(temp_df,
+                              subset(scar_supe$car_rank_test,
+                                     select=c('significance', 'group')) %>% 
+                                set_colnames(c('rank.sig', 'group')))
   # Ensure correct dtypes 
   temp_df$significance <- factor(temp_df$significance,
                                  levels = c("NA", "10%", "5%", "1%"),
@@ -897,7 +925,7 @@ for (EVT in seq_along(e_meta)) {
   toggle <- function() {
   # Merge AAR & CAAR data.frames ####
   # GEOGRAPHIC
-  ave_lst_geo <- make_list(length(geo_fac), geo_fac)
+  ave_lst_geo <- make_list(length(geo_names), geo_names)
   for (i in seq_along(ave_lst_geo)) {
     EVENT_SPEC <- all_events[[E_NAME]][[i]]
     name <- EVENT_SPEC$group
@@ -909,9 +937,9 @@ for (EVT in seq_along(e_meta)) {
     rm(temp_df)
   }
   # INDUSTRY
-  ave_lst_indu <- make_list(length(indu_fac), indu_fac)
+  ave_lst_indu <- make_list(length(indu_names), indu_names)
   for (i in seq_along(ave_lst_indu)) {
-    name <- indu_fac[[i]]
+    name <- indu_names[[i]]
     
     temp_df <- merge_caar_aar(aar = aar_indu[[name]],
                               caar = caar_indu[[name]],
@@ -920,9 +948,9 @@ for (EVT in seq_along(e_meta)) {
     rm(temp_df)
   }
   # SUPERSECTOR
-  ave_lst_supe <- make_list(length(supe_fac), supe_fac)
+  ave_lst_supe <- make_list(length(supe_names), supe_names)
   for (i in seq_along(ave_lst_supe)) {
-    name <- supe_fac[[i]]
+    name <- supe_names[[i]]
     
     temp_df <- merge_caar_aar(aar = aar_supe[[name]],
                               caar = caar_supe[[name]],
@@ -934,7 +962,7 @@ for (EVT in seq_along(e_meta)) {
   # PLOT AARs V CAARs ####
   # GEOGRAPHIC
   aar_caar_plot(
-    name_lst = geo_fac,
+    name_lst = geo_names,
     aar_caar_df_lst = ave_lst_geo,
     PATH = paste0(d_root,
                   d_res_pres,
@@ -945,7 +973,7 @@ for (EVT in seq_along(e_meta)) {
   )
   # INDUSTRY
   aar_caar_plot(
-    name_lst = indu_fac,
+    name_lst = indu_names,
     aar_caar_df_lst = ave_lst_indu,
     PATH = paste0(d_root,
                   d_res_pres,
@@ -957,7 +985,7 @@ for (EVT in seq_along(e_meta)) {
   )
   # SUPERSECTOR
   aar_caar_plot(
-    name_lst = indu_fac,
+    name_lst = indu_names,
     aar_caar_df_lst = ave_lst_indu,
     PATH = paste0(d_root,
                   d_res_pres,
@@ -981,8 +1009,8 @@ for (evt in seq_along(e_meta)) {
 }
 
 # PLOT ARs ####
-for (i in seq_along(geo_fac)) {
-  indx <- geo_fac[[i]]
+for (i in seq_along(geo_names)) {
+  indx <- geo_names[[i]]
   # AAR vs CAAR PLOT ####
   p_ave <-
     ggplot(data = ave_lst_geo[[indx]]) +
@@ -1029,7 +1057,7 @@ for (i in seq_along(geo_fac)) {
 }
 
 # FOR EXPERIMENTS ####
-indx <- geo_fac[[i]]
+indx <- geo_names[[i]]
 # AAR vs CAAR PLOT ####
 p1 <-
   ggplot(data = ave_lst_geo[[indx]]) +
