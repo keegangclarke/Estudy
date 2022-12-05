@@ -486,7 +486,7 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
       p_ave,
       filename = paste0(name, "_aar_caar.png"),
       path = PATH,
-      dpi = 320,
+      dpi = 600,
       width = 8,
       height = 4,
       units = 'in'
@@ -569,7 +569,6 @@ plot_car_stats <- function(car_lst,
                            grouping,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
                            ar_lst = NULL,
-                           Save = FALSE,
                            Path = NULL,
                            Filename = NULL,
                            rank_sig) {
@@ -607,7 +606,7 @@ plot_car_stats <- function(car_lst,
   # Reorder
   car_df <- car_df[order(car_df$car_mean),]
 
-  # p <-
+  p <-
     ggplot(data = car_df) +
     geom_bar(
       mapping = aes(
@@ -620,15 +619,15 @@ plot_car_stats <- function(car_lst,
       stat = 'identity',
       show.legend = TRUE
     ) +
-    if (exists('sm', envir = environment())) {
-      geom_text(mapping = aes(y = group,
-                              x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
-                              label = sample.size)) +
-    } else {}
     theme_bw() +
     labs(
       title = Title,
-      subtitle = "Cumulative Average Abnormal Returns",
+      subtitle = paste("Cumulative Average Abnormal Returns:",
+                       e_meta[[EVT]]$event_window[[1]],
+                       " to ",
+                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
+                       ),
+      caption = "Sample sizes shown as integers.",
       x = "Cumulative Abnormal Return (%)",
       y = "",
       fill = "Significance"
@@ -639,15 +638,21 @@ plot_car_stats <- function(car_lst,
                         values = RColorBrewer::brewer.pal(4, 'Oranges')) +
     scale_y_discrete(limits = car_df$group,
                      guide = guide_axis(n.dodge = 1)) +
-    scale_x_continuous(n.breaks = 20)
+    scale_x_continuous(n.breaks = 20) +
+    geom_text(mapping = aes(y = group,
+                            x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
+                            label = sample.size),
+              position = position_dodge2(0))
+
   
-  if (Save) {
+  if (!is.null(Path)) {
+    Filename <- paste0(grouping, '_', 'E', EVT, '_car_stats_bar_graph.png')
     ggsave(
       plot = p,
       filename = Filename,
       path = Path,
       dpi = 600,
-      width = 8,
+      width = 12,
       height = 4,
       units = 'in'
     )
@@ -865,65 +870,39 @@ for (EVT in seq_along(e_meta)) {
   
   # Plotting of CAR stats ####
   # Plot CAR results: B&W & RANK
-  plot_car_stats(car.stats[[E_NAME]][['geo']], 'Geographic')
-  plot_car_stats(car.stats[[E_NAME]][['indu']], 'Industry')
-  plot_car_stats(car.stats[[E_NAME]][['supe']], 'Supersector')
-
+  plot_car_stats(car.stats[[E_NAME]][['geo']],
+                 'Geographic',
+                 ar_lst = ar_geo,
+                 Path = paste0(d_root,
+                        d_res_pres,
+                        d_plot,
+                        E_DIR,
+                        d_geo,
+                        "aar_caar/"))
+  plot_car_stats(car.stats[[E_NAME]][['indu']],
+                 'Industry',
+                 ar_lst = ar_indu,
+                 Path = paste0(d_root,
+                               d_res_pres,
+                               d_plot,
+                               E_DIR,
+                               d_icb,
+                               d_indu,
+                               "aar_caar/"))
+  plot_car_stats(car.stats[[E_NAME]][['supe']],
+                 'Supersector',
+                 ar_lst = ar_supe,
+                 Path = paste0(d_root,
+                               d_res_pres,
+                               d_plot,
+                               E_DIR,
+                               d_icb,
+                               d_supe,
+                               "aar_caar/"))
   
-  }
-  
-  # Select Data
-  temp_df <- car.stats[[E_NAME]]$supe$car_brown_warner_1985
-  temp_df <- dplyr::full_join(temp_df,
-                              subset(scar_supe$car_rank_test,
-                                     select=c('significance', 'group')) %>% 
-                                set_colnames(c('rank.sig', 'group')))
-  # Ensure correct dtypes 
-  temp_df$significance <- factor(temp_df$significance,
-                                 levels = c("NA", "10%", "5%", "1%"),
-                                 ordered = TRUE)
-  temp_df$rank.sig <- factor(temp_df$rank.sig,
-                             levels = c("NA", "10%", "5%", "1%"),
-                             ordered = TRUE)  
-  
-  temp_df$group <- gsub(pattern = '\\.', replacement = ' ', temp_df$group)
-  temp_df$group <- gsub(".Index", "", temp_df$group) %>% as.factor()
-  temp_df$car_mean <- as.numeric(temp_df$car_mean)
-  # Reorder
-  temp_df <- temp_df[order(temp_df$car_mean),]
-  
-  # Prototype CAR plot
-  # png(filename="bench_query_sort.png", width=600, height=600)
-  ggplot(data = temp_df) +
-    geom_bar(
-      mapping = aes(
-        y = group,
-        x = sort.int(car_mean * 100, decreasing = TRUE),
-        fill = significance,
-        colour = rank.sig
-      ),
-      size = 1,
-      stat = 'identity',
-      show.legend = TRUE
-    ) +
-    theme_bw() +
-    labs(
-      title = '<- period 4',
-      subtitle = "Cumulative Average Abnormal Returns",
-      x = "Cumulative Abnormal Return (%)",
-      y = "",
-      fill = "Significance"
-    ) +
-    scale_fill_manual(name = "Parametric \nSignificance",
-                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
-    scale_colour_manual(name = "Rank Test \nSignificance",
-                        values = RColorBrewer::brewer.pal(4, 'Oranges')) +
-    scale_y_discrete(limits = temp_df$group,
-                     guide = guide_axis(n.dodge=1)) +
-    scale_x_continuous(n.breaks=20)
-  
-  toggle <- function() {
   # Merge AAR & CAAR data.frames ####
+  toggle <- function() {
+
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_names), geo_names)
   for (i in seq_along(ave_lst_geo)) {
