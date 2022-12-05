@@ -981,12 +981,6 @@ for (EVT in seq_along(e_meta)) {
   }
 }
 
-# PLAN SLICE OUT SPECIFIC DATES AND COMBINE
-
-for (evt in seq_along(e_meta)) {
-  
-}
-
 # PLOT ARs ####
 for (i in seq_along(geo_names)) {
   indx <- geo_names[[i]]
