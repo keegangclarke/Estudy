@@ -550,15 +550,21 @@ drop_ar_stats <- function(ar_lst, to_keep) {
   return(ar_lst)
 }
 # F: ar_lst_signif_repl() # REPLACE SIG. STRING VECTORS WITH INTERGER VACTORS ####
-ar_lst_signif_repl <- function(ar_lst, sig_cols) {
+ar_lst_signif_repl <- function(ar_lst, sig_cols, ints=TRUE) {
   for (i in seq_along(ar_lst)) {
     res_df <- ar_lst[[i]]
     for (j in seq_along(sig_cols)) {
       col <- sig_cols[[j]]
       
+      if (ints) {
       res_df[[col]] <- vec_replace(res_df[[col]],
                                    c("", "*", "**", "***"),
                                    0:3)
+      } else {
+        res_df[[col]] <- vec_replace(res_df[[col]],
+                                     c("", "*", "**", "***"),
+                                     c("NA", "10%", "5%", "1%"))
+      }
     }
     ar_lst[[i]] <- res_df
   }
@@ -568,6 +574,7 @@ ar_lst_signif_repl <- function(ar_lst, sig_cols) {
 plot_car_stats <- function(car_lst,
                            grouping,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
+                           name_list = NULL,
                            ar_lst = NULL,
                            Path = NULL,
                            Filename = NULL,
@@ -628,7 +635,7 @@ plot_car_stats <- function(car_lst,
                        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
                        ),
       caption = "Sample sizes shown as integers.",
-      x = "Cumulative Abnormal Return (%)",
+      x = "CAAR (%)",
       y = "",
       fill = "Significance"
     ) +
@@ -658,6 +665,139 @@ plot_car_stats <- function(car_lst,
     )
   }
   
+  return(p)
+}
+
+# F: merge_ar_stats() # recombine lists of AR stat data.frames into single df ####
+merge_ar_stats <- function(ar_lst){
+  # get names
+  name_lst <- names(ar_lst)
+  # create base df
+  df <- ar_lst[[name_lst[[1]]]]
+  df[['group']] <- name_lst[[1]]
+  
+  # remove data already extracted
+  rem <- name_lst[-1]
+  # loop over names to
+  for (name in rem) {
+    tmp_df <- ar_lst[[name]]
+    tmp_df[['group']] <- name
+    df <- rbind.data.frame(df, tmp_df)
+  }
+  df[['group']] <- as.factor(df[['group']])
+  
+    for (i in 1:nrow(df)) {
+      if ((as.numeric(df[i, 'bh_signif']) >= 2)) {
+        df[i, 'text'] <- as.character(df[i, 'group'])
+      }
+    }
+  df$text <- tidyr::replace_na(df$text, "")
+  return(df)
+}
+# F: plot_ar_stats() # Plots bar chart of AR stats #### 
+plot_ar_stats <- function(ar_lst,
+                           grouping,
+                           Title = paste0(grouping, ": ", "Event Period ", EVT),
+                           Path = NULL,
+                           Filename = NULL,
+                           rank_sig) {
+  
+  ar_df <- merge_ar_stats(ar_lst = ar_lst)
+  # Change labels
+  ar_df$bh_signif <- vec_replace(ar_df$bh_signif,
+                                 c(0, 1, 2, 3),
+                                 c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+  ar_df$gsign_signif <- vec_replace(ar_df$gsign_signif,
+                                    c(0, 1, 2, 3),
+                                    c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+  ar_df$mrank_signif <- vec_replace(ar_df$mrank_signif,
+                                    c(0, 1, 2, 3),
+                                    c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+  
+  # format nicely
+  ar_df$group <- gsub(pattern = '\\.', replacement = ' ', ar_df$group)
+  ar_df$group <- gsub(".Index", "", ar_df$group) %>% as.factor()
+  ar_df$mean <- as.numeric(round(ar_df$mean*100, 2))
+  # Reorder
+  # ar_df <- ar_df[order(ar_df$mean),]
+
+  p <- ggplot(data = ar_df) +
+    geom_point(
+      aes(
+        x = date,
+        y = group,
+        fill = bh_signif,
+        color = mrank_signif,
+        size = gsign_signif
+        # group = mean
+      ),
+      shape = 21,
+      stroke = 2,
+      alpha = 0.7,
+      show.legend = TRUE
+    ) +
+    theme_bw() +
+    labs(
+      title = Title,
+      subtitle = paste(
+        "Average Abnormal Returns:",
+        e_meta[[EVT]]$event_window[[1]],
+        " to ",
+        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
+      ),
+      caption = "AARs sizes shown as percentages.",
+      x = "Date",
+      y = "",
+      size = "Significance"
+    ) +
+    scale_fill_manual(name = "Parametric \nSignificance",
+                      values = RColorBrewer::brewer.pal(4, 'Oranges')) +
+    scale_colour_manual(name = "Rank Test \nSignificance",
+                        values = viridis::plasma(4)) +
+    ggrepel::geom_text_repel(
+      mapping = aes(
+        y = group,
+        x = date,
+        label = mean
+      ),
+      box.padding = 0.3,
+      nudge_x = 0.2
+    )
+  # geom_text(mapping = aes(y = group,
+  #                         x = date,
+  #                         label = round(mean*100,2)),
+  #           position = position_dodge2(0),
+  #           hjust = -1
+  #           )
+    
+  if (!is.null(Path)) {
+    Filename <-
+      paste0(grouping, '_', 'E', EVT, '_car_stats_bar_graph.png')
+    
+    if (dir.exists(Path)) {
+      ggsave(
+        plot = p,
+        filename = Filename,
+        path = Path,
+        dpi = 600,
+        width = 12,
+        height = 8,
+        units = 'in'
+      )
+      
+    } else {
+      dir.create(path = Path, showWarnings = FALSE)
+      ggsave(
+        plot = p,
+        filename = Filename,
+        path = Path,
+        dpi = 600,
+        width = 12,
+        height = 8,
+        units = 'in'
+      )
+    }
+  }
   return(p)
 }
 #############
@@ -899,6 +1039,33 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_supe,
                                "aar_caar/"))
+  # plot ar statistics ####
+  plot_ar_stats(sar_geo,
+                 'Geographic',
+                 Path = paste0(d_root,
+                               d_res_pres,
+                               d_plot,
+                               E_DIR,
+                               d_geo,
+                               "aar_caar/"))
+  plot_ar_stats(sar_indu,
+                 'Industry',
+                 Path = paste0(d_root,
+                               d_res_pres,
+                               d_plot,
+                               E_DIR,
+                               d_icb,
+                               d_indu,
+                               "aar_caar/"))
+  plot_ar_stats(sar_supe,
+                 'Supersector',
+                 Path = paste0(d_root,
+                               d_res_pres,
+                               d_plot,
+                               E_DIR,
+                               d_icb,
+                               d_supe,
+                               "ar/"))
   
   # Merge AAR & CAAR data.frames ####
   toggle <- function() {
