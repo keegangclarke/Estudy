@@ -699,20 +699,23 @@ plot_ar_stats <- function(ar_lst,
                            grouping,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
                            Path = NULL,
-                           Filename = NULL,
+                           Filename = paste0(grouping, '_', 'E', EVT, '_ar_stats_point_graph.png'),
                            rank_sig) {
   
   ar_df <- merge_ar_stats(ar_lst = ar_lst)
   # Change labels
   ar_df$bh_signif <- vec_replace(ar_df$bh_signif,
                                  c(0, 1, 2, 3),
-                                 c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+                                 c("NA", "10%", "5%", "1%")) %>%
+    factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
   ar_df$gsign_signif <- vec_replace(ar_df$gsign_signif,
                                     c(0, 1, 2, 3),
-                                    c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+                                    c("NA", "10%", "5%", "1%")) %>%
+    factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
   ar_df$mrank_signif <- vec_replace(ar_df$mrank_signif,
                                     c(0, 1, 2, 3),
-                                    c("NA", "10%", "5%", "1%")) %>% factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
+                                    c("NA", "10%", "5%", "1%")) %>%
+    factor(levels = c("NA", "10%", "5%", "1%"), ordered = TRUE)
   
   # format nicely
   ar_df$group <- gsub(pattern = '\\.', replacement = ' ', ar_df$group)
@@ -770,10 +773,6 @@ plot_ar_stats <- function(ar_lst,
   #           hjust = -1
   #           )
     
-  if (!is.null(Path)) {
-    Filename <-
-      paste0(grouping, '_', 'E', EVT, '_car_stats_bar_graph.png')
-    
     if (dir.exists(Path)) {
       ggsave(
         plot = p,
@@ -797,7 +796,6 @@ plot_ar_stats <- function(ar_lst,
         units = 'in'
       )
     }
-  }
   return(p)
 }
 #############
