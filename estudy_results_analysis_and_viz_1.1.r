@@ -729,17 +729,17 @@ plot_ar_stats <- function(ar_lst,
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
 
-  p <- ggplot(data = ar_df) +
-    geom_point(
+  p <- ggplot(data = ar_df) #+
+  p+ geom_point(
       aes(
         x = date,
         y = group,
-        fill = bh_signif,
-        color = mrank_signif,
-        size = gsign_signif
+        # fill = bh_signif,
+        color =  bh_signif, #mrank_signif,
+        size = mrank_signif, #gsign_signif
         # group = mean
       ),
-      shape = 21,
+      # shape = 21,
       stroke = 2,
       alpha = 0.7,
       show.legend = TRUE
@@ -756,12 +756,13 @@ plot_ar_stats <- function(ar_lst,
       caption = "AARs sizes shown as percentages.",
       x = "Date",
       y = "",
-      size = "Significance"
+      size = "Rank Test \nSignificance", #"Generalized \nSign Test \nSignificance"
     ) +
-    scale_fill_manual(name = "Parametric \nSignificance",
-                      values = RColorBrewer::brewer.pal(4, 'Oranges')) +
-    scale_colour_manual(name = "Rank Test \nSignificance",
-                        values = viridis::plasma(4)) +
+    # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
+    #                   values = viridis::viridis(4)) +
+    scale_colour_manual(name = "Parametric \nSignificance \n(Boehmer)", #"Rank Test \nSignificance",
+                        values = viridis::viridis(4)) + #heat.colors(4)) +
+    # scale_size(name = "Generalized Sign Test \nSignificance") +
     ggrepel::geom_text_repel(
       mapping = aes(
         y = group,
@@ -834,7 +835,7 @@ for (EVT in seq_along(e_meta)) {
   E_DIR <- paste0(e_meta[[EVT]]$event_name, "/")
 
   print(E_NAME)
-  # ARs & CARs: Retrieve data ####
+  # ARs & CARs: RETRIEVE DATA ####
   # GEOGRAPHIC
   ar_geo <- fetch_rtns(name_lst = geo_names,
                        directory = paste0(d_root,
@@ -923,7 +924,7 @@ for (EVT in seq_along(e_meta)) {
                                              d_caar))
   
   
-  # ARs & CARs: Retrieve STATS data ####
+  # ARs & CARs: RETRIEVE STATS DATA ####
   # DROP UNUSED STATS
   ar_cols_to_keep <- c("date", "weekday", "pct.para", "mean", "bh_stat", "bh_signif", "pct.nonpara", "gsign_stat", "gsign_signif", "mrank_stat", "mrank_signif")
   signif_cols <- c('bh_signif','gsign_signif','mrank_signif')
@@ -1011,7 +1012,7 @@ for (EVT in seq_along(e_meta)) {
   
   scar_cols <- names(scar_geo[[1]])
   
-  # Plotting of CAR stats ####
+  # PLOT CAR STATS ####
   # Plot CAR results: B&W & RANK
   plot_car_stats(car.stats[[E_NAME]][['geo']],
                  'Geographic',
@@ -1042,7 +1043,7 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_supe,
                                "aar_caar/"))
-  # plot ar statistics ####
+  # PLOT AR STATS ####
   plot_ar_stats(sar_geo,
                  'Geographic',
                  Path = paste0(d_root,
@@ -1070,7 +1071,7 @@ for (EVT in seq_along(e_meta)) {
                                d_supe,
                                "aar_caar/"))
   
-  # Merge AAR & CAAR data.frames ####
+  # MERGE AAR & CAAR DATA.FRAMES ####
   # toggle <- function() {
 
   # GEOGRAPHIC
