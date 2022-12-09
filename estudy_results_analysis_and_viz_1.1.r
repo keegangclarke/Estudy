@@ -1114,6 +1114,7 @@ for (EVT in seq_along(e_meta)) {
   aar_caar_plot(
     name_lst = geo_names,
     aar_caar_df_lst = ave_lst_geo,
+    GROUP = 'Geographic',
     PATH = paste0(d_root,
                   d_res_pres,
                   d_plot,
@@ -1125,6 +1126,7 @@ for (EVT in seq_along(e_meta)) {
   aar_caar_plot(
     name_lst = indu_names,
     aar_caar_df_lst = ave_lst_indu,
+    GROUP = 'Industry',
     PATH = paste0(d_root,
                   d_res_pres,
                   d_plot,
@@ -1137,6 +1139,7 @@ for (EVT in seq_along(e_meta)) {
   aar_caar_plot(
     name_lst = supe_names,
     aar_caar_df_lst = ave_lst_supe,
+    GROUP = 'Supersector',
     PATH = paste0(d_root,
                   d_res_pres,
                   d_plot,
