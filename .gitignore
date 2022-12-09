@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 demo_sign_test.R
+bench_query_sort.png
