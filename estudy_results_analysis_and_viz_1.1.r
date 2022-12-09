@@ -1063,7 +1063,7 @@ for (EVT in seq_along(e_meta)) {
                                E_DIR,
                                d_icb,
                                d_supe,
-                               "ar/"))
+                               "aar_caar/"))
   
   # Merge AAR & CAAR data.frames ####
   toggle <- function() {
