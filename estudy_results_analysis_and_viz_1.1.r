@@ -449,7 +449,7 @@ merge_caar_aar <-
 
 
 # F: aar_caar_plot() # PLOT AARs VS CAARs ####
-aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
+aar_caar_plot <- function(name_lst, aar_caar_df_lst, SCALE = 100, GROUP=NULL, PATH = NULL) {
   for (i in seq_along(name_lst)) {
     name <- name_lst[[i]]
     # AAR vs CAAR PLOT ####
@@ -457,28 +457,33 @@ aar_caar_plot <- function(name_lst, aar_caar_df_lst, PATH = NULL) {
       ggplot(data = aar_caar_df_lst[[name]]) +
       geom_line(
         mapping = aes(x = Event.Time,
-                      y = AAR),
-        colour = "navyblue",
+                      y = AAR*SCALE,
+                      colour = "AAR"),
+        # label = 'Average Abnormal Return',
         show.legend = TRUE
-      ) +
+      ) + labs(color = 'AAR')+
       geom_line(
         mapping = aes(x = Event.Time,
-                      y = CAAR),
-        colour = "darkred",
+                      y = CAAR*SCALE,
+                      colour = "CAAR"),
+        # label = 'Cumulative Average Abnormal Return',
         show.legend = TRUE
       ) +
       scale_x_continuous(breaks = aar_caar_df_lst[[name]]$Event.Time) +
       geom_hline(yintercept = 0,
                  size = 0.3) +
       geom_ribbon(aes(x = Event.Time,
-                      ymin = AAR,
-                      ymax = CAAR),
+                      ymin = AAR*SCALE,
+                      ymax = CAAR*SCALE),
                   fill = "navyblue",
                   alpha = 0.1) +
       theme_bw() +
-      labs(title = name,
+        scale_color_manual(name = "Type",
+                           values = c("AAR" = "navyblue",
+                                      "CAAR" = "darkred")) +
+      labs(title = paste0(GROUP, ': ', name),
            subtitle = "Average Abnormal Returns",
-           y = "Abnormal Return",
+           y = "Abnormal Return (%)",
            x = "Event day")
     
     # Store plot
@@ -1066,7 +1071,7 @@ for (EVT in seq_along(e_meta)) {
                                "aar_caar/"))
   
   # Merge AAR & CAAR data.frames ####
-  toggle <- function() {
+  # toggle <- function() {
 
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_names), geo_names)
@@ -1129,8 +1134,8 @@ for (EVT in seq_along(e_meta)) {
   )
   # SUPERSECTOR
   aar_caar_plot(
-    name_lst = indu_names,
-    aar_caar_df_lst = ave_lst_indu,
+    name_lst = supe_names,
+    aar_caar_df_lst = ave_lst_supe,
     PATH = paste0(d_root,
                   d_res_pres,
                   d_plot,
@@ -1139,11 +1144,7 @@ for (EVT in seq_along(e_meta)) {
                   d_supe,
                   "aar_caar/")
   )
-  
-
-  
-  
-  }
+  # }
 }
 
 # PLOT ARs ####
