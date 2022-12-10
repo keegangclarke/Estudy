@@ -578,6 +578,7 @@ ar_lst_signif_repl <- function(ar_lst, sig_cols, ints=TRUE) {
 # F: plot_car_stats() # PLOT CAR STATISTICS ####
 plot_car_stats <- function(car_lst,
                            grouping,
+                           aar_lst,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
                            name_list = NULL,
                            ar_lst = NULL,
@@ -586,9 +587,20 @@ plot_car_stats <- function(car_lst,
                            rank_sig) {
   # get data
   car_df <- car_lst$car_brown_warner_1985
-
   # get rank significance
   car_df <- dplyr::full_join(car_df,subset(car_lst$car_rank_test, select=c('significance', 'group')) %>% set_colnames(c('rank.sig', 'group')))
+  # get caar data
+  idxs <- names(aar_lst)
+  group <- character(length(idxs))
+  caars <- numeric(length(idxs))
+  for (j in seq_along(aar_lst)) {
+    idx <- idxs[[j]]
+    caars[[j]] <- aar_lst[[idx]][[idx]] %>% sum
+    group[[j]] <- idx
+  }
+  caar_df <- data.frame(group,caars)
+  car_df <- dplyr::full_join(car_df,caar_df, by='group')
+  
   # Ensure correct dtypes 
   car_df$significance <- factor(car_df$significance,
                                 levels = c("NA", "10%", "5%", "1%"),
@@ -596,7 +608,8 @@ plot_car_stats <- function(car_lst,
   car_df$rank.sig <- factor(car_df$rank.sig,
                             levels = c("NA", "10%", "5%", "1%"),
                             ordered = TRUE)
-
+  car_df$caars <- as.numeric(car_df$caars)
+  
   if (!is.null(ar_lst)) {
     # counts the sample sizes used per group
     sm <- ar_lst %>% sapply(length) %>% as.data.frame() %>% set_colnames('sample.size')
@@ -611,19 +624,19 @@ plot_car_stats <- function(car_lst,
       
     }
   } else {}
+  
   # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
   car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
-  car_df$car_mean <- as.numeric(car_df$car_mean)
   # Reorder
-  car_df <- car_df[order(car_df$car_mean),]
+  car_df <- car_df[order(car_df$caars),]
 
   p <-
     ggplot(data = car_df) +
     geom_bar(
       mapping = aes(
         y = group,
-        x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
+        x = sort.int(as.numeric(caars) * 100, decreasing = TRUE),
         fill = significance,
         colour = rank.sig
       ),
@@ -652,7 +665,7 @@ plot_car_stats <- function(car_lst,
                      guide = guide_axis(n.dodge = 1)) +
     scale_x_continuous(n.breaks = 20) +
     geom_text(mapping = aes(y = group,
-                            x = sort.int(as.numeric(car_mean) * 100, decreasing = TRUE),
+                            x = sort.int(as.numeric(caars) * 100, decreasing = TRUE),
                             label = sample.size),
               position = position_dodge2(0))
 
@@ -1017,6 +1030,7 @@ for (EVT in seq_along(e_meta)) {
   plot_car_stats(car.stats[[E_NAME]][['geo']],
                  'Geographic',
                  ar_lst = ar_geo,
+                 aar_lst = aar_geo,
                  Path = paste0(d_root,
                         d_res_pres,
                         d_plot,
@@ -1026,6 +1040,7 @@ for (EVT in seq_along(e_meta)) {
   plot_car_stats(car.stats[[E_NAME]][['indu']],
                  'Industry',
                  ar_lst = ar_indu,
+                 aar_lst = aar_indu,
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
@@ -1036,6 +1051,7 @@ for (EVT in seq_along(e_meta)) {
   plot_car_stats(car.stats[[E_NAME]][['supe']],
                  'Supersector',
                  ar_lst = ar_supe,
+                 aar_lst = aar_supe,
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
