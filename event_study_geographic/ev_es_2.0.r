@@ -672,13 +672,14 @@ for (event_number in seq_along(all_events)) {
         # need to account for the rows removed in the estudy process
         ticks <- ticks[!ticks %in% removed_names[[indx]]]
         names(ar_data[[indx]]) <- ticks
-        
+
         ar_data_copy <- ar_data
         for (j in 1:length(ticks)) {
           tryCatch({
           tic <- ticks[[j]]
           ar_data[[indx]][[tic]] <-
-            ar_data_copy[[indx]][[tic]]$abnormal
+             ar_data_copy[[indx]][[tic]]$abnormal
+            #ar_data_copy[[indx]][[tic]]$observed - ar_data_copy[[indx]][[tic]]$predicted
           }, error = function(e)
           {
             message(cat("ERROR: ", conditionMessage(e), "i = ", j, "\n"))
