@@ -597,6 +597,7 @@ plot_car_stats <- function(car_lst,
     idx <- idxs[[j]]
     caars[[j]] <- aar_lst[[idx]][[idx]] %>% sum
     group[[j]] <- idx
+    print(caars[[j]])
   }
   caar_df <- data.frame(group,caars)
   car_df <- dplyr::full_join(car_df,caar_df, by='group')
@@ -632,11 +633,11 @@ plot_car_stats <- function(car_lst,
   car_df <- car_df[order(car_df$caars),]
 
   p <-
-    ggplot(data = car_df) +
-    geom_bar(
+    ggplot(data = car_df) #+
+  p+  geom_bar(
       mapping = aes(
         y = group,
-        x = sort.int(as.numeric(caars) * 100, decreasing = TRUE),
+        x = as.numeric(caars) * 100,
         fill = significance,
         colour = rank.sig
       ),
@@ -665,7 +666,7 @@ plot_car_stats <- function(car_lst,
                      guide = guide_axis(n.dodge = 1)) +
     scale_x_continuous(n.breaks = 20) +
     geom_text(mapping = aes(y = group,
-                            x = sort.int(as.numeric(caars) * 100, decreasing = TRUE),
+                            x = as.numeric(caars) * 100,
                             label = sample.size),
               position = position_dodge2(0))
 
@@ -714,11 +715,11 @@ merge_ar_stats <- function(ar_lst){
 }
 # F: plot_ar_stats() # Plots bar chart of AR stats #### 
 plot_ar_stats <- function(ar_lst,
-                           grouping,
-                           Title = paste0(grouping, ": ", "Event Period ", EVT),
-                           Path = NULL,
-                           Filename = paste0(grouping, '_', 'E', EVT, '_ar_stats_point_graph.png'),
-                           rank_sig) {
+                          grouping,
+                          Title = paste0(grouping, ": ", "Event Period ", EVT),
+                          Path = NULL,
+                          Filename = paste0(grouping, '_', 'E', EVT, '_ar_stats_point_graph.png'),
+                          rank_sig) {
   
   ar_df <- merge_ar_stats(ar_lst = ar_lst)
   # Change labels
@@ -742,8 +743,8 @@ plot_ar_stats <- function(ar_lst,
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
 
-  p <- ggplot(data = ar_df) +
-    geom_point(
+  p <- ggplot(data = ar_df) #+
+  p+  geom_point(
       aes(
         x = date,
         y = group,
@@ -1027,8 +1028,8 @@ for (EVT in seq_along(e_meta)) {
   
   # PLOT CAR STATS ####
   # Plot CAR results: B&W & RANK
-  plot_car_stats(car.stats[[E_NAME]][['geo']],
-                 'Geographic',
+  plot_car_stats(car_lst = car.stats[[E_NAME]][['geo']],
+                 grouping = 'Geographic',
                  ar_lst = ar_geo,
                  aar_lst = aar_geo,
                  Path = paste0(d_root,
@@ -1037,8 +1038,8 @@ for (EVT in seq_along(e_meta)) {
                         E_DIR,
                         d_geo,
                         "aar_caar/"))
-  plot_car_stats(car.stats[[E_NAME]][['indu']],
-                 'Industry',
+  plot_car_stats(car_lst = car.stats[[E_NAME]][['indu']],
+                 grouping = 'Industry',
                  ar_lst = ar_indu,
                  aar_lst = aar_indu,
                  Path = paste0(d_root,
@@ -1048,8 +1049,8 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_indu,
                                "aar_caar/"))
-  plot_car_stats(car.stats[[E_NAME]][['supe']],
-                 'Supersector',
+  plot_car_stats(car_lst = car.stats[[E_NAME]][['supe']],
+                 grouping = 'Supersector',
                  ar_lst = ar_supe,
                  aar_lst = aar_supe,
                  Path = paste0(d_root,
@@ -1060,16 +1061,16 @@ for (EVT in seq_along(e_meta)) {
                                d_supe,
                                "aar_caar/"))
   # PLOT AR STATS ####
-  plot_ar_stats(sar_geo,
-                 'Geographic',
+  plot_ar_stats(ar_lst = sar_geo,
+                grouping = 'Geographic',
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
                                E_DIR,
                                d_geo,
                                "aar_caar/"))
-  plot_ar_stats(sar_indu,
-                 'Industry',
+  plot_ar_stats(ar_lst = sar_indu,
+                grouping = 'Industry',
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
@@ -1077,8 +1078,8 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_indu,
                                "aar_caar/"))
-  plot_ar_stats(sar_supe,
-                 'Supersector',
+  plot_ar_stats(ar_lst = sar_supe,
+                grouping = 'Supersector',
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
