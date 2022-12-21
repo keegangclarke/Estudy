@@ -50,80 +50,45 @@ source(
 # Source development aid functions ####
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
+# SOURCE: "bday_windows.R" & "event_spec.R" ####
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/bday_windows.R")
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/event_spec.R")
+
 # 1. Parameters ####
 # list to store all event params
 all_events <- vector(mode = 'list', length = 4)
 
-event_spec <- function(name = "",
-                       edate = NULL,
-                       bounds = NULL,
-                       est_len = NULL) {
-  if ((name == "") == TRUE) {
-    message("Please specify event name as string.")
-  } else if (is.null(edate) == TRUE) {
-    message("Please specify event date.")
-  } else if ((class(edate) != "Date") == TRUE) {
-    message("Please ensure event date is 'as.Date'")
-  } else if (is.null(bounds) == TRUE) {
-    message("Please specify event bounds.")
-  } else if (is.null(est_len) == TRUE) {
-    message("Please specify estimation length.")
-  } else {
-    event_window <- seq.Date(from = edate - abs(bounds[1]),
-                             to = edate + bounds[2],
-                             by = 'day')
-    estimation_window <-
-      seq.Date(
-        from = edate - abs(bounds[1]) - abs(est_len + 1),
-        to = edate + bounds[1] - 1 ,
-        by = 'day'
-      )
-    
-    event_specification <- vector(mode = 'list', length = 4)
-    event_specification[[1]] <- name
-    event_specification[[2]] <- edate
-    event_specification[[3]] <- event_window
-    event_specification[[4]] <- estimation_window
-    
-    event_specification <-
-      setNames(
-        event_specification,
-        c(
-          "event_name",
-          "event_date",
-          "event_window",
-          "estimation_window"
-        )
-      )
-    
-    class(event_specification) <- "event_spec"
-    return(event_specification)
-  }
-}
-
 all_events[[1]] <- event_spec(
   "event1",
+  grouping = "meta",
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
-  est_len = 250
+  est_len = 250,
+  calendar = "universal"
 )
 all_events[[2]] <- event_spec(
   "event2",
+  grouping = "meta",
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
-  est_len = 250
+  est_len = 250,
+  calendar = "universal"
 )
 all_events[[3]] <- event_spec(
   "event3",
+  grouping = "meta",
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
-  est_len = 250
+  est_len = 250,
+  calendar = "universal"
 )
 all_events[[4]] <- event_spec(
   "event4",
+  grouping = "meta",
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
-  est_len = 250
+  est_len = 250,
+  calendar = "universal"
 )
 
 all_events <- all_events %>% set_names(c("event1","event2","event3","event4"))
@@ -436,14 +401,12 @@ paste("Complete. Time elapsed: ",
 
 for (event_number in seq_along(all_events)) {
   tryCatch({
-    
     # CREATION OF OUTER-LOOP-VARIABLES
     EVENT_START <- all_events[[event_number]]$event_window[[1]]
     EVENT_END <- all_events[[event_number]]$event_window[[length(all_events[[event_number]]$event_window)]]
     
     ESTIMATION_START <- all_events[[event_number]]$estimation_window[[1]]
     ESTIMATION_END <- all_events[[event_number]]$estimation_window[[length(all_events[[event_number]]$estimation_window)]]
-    
     
     # 9. Pre-initialize objects for later loop ####
     start_time <- Sys.time()
@@ -483,7 +446,7 @@ for (event_number in seq_along(all_events)) {
           multi_day = TRUE,
           compounding = "continuous"
         )
-        
+         # SOME WRANGLING ####
         # This loop checks if the values in the columns of 'rates' are NOT INVALID
         # If tests eval TRUE, then the offending column's name is stored
         # after the loop is complete, the offending columns are removed
@@ -513,6 +476,7 @@ for (event_number in seq_along(all_events)) {
           transform.data.frame(rates_indx, date = as.Date(date))
         print("Done. Applying single-index market model.")
         
+        # SPECIFY MODELS PROCESS ####
         # apply single-index market model to get ARs
         securities_returns <- apply_market_model.data.frame(
           rates = rates,
@@ -525,7 +489,7 @@ for (event_number in seq_along(all_events)) {
         )
         
          print("Done. Applying parametric and non-parametric tests to abnormal returns...")
-        # ABNORMAL RETURN TESTS
+        # ABNORMAL RETURN TESTS ####
         # Parametric tests
         ar_para <- data.frame(
           estudy2::parametric_tests(
@@ -559,6 +523,8 @@ for (event_number in seq_along(all_events)) {
             car_end = as.Date(EVENT_END)
           )
         )
+        
+        # STORAGE ####
         print(paste("Merging results.", keys[[i]]))
         # Stage results for storage
         ar_results <-
