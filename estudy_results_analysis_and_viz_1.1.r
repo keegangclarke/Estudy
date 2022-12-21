@@ -632,9 +632,8 @@ plot_car_stats <- function(car_lst,
   # Reorder
   car_df <- car_df[order(car_df$caars),]
 
-  p <-
-    ggplot(data = car_df) #+
-  p+  geom_bar(
+  p <- ggplot(data = car_df) +
+  geom_bar(
       mapping = aes(
         y = group,
         x = as.numeric(caars) * 100,
@@ -743,8 +742,8 @@ plot_ar_stats <- function(ar_lst,
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
 
-  p <- ggplot(data = ar_df) #+
-  p+  geom_point(
+  p <- ggplot(data = ar_df) +
+  geom_point(
       aes(
         x = date,
         y = group,
