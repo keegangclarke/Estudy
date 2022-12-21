@@ -90,6 +90,17 @@ b_days <- function(Edate, wind_len, est_len, cal) {
   upper <- bizdays::add.bizdays(Edate, wind_len[[2]], cal)
   bdays <- bizdays::bizseq(as.Date(lower), as.Date(upper), cal)
   
+  elen <- abs(wind_len[[1]]) + abs(wind_len[[2]])+1
+  alen <- length(bdays)
+  
+  if (elen < alen) {
+    upper <- bizdays::add.bizdays(Edate, wind_len[[2]]-1, cal)
+    bdays <- bizdays::bizseq(as.Date(lower), as.Date(upper), cal)
+  } else if (elen > alen) {
+    upper <- bizdays::add.bizdays(Edate, wind_len[[2]]+1, cal)
+    bdays <- bizdays::bizseq(as.Date(lower), as.Date(upper), cal)
+  }
+  
   # estimation widow
   est_end <- bizdays::add.bizdays(Edate, (wind_len[[1]]-adj1), cal)
   if (est_end >= lower) {
