@@ -3,7 +3,7 @@ print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
 library(magrittr)
-
+library(beepr)
 
 fun_insert <- function(x, pos, insert) {
   # Create own function
@@ -819,3 +819,5 @@ for (event_number in seq_along(all_events)) {
     message(cat("ERROR: ", conditionMessage(e), "i = ", i, "\n"))
   })
 }
+
+beep()

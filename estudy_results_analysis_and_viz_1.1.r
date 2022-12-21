@@ -3,6 +3,8 @@ library(magrittr)
 library(ggplot2)
 library(bizdays)
 library(scales) # use for labels
+library(beepr)
+
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
 # Directory components ####
@@ -1258,3 +1260,4 @@ for (EVT in seq_along(e_meta)) {
   )
   # }
 }
+beep()

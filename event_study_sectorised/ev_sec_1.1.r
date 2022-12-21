@@ -5,6 +5,7 @@ print("Loading libraries and user-defined functions.")
 start_time <- Sys.time()
 
 library(magrittr)
+library(beepr)
 
 fun_insert <- function(x, pos, insert)
 {
@@ -1596,4 +1597,5 @@ for (event_number in seq_along(all_events)) {
 paste("Complete.")
 round(end_time - start_time, digits = 4) %>%  print()
 
+beep()
 print("Script complete.")
