@@ -48,9 +48,7 @@ source(
   "C:/Users/Keegan/Desktop/Repository/@ Development/estudy2_gls/R/apply_market_model_gls.R"
 )
 # Source development aid functions ####
-source(
-  "C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R"
-)
+source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 
 # 1. Parameters ####
 # list to store all event params
