@@ -352,6 +352,37 @@ e_meta[[4]] <- event_spec(
   calendar = "no_holidays"
 )
 
+# F: event_time() # CALCULATES EVENT TIME AND RETURNS DF WITH intS and dateS ####
+# calcs event_time
+event_time <- function(event_specification,
+                       alt_cal_days = NULL,
+                       dtype = 'date') {
+    evt_day <- event_specification$event_date
+    if (is.null(alt_cal_days)) {
+      e_time_df <- setNames(as.data.frame(event_specification$event_window),
+                 "date")
+    } else if (!is.null(alt_cal_days)) {
+      e_time_df <- setNames(as.data.frame(alt_cal_days),
+                            "date")
+    }
+    # Is event day in event_window?
+    zero <- evt_day %in% event_specification$event_window
+    # calculates sequence of ints that represent the event-time
+    e_time <-
+      -sum(as.integer(e_time_df[["date"]] < evt_day)):sum(as.integer(e_time_df[["date"]] > evt_day))
+    if (zero) {
+      e_time_df$Event.Time <- e_time
+    } else if (!zero) {
+      e_time_df$Event.Time <- setdiff(e_time, 0)
+    }
+    # Change dtype
+    if (dtype ==  'character') {
+      e_time_df$date <- as.character(e_time_df$date)
+    } 
+    
+    return(e_time_df)
+  }
+
 # F: fetch_rtns() # GET ABNORMAL RETURN DATA ####
 fetch_rtns <- function(name_lst, directory) {
   d <- vector(mode = "character",
@@ -687,20 +718,52 @@ plot_car_stats <- function(car_lst,
 }
 
 # F: merge_ar_stats() # recombine lists of AR stat data.frames into single df ####
-merge_ar_stats <- function(ar_lst){
-  # get names
+merge_ar_stats <- function(ar_lst,
+                           event_spec = NULL,
+                           single_e_time = FALSE,
+                           alt_cal_days = NULL) {
+  if (single_e_time) {
+    e_spec <- event_spec[['SPX.Index']] 
+  }
+    # get names
   name_lst <- names(ar_lst)
   # create base df
-  df <- ar_lst[[name_lst[[1]]]]
-  df[['group']] <- name_lst[[1]]
+  first <- name_lst[[1]]
+  df <- ar_lst[[first]]
+  df[['group']] <- first
+  
+  if (single_e_time) {
+    df <- merge.data.frame(df,
+                           event_time(event_specification=e_spec, dtype='character'),
+                           by='date')
+  } else {
+    df <- merge.data.frame(df,
+                           event_time(event_specification=event_spec[[first]] , dtype='character'),
+                           by='date')
+  }
   
   # remove data already extracted
   rem <- name_lst[-1]
   # loop over names to
   for (name in rem) {
+    if(single_e_time) {
+      tmp_df <- ar_lst[[name]]
+      tmp_df[['group']] <- name
+      # add Event.Time
+      tmp_df <- merge.data.frame(tmp_df,
+                                 event_time(e_spec, dtype='character'),
+                                 by='date')
+      df <- rbind.data.frame(df, tmp_df)
+      
+    } else {
     tmp_df <- ar_lst[[name]]
     tmp_df[['group']] <- name
+    # add Event.Time
+    tmp_df <- merge.data.frame(tmp_df,
+                               event_time(event_specification=event_spec[[name]], dtype='character'),
+                               by='date')
     df <- rbind.data.frame(df, tmp_df)
+    }
   }
   df[['group']] <- as.factor(df[['group']])
   
@@ -712,15 +775,22 @@ merge_ar_stats <- function(ar_lst){
   df$text <- tidyr::replace_na(df$text, "")
   return(df)
 }
-# F: plot_ar_stats() # Plots bar chart of AR stats #### 
+# F: plot_ar_stats() # Plots dot chart of AR stats #### 
 plot_ar_stats <- function(ar_lst,
                           grouping,
-                          Title = paste0(grouping, ": ", "Event Period ", EVT),
+                          E_SPEC = NULL,
                           Path = NULL,
+                          alt_cal_days = NULL,
+                          single_espec = FALSE,
+                          Title = paste0(grouping, ": ", "Event Period ", EVT),                          
                           Filename = paste0(grouping, '_', 'E', EVT, '_ar_stats_point_graph.png'),
                           rank_sig) {
-  
-  ar_df <- merge_ar_stats(ar_lst = ar_lst)
+
+  # Prepare Data for plotting
+  ar_df <- merge_ar_stats(ar_lst = ar_lst,
+                          event_spec = E_SPEC,
+                          alt_cal_days = alt_cal_days,
+                          single_e_time = single_espec)
   # Change labels
   ar_df$bh_signif <- vec_replace(ar_df$bh_signif,
                                  c(0, 1, 2, 3),
@@ -741,9 +811,10 @@ plot_ar_stats <- function(ar_lst,
   ar_df$mean <- as.numeric(round(ar_df$mean*100, 2))
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
-
+  
+  
   p <- ggplot(data = ar_df) +
-  geom_point(
+    geom_point(
       aes(
         x = date,
         y = group,
@@ -771,17 +842,32 @@ plot_ar_stats <- function(ar_lst,
       y = "",
       size = "Rank Test \nSignificance", #"Generalized \nSign Test \nSignificance"
     ) +
-    # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
-    #                   values = viridis::viridis(4)) +
     scale_colour_manual(name = "Parametric \nSignificance \n(Boehmer)", #"Rank Test \nSignificance",
-                        values = viridis::viridis(4)) + #heat.colors(4)) +
-    # scale_size(name = "Generalized Sign Test \nSignificance") +
+                        values = viridis::viridis(4)) + #heat.colors(4))
+    annotate(geom="text",
+             x = unique(ar_df$date),
+             y = seq(-1,-1, length.out=length(unique(ar_df$Event.Time))),
+             label=unique(ar_df$Event.Time),
+             size=3) +
+    # scale_x_datetime("Date", integer(length=length(unique(ar_df$Event.Time)))
+    #                  date_labels = '%Y-%m-%d',
+    #                  sec.axis = sec_axis(
+    #                    name = "Event Time",
+    #                    labels = Event.Time
+    #                  )) +
+    coord_cartesian(ylim = c(0, length(unique(ar_df$group))+1),
+                    xlim = c(0, length(unique(ar_df$date))+1),
+                    expand = FALSE, clip = "off")+
     ggrepel::geom_text_repel(
       mapping = aes(
         y = group,
         x = date,
         label = mean
-      ),
+      ) #+
+      # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
+      #                   values = viridis::viridis(4)) +
+      # scale_size(name = "Generalized Sign Test \nSignificance") +
+      ,
       box.padding = 0.3,
       nudge_x = 0.2
     )
@@ -1062,30 +1148,36 @@ for (EVT in seq_along(e_meta)) {
   # PLOT AR STATS ####
   plot_ar_stats(ar_lst = sar_geo,
                 grouping = 'Geographic',
-                 Path = paste0(d_root,
-                               d_res_pres,
-                               d_plot,
-                               E_DIR,
-                               d_geo,
-                               "aar_caar/"))
+                E_SPEC = all_events[[E_NAME]],
+                Path = paste0(d_root,
+                              d_res_pres,
+                              d_plot,
+                              E_DIR,
+                              d_geo,
+                              "aar_caar/"))
+
   plot_ar_stats(ar_lst = sar_indu,
                 grouping = 'Industry',
-                 Path = paste0(d_root,
-                               d_res_pres,
-                               d_plot,
-                               E_DIR,
-                               d_icb,
-                               d_indu,
-                               "aar_caar/"))
+                E_SPEC = all_events[[E_NAME]],
+                single_espec = TRUE,
+                Path = paste0(d_root,
+                              d_res_pres,
+                              d_plot,
+                              E_DIR,
+                              d_icb,
+                              d_indu,
+                              "aar_caar/"))
   plot_ar_stats(ar_lst = sar_supe,
                 grouping = 'Supersector',
-                 Path = paste0(d_root,
-                               d_res_pres,
-                               d_plot,
-                               E_DIR,
-                               d_icb,
-                               d_supe,
-                               "aar_caar/"))
+                E_SPEC = all_events[[E_NAME]],
+                single_espec = TRUE,
+                Path = paste0(d_root,
+                              d_res_pres,
+                              d_plot,
+                              E_DIR,
+                              d_icb,
+                              d_supe,
+                              "aar_caar/"))
   
   # MERGE AAR & CAAR DATA.FRAMES ####
   # toggle <- function() {
