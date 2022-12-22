@@ -79,7 +79,7 @@ df_region <- readxl::read_xlsx(paste0(d_root,
   lapply(as.factor) %>% 
   as.data.frame()
 
-j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal2.json")
+j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/weekdays.json")
 create.calendar(j.cal.uni$name,
                 holidays = j.cal.uni$holidays,
                 weekdays = j.cal.uni$weekdays,
@@ -145,7 +145,7 @@ e_meta[[1]] <- event_spec(
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 e_meta[[2]] <- event_spec(
   e_name = "event2",
@@ -153,7 +153,7 @@ e_meta[[2]] <- event_spec(
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 e_meta[[3]] <- event_spec(
   e_name = "event3",
@@ -161,7 +161,7 @@ e_meta[[3]] <- event_spec(
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 e_meta[[4]] <- event_spec(
   e_name = "event4",
@@ -169,7 +169,7 @@ e_meta[[4]] <- event_spec(
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 
 # F: event_time() # CALCULATES EVENT TIME AND RETURNS DF WITH intS and dateS ####
