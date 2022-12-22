@@ -91,7 +91,7 @@ create.calendar(j.cal.uni$name,
 
 # 1. Parameters ####
 
-# list to store all event params ####
+# list to store all event params, using event time specific to each market ####
 all_events <- make_list(4, 
                         c("event1", "event2", "event3", "event4"))
 groupings <- make_list(Length = length(geo_names),
