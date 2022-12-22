@@ -70,7 +70,16 @@ for (d in seq_along(d_cals)) {
                   adjust.to = j.cal$adjust.to,
                   financial = j.cal$financial)
 }
-j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal.json")
+# j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal.json")
+# create.calendar(j.cal.uni$name,
+#                 holidays = j.cal.uni$holidays,
+#                 weekdays = j.cal.uni$weekdays,
+#                 start.date = as.Date("2018-01-01"),
+#                 end.date = as.Date("2020-12-31"),
+#                 adjust.from = j.cal.uni$adjust.from,
+#                 adjust.to = j.cal.uni$adjust.to,
+#                 financial = j.cal.uni$financial)
+j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal2.json")
 create.calendar(j.cal.uni$name,
                 holidays = j.cal.uni$holidays,
                 weekdays = j.cal.uni$weekdays,
@@ -79,6 +88,7 @@ create.calendar(j.cal.uni$name,
                 adjust.from = j.cal.uni$adjust.from,
                 adjust.to = j.cal.uni$adjust.to,
                 financial = j.cal.uni$financial)
+
 
 # Function to get the right days
 b_days <- function(Edate, wind_len, est_len, cal) {
