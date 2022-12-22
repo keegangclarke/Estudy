@@ -448,7 +448,6 @@ plot_car_stats <- function(car_lst,
     idx <- idxs[[j]]
     caars[[j]] <- aar_lst[[idx]][[idx]] %>% sum
     group[[j]] <- idx
-    print(caars[[j]])
   }
   caar_df <- data.frame(group,caars)
   car_df <- dplyr::full_join(car_df,caar_df, by='group')
@@ -756,6 +755,7 @@ for (EVT in seq_along(e_meta)) {
   print(E_NAME)
   # ARs & CARs: RETRIEVE DATA ####
   # GEOGRAPHIC
+  print("Compiling AR and CAR data.")
   ar_geo <- fetch_rtns(name_lst = geo_names,
                        directory = paste0(d_root,
                                           d_geo,
@@ -800,6 +800,7 @@ for (EVT in seq_along(e_meta)) {
 
   # AARs: RETRIEVE ALL AAR DATA ####
   # GEOGRAPHIC
+  print("Compiling AAR data.")
   aar_geo <- fetch_rtns(name_lst = geo_names,
                         directory = paste0(d_root,
                                            d_geo,
@@ -822,6 +823,7 @@ for (EVT in seq_along(e_meta)) {
   
   # CAARs: RETRIEVE ALL CAAR DATA ####
   # GEOGRAPHIC
+  print("Compiling CAAR data.")
   caar_geo <- fetch_rtns(name_lst = geo_names,
                          directory = paste0(d_root,
                                             d_geo,
@@ -933,6 +935,7 @@ for (EVT in seq_along(e_meta)) {
   
   # PLOT CAR STATS ####
   # Plot CAR results: B&W & RANK
+  print("plotting CAAR bar charts.")
   plot_car_stats(car_lst = car.stats[[E_NAME]][['geo']],
                  grouping = 'Geographic',
                  ar_lst = ar_geo,
@@ -966,6 +969,7 @@ for (EVT in seq_along(e_meta)) {
                                d_supe,
                                "aar_caar/"))
   # PLOT AR STATS ####
+  print("plotting AAR dot plots.")
   plot_ar_stats(ar_lst = sar_geo,
                 grouping = 'Geographic',
                 E_SPEC = e_meta[[E_NAME]],
@@ -1002,7 +1006,7 @@ for (EVT in seq_along(e_meta)) {
   
   # MERGE AAR & CAAR DATA.FRAMES ####
   # toggle <- function() {
-
+  print("Preparing AAR & CAAR data for line plots.")
   # GEOGRAPHIC
   ave_lst_geo <- make_list(length(geo_names), geo_names)
   for (i in seq_along(ave_lst_geo)) {
@@ -1040,6 +1044,7 @@ for (EVT in seq_along(e_meta)) {
   
   # PLOT AARs V CAARs ####
   # GEOGRAPHIC
+  print("Plotting AAR & CAAR line plots.")
   aar_caar_plot(
     name_lst = geo_names,
     aar_caar_df_lst = ave_lst_geo,
@@ -1077,6 +1082,7 @@ for (EVT in seq_along(e_meta)) {
                   d_supe,
                   "aar_caar/")
   )
+  print("\n_______________________end of iter_______________________\n")
   # }
 }
 beep()
