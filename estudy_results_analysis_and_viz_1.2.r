@@ -79,6 +79,16 @@ df_region <- readxl::read_xlsx(paste0(d_root,
   lapply(as.factor) %>% 
   as.data.frame()
 
+j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/universal2.json")
+create.calendar(j.cal.uni$name,
+                holidays = j.cal.uni$holidays,
+                weekdays = j.cal.uni$weekdays,
+                start.date = as.Date("2018-01-01"),
+                end.date = as.Date("2020-12-31"),
+                adjust.from = j.cal.uni$adjust.from,
+                adjust.to = j.cal.uni$adjust.to,
+                financial = j.cal.uni$financial)
+
 # 1. Parameters ####
 
 # list to store all event params ####
@@ -92,7 +102,7 @@ for (event in seq_along(all_events)) {
 }
 for (geo in seq_along(geo_names)) {
   group <- geo_names[[geo]]
-  CAL <- cal_names[[geo]]
+    CAL <- cal_names[[geo]]
   
   all_events[[1]][[group]] <- event_spec(
     e_name = "event1",
@@ -135,7 +145,7 @@ e_meta[[1]] <- event_spec(
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
   est_len = 250,
-  calendar = "no_holidays"
+  calendar = "universal2"
 )
 e_meta[[2]] <- event_spec(
   e_name = "event2",
@@ -143,7 +153,7 @@ e_meta[[2]] <- event_spec(
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
   est_len = 250,
-  calendar = "no_holidays"
+  calendar = "universal2"
 )
 e_meta[[3]] <- event_spec(
   e_name = "event3",
@@ -151,7 +161,7 @@ e_meta[[3]] <- event_spec(
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "no_holidays"
+  calendar = "universal2"
 )
 e_meta[[4]] <- event_spec(
   e_name = "event4",
@@ -159,7 +169,7 @@ e_meta[[4]] <- event_spec(
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "no_holidays"
+  calendar = "universal2"
 )
 
 # F: event_time() # CALCULATES EVENT TIME AND RETURNS DF WITH intS and dateS ####
@@ -532,10 +542,8 @@ merge_ar_stats <- function(ar_lst,
                            event_spec = NULL,
                            single_e_time = FALSE,
                            alt_cal_days = NULL) {
-  if (single_e_time) {
-    e_spec <- event_spec[['SPX.Index']] 
-  }
-    # get names
+  e_spec <- event_spec
+  # get names
   name_lst <- names(ar_lst)
   # create base df
   first <- name_lst[[1]]
@@ -960,7 +968,7 @@ for (EVT in seq_along(e_meta)) {
   # PLOT AR STATS ####
   plot_ar_stats(ar_lst = sar_geo,
                 grouping = 'Geographic',
-                E_SPEC = all_events[[E_NAME]],
+                E_SPEC = e_meta[[E_NAME]],
                 single_espec = TRUE,
                 Path = paste0(d_root,
                               d_res_pres,
@@ -971,7 +979,7 @@ for (EVT in seq_along(e_meta)) {
 
   plot_ar_stats(ar_lst = sar_indu,
                 grouping = 'Industry',
-                E_SPEC = all_events[[E_NAME]],
+                E_SPEC = e_meta[[E_NAME]],
                 single_espec = TRUE,
                 Path = paste0(d_root,
                               d_res_pres,
@@ -982,7 +990,7 @@ for (EVT in seq_along(e_meta)) {
                               "aar_caar/"))
   plot_ar_stats(ar_lst = sar_supe,
                 grouping = 'Supersector',
-                E_SPEC = all_events[[E_NAME]],
+                E_SPEC = e_meta[[E_NAME]],
                 single_espec = TRUE,
                 Path = paste0(d_root,
                               d_res_pres,
