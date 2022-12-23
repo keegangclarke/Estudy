@@ -176,28 +176,39 @@ e_meta[[4]] <- event_spec(
 # calcs event_time
 event_time <- function(event_specification,
                        alt_cal_days = NULL,
-                       dtype = 'date') {
+                       dtype = 'date',
+                       alt_date_col = FALSE) {
+  
     evt_day <- event_specification$event_date
+    # Adjust date cole
+    if (alt_date_col) {
+      date_col_name <- "Date"
+    } else {
+      date_col_name <- "date"
+    }
+    # event window's dates
     if (is.null(alt_cal_days)) {
+      
       e_time_df <- setNames(as.data.frame(event_specification$event_window),
-                 "date")
+                            date_col_name)
     } else if (!is.null(alt_cal_days)) {
       e_time_df <- setNames(as.data.frame(alt_cal_days),
-                            "date")
+                            date_col_name)
     }
     # Is event day in event_window?
     zero <- evt_day %in% event_specification$event_window
     # calculates sequence of ints that represent the event-time
     e_time <-
-      -sum(as.integer(e_time_df[["date"]] < evt_day)):sum(as.integer(e_time_df[["date"]] > evt_day))
+      -sum(as.integer(e_time_df[[date_col_name]] < evt_day)):sum(as.integer(e_time_df[[date_col_name]] > evt_day))
     if (zero) {
       e_time_df$Event.Time <- e_time
     } else if (!zero) {
       e_time_df$Event.Time <- setdiff(e_time, 0)
     }
+    
     # Change dtype
     if (dtype ==  'character') {
-      e_time_df$date <- as.character(e_time_df$date)
+      e_time_df[[date_col_name]] <- as.character(e_time_df[[date_col_name]])
     } 
     
     return(e_time_df)
@@ -433,6 +444,7 @@ plot_car_stats <- function(car_lst,
                            Title = paste0(grouping, ": ", "Event Period ", EVT),
                            name_list = NULL,
                            ar_lst = NULL,
+                           event_specification = NULL,
                            Path = NULL,
                            Filename = NULL,
                            rank_sig) {
@@ -444,9 +456,10 @@ plot_car_stats <- function(car_lst,
   idxs <- names(aar_lst)
   group <- character(length(idxs))
   caars <- numeric(length(idxs))
+  event_window <- event_time(event_specification = event_specification, dtype="date", alt_date_col = TRUE)
   for (j in seq_along(aar_lst)) {
     idx <- idxs[[j]]
-    caars[[j]] <- aar_lst[[idx]][[idx]] %>% sum
+    caars[[j]] <- merge.data.frame(aar_lst[[idx]], event_window, by='Date')[[idx]] %>% sum
     group[[j]] <- idx
   }
   caar_df <- data.frame(group,caars)
@@ -940,6 +953,7 @@ for (EVT in seq_along(e_meta)) {
                  grouping = 'Geographic',
                  ar_lst = ar_geo,
                  aar_lst = aar_geo,
+                 event_specification = e_meta[[E_NAME]],
                  Path = paste0(d_root,
                         d_res_pres,
                         d_plot,
@@ -950,6 +964,7 @@ for (EVT in seq_along(e_meta)) {
                  grouping = 'Industry',
                  ar_lst = ar_indu,
                  aar_lst = aar_indu,
+                 event_specification = e_meta[[E_NAME]],
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
@@ -961,6 +976,7 @@ for (EVT in seq_along(e_meta)) {
                  grouping = 'Supersector',
                  ar_lst = ar_supe,
                  aar_lst = aar_supe,
+                 event_specification = e_meta[[E_NAME]],
                  Path = paste0(d_root,
                                d_res_pres,
                                d_plot,
