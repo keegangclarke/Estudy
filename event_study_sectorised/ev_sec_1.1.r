@@ -56,6 +56,17 @@ source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/bday_windows.R
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/event_spec.R")
 
 # 1. Parameters ####
+# for weekdays
+j.cal.uni <- rjson::fromJSON(file="C:/Users/Keegan/OneDrive/1 Studies/2021 - 2022/5003W/3 - Dissertation/5-Data/calendars/weekdays.json")
+create.calendar(j.cal.uni$name,
+                holidays = j.cal.uni$holidays,
+                weekdays = j.cal.uni$weekdays,
+                start.date = as.Date("2018-01-01"),
+                end.date = as.Date("2020-12-31"),
+                adjust.from = j.cal.uni$adjust.from,
+                adjust.to = j.cal.uni$adjust.to,
+                financial = j.cal.uni$financial)
+
 # list to store all event params
 all_events <- vector(mode = 'list', length = 4)
 
