@@ -64,7 +64,7 @@ all_events[[1]] <- event_spec(
   edate = as.Date("2020-01-13"),
   bounds = c(-5, 5),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 all_events[[2]] <- event_spec(
   "event2",
@@ -72,7 +72,7 @@ all_events[[2]] <- event_spec(
   edate = as.Date("2020-01-24"),
   bounds = c(-2, 8),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 all_events[[3]] <- event_spec(
   "event3",
@@ -80,7 +80,7 @@ all_events[[3]] <- event_spec(
   edate = as.Date("2020-02-24"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 all_events[[4]] <- event_spec(
   "event4",
@@ -88,7 +88,7 @@ all_events[[4]] <- event_spec(
   edate = as.Date("2020-03-09"),
   bounds = c(-1, 9),
   est_len = 250,
-  calendar = "universal2"
+  calendar = "weekdays"
 )
 
 all_events <- all_events %>% set_names(c("event1","event2","event3","event4"))
