@@ -150,7 +150,7 @@ e_meta[[1]] <- event_spec(
 e_meta[[2]] <- event_spec(
   e_name = "event2",
   grouping = "meta",
-  edate = as.Date("2020-01-24"),
+  edate = as.Date("2020-01-23"),
   bounds = c(-2, 8),
   est_len = 250,
   calendar = "weekdays"
