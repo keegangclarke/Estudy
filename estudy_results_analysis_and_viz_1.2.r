@@ -642,9 +642,10 @@ plot_ar_stats <- function(ar_lst,
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
   
-  
+  # ar_df[!("NA" == ar_df[["bh_signif"]])&!("NA" == ar_df[["mrank_signif"]]),]
+  ar_df <- ar_df[!("NA" == ar_df[["bh_signif"]]),]
   p <- ggplot(data = ar_df) +
-    geom_point(
+  geom_point(
       aes(
         x = date,
         y = group,
