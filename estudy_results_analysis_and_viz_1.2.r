@@ -642,10 +642,35 @@ plot_ar_stats <- function(ar_lst,
   # Reorder
   # ar_df <- ar_df[order(ar_df$mean),]
   
+  # make df for secondary plot
+  lines <- ar_df$date %>% unique %>% as.data.frame %>% set_colnames('date')
+  for (i in 1:length(ar_lst)) {
+    tmp_df <- subset(ar_lst[[i]], select = c(date, mean))
+    lines <- dplyr::full_join(lines,
+                              tmp_df,
+                              by='date') %>%
+      set_colnames(
+        c(names(lines),
+        paste0('mean.',i))
+      )
+    # index by date
+    # lines <- lines %>% set_rownames(lines$date)
+    rm(tmp_df)
+  }
+  # drop additional date column
+  lines <- lines[-1]
+  tmp_df <- ar_df$date %>% unique %>% as.data.frame %>% set_colnames('date')
+  lines <- rowMeans(lines, na.rm = TRUE) %>%
+    multiply_by(100) %>% 
+    round(digits = 2) %>% 
+    cbind(tmp_df) %>%
+    set_colnames(c('mean', 'date'))
+  rm(tmp_df)
+  
   # ar_df[!("NA" == ar_df[["bh_signif"]])&!("NA" == ar_df[["mrank_signif"]]),]
   ar_df <- ar_df[!("NA" == ar_df[["bh_signif"]]),]
-  p <- ggplot(data = ar_df) +
-  geom_point(
+  p <- ggplot(data = ar_df) #+
+  p+geom_point(
       aes(
         x = date,
         y = group,
@@ -659,6 +684,17 @@ plot_ar_stats <- function(ar_lst,
       alpha = 0.7,
       show.legend = TRUE
     ) +
+    # geom_line(
+    #   data = lines,
+    #   aes(
+    #     x = date,
+    #     y = mean,
+    #   ),
+    #   # shape = 21,
+    #   stroke = 2,
+    #   alpha = 0.7,
+    #   show.legend = TRUE
+    # ) +
     labs(
       title = Title,
       subtitle = paste(
@@ -692,15 +728,32 @@ plot_ar_stats <- function(ar_lst,
                     expand = FALSE,
                     clip = "off") +
     ggrepel::geom_text_repel(
+      data = ar_df[ar_df$mean>=0,],
       mapping = aes(
         y = group,
         x = date,
-        label = mean
-      ) #+
+        label = mean,
+      )
       # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
       #                   values = viridis::viridis(4)) +
       # scale_size(name = "Generalized Sign Test \nSignificance") +
       ,
+      color='black',
+      box.padding = 0.3,
+      nudge_x = 0.2
+    ) #+
+    ggrepel::geom_text_repel(
+      data = ar_df[ar_df$mean<=0,],
+      mapping = aes(
+        y = group,
+        x = date,
+        label = mean,
+      )
+      # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
+      #                   values = viridis::viridis(4)) +
+      # scale_size(name = "Generalized Sign Test \nSignificance") +
+      ,
+      color='firebrick3',
       box.padding = 0.3,
       nudge_x = 0.2
     )
