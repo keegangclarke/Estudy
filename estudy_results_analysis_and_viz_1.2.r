@@ -488,6 +488,9 @@ plot_car_stats <- function(car_lst,
       
     }
   } else {}
+  if (grouping == "Supersector") {
+    
+  }
   
   # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
@@ -669,8 +672,8 @@ plot_ar_stats <- function(ar_lst,
   
   # ar_df[!("NA" == ar_df[["bh_signif"]])&!("NA" == ar_df[["mrank_signif"]]),]
   ar_df <- ar_df[!("NA" == ar_df[["bh_signif"]]),]
-  p <- ggplot(data = ar_df) #+
-  p+geom_point(
+  p <- ggplot(data = ar_df) +
+    geom_point(
       aes(
         x = date,
         y = group,
@@ -685,13 +688,9 @@ plot_ar_stats <- function(ar_lst,
       show.legend = TRUE
     ) +
     # geom_line(
-    #   data = lines,
-    #   aes(
-    #     x = date,
-    #     y = mean,
-    #   ),
-    #   # shape = 21,
-    #   stroke = 2,
+    #   # data = lines,
+    #     x = lines$date,
+    #     y = lines$mean,
     #   alpha = 0.7,
     #   show.legend = TRUE
     # ) +
@@ -741,7 +740,7 @@ plot_ar_stats <- function(ar_lst,
       color='black',
       box.padding = 0.3,
       nudge_x = 0.2
-    ) #+
+    ) +
     ggrepel::geom_text_repel(
       data = ar_df[ar_df$mean<=0,],
       mapping = aes(
