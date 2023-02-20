@@ -36,7 +36,6 @@ d_car_res <- "car_res/"
 
 d_proto <- "prototypes/"
 
-
 # LOAD ID INFO ####
 # Static since variables not identical format
 geo_names <- paste0(d_root,
@@ -447,6 +446,7 @@ plot_car_stats <- function(car_lst,
                            event_specification = NULL,
                            Path = NULL,
                            Filename = NULL,
+                           regional = NULL,
                            rank_sig) {
   # get data
   car_df <- car_lst$car_brown_warner_1985
@@ -488,16 +488,29 @@ plot_car_stats <- function(car_lst,
       
     }
   } else {}
-  if (grouping == "Supersector") {
-    
-  }
+
+  # load & attach additional regional data if necessary
+  if ((grouping == "Geographic") & (!is.null(regional))) {
+    # pre-define empty holding space for new id data
+    car_df[["class"]] <- NA
+    for (i in 1:nrow(regional)) {
+      nm <- as.character(regional$B.Ticker[[i]])
+      # check if id data still present in working data
+      if (nm  %in% as.character(car_df$group)) {
+        # match the cells in each table to record the id data in the correct cell
+        car_df[car_df$group == nm,]$class <- as.character(regional[regional$B.Ticker==nm,]$Equity.Country.Classification)
+      }
+    }
+  } else if ((grouping == "Geographic")&(is.null(regional))) {
+    warning("Not plotting regions for CAAR plot. If regions desired, please provide regional dataframe")
+  } else {}
   
   # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
   car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
   # Reorder
   car_df <- car_df[order(car_df$caars),]
-
+  
   p <- ggplot(data = car_df) +
   geom_bar(
       mapping = aes(
@@ -1037,6 +1050,19 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_supe,
                                "aar_caar/"))
+  # plot_car_stats(car_lst = car.stats[[E_NAME]][['supe']],
+  #                grouping = 'Supersector',
+  #                ar_lst = ar_supe,
+  #                aar_lst = aar_supe,
+  #                event_specification = e_meta[[E_NAME]],
+  #                Path = paste0(d_root,
+  #                              d_res_pres,
+  #                              d_plot,
+  #                              E_DIR,
+  #                              d_icb,
+  #                              d_supe,
+  #                              "aar_caar/"))
+  
   # PLOT AR STATS ####
   print("plotting AAR dot plots.")
   plot_ar_stats(ar_lst = sar_geo,
@@ -1049,7 +1075,6 @@ for (EVT in seq_along(e_meta)) {
                               E_DIR,
                               d_geo,
                               "aar_caar/"))
-
   plot_ar_stats(ar_lst = sar_indu,
                 grouping = 'Industry',
                 E_SPEC = e_meta[[E_NAME]],
