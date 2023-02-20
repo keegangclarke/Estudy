@@ -479,18 +479,18 @@ caar_bar_plot <- function (df, plot_name=NULL) {
 } 
 # F: caar_point_plot() # ALTERNATIVE DOT PLOT FOR THE CAARs ####
 caar_point_plot <- function (df, plot_name=NULL) {
-  p <- ggplot(data = dplyr::arrange(df, caars)) #+
-  p+geom_hline(yintercept = 0) +
+  p <- ggplot(data = dplyr::arrange(df, caars)) +
+  geom_vline(xintercept = 0) +
     geom_point(
       mapping = aes(
-        x = group,
-        y = as.numeric(caars) * 100,
+        y = group,
+        x = as.numeric(caars) * 100,
         fill = significance,
         colour = rank.sig,
         shape = class
       ),
       stroke = 2,
-      size = 17,
+      size = 10,
       stat = 'identity',
       show.legend = TRUE
     ) +
@@ -502,8 +502,8 @@ caar_point_plot <- function (df, plot_name=NULL) {
                        " to ",
                        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
       caption = "Sample sizes shown as integers.",
-      x = "CAAR (%)",
-      y = "",
+      y = "CAAR (%)",
+      x = "",
       fill = "Significance"
     ) +
     scale_fill_manual(name = "Parametric \nSignificance",
@@ -512,16 +512,16 @@ caar_point_plot <- function (df, plot_name=NULL) {
                         values =  RColorBrewer::brewer.pal(5, 'Oranges')[-1]) +
     scale_shape_manual(name = "Market Class",
                        values = c("Developed"=21,"Advanced Emerging"=22,"Secondary Emerging"=23, "Frontier"=24)) +
-    scale_x_discrete(limits = df$group,
+    scale_y_discrete(limits = df$group,
                      guide = guide_axis(n.dodge = 1)) +
-    scale_y_continuous(n.breaks = 20) +
-    geom_text(mapping = aes(x = group,
-                            y = as.numeric(caars) * 100,
+    scale_x_continuous(n.breaks = 20) +
+    geom_text(mapping = aes(y = group,
+                            x = as.numeric(caars) * 100,
                             label = sample.size),
               position = position_dodge2(0)) +
-    guides(fill = guide_legend(override.aes = list(shape=21, size=8)),
-           shape = guide_legend(override.aes = list(size = 8)),
-           colour = guide_legend(override.aes = list(size = 8))
+    guides(fill = guide_legend(override.aes = list(shape=21, size=3)),
+           shape = guide_legend(override.aes = list(size = 3)),
+           colour = guide_legend(override.aes = list(size = 3))
            )
   return (p)
 }
@@ -618,7 +618,7 @@ plot_car_stats <- function(car_lst,
       path = Path,
       dpi = 600,
       width = 12,
-      height = 4,
+      height = 8,
       units = 'in'
     )
   }
