@@ -4,6 +4,7 @@ library(ggplot2)
 library(bizdays)
 library(scales) # use for labels
 library(beepr)
+library(patchwork)
 
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/development_aid_functions.R")
 source("C:/Users/Keegan/Desktop/Repository/@ Development/Estudy_R/bday_windows.R")
@@ -436,6 +437,95 @@ ar_lst_signif_repl <- function(ar_lst, sig_cols, ints=TRUE) {
   }
   return(ar_lst)
 }
+# F: caar_bar_plot() # OUTSOURCED BAR PLOT TO SIMPLIFY plot_car_stats() when using 'patchwork' ####
+caar_bar_plot <- function (df, plot_name=NULL) {
+  p <- ggplot(data = df) +
+    geom_bar(
+      mapping = aes(
+        y = group,
+        x = as.numeric(caars) * 100,
+        fill = significance,
+        colour = rank.sig
+      ),
+      size = 1,
+      stat = 'identity',
+      show.legend = TRUE
+    ) +
+    theme_bw() +
+    labs(
+      title = plot_name,
+      subtitle = paste("Cumulative Average Abnormal Returns:",
+                       e_meta[[EVT]]$event_window[[1]],
+                       " to ",
+                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
+      caption = "Sample sizes shown as integers.",
+      x = "CAAR (%)",
+      y = "",
+      fill = "Significance"
+    ) +
+    scale_fill_manual(name = "Parametric \nSignificance",
+                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
+    scale_colour_manual(name = "Rank Test \nSignificance",
+                        values =  RColorBrewer::brewer.pal(5, 'Oranges')[-1]) +
+    scale_y_discrete(limits = df$group,
+                     guide = guide_axis(n.dodge = 1)) +
+    scale_x_continuous(n.breaks = 20) +
+    geom_text(mapping = aes(y = group,
+                            x = as.numeric(caars) * 100,
+                            label = sample.size),
+              position = position_dodge2(0)) +
+    guides(colour = guide_legend(override.aes = list(fill = c(NA))))
+  return (p)
+} 
+# F: caar_point_plot() # ALTERNATIVE DOT PLOT FOR THE CAARs ####
+caar_point_plot <- function (df, plot_name=NULL) {
+  p <- ggplot(data = dplyr::arrange(df, caars)) #+
+  p+geom_hline(yintercept = 0) +
+    geom_point(
+      mapping = aes(
+        x = group,
+        y = as.numeric(caars) * 100,
+        fill = significance,
+        colour = rank.sig,
+        shape = class
+      ),
+      stroke = 2,
+      size = 17,
+      stat = 'identity',
+      show.legend = TRUE
+    ) +
+    theme_bw() +
+    labs(
+      title = plot_name,
+      subtitle = paste("Cumulative Average Abnormal Returns:",
+                       e_meta[[EVT]]$event_window[[1]],
+                       " to ",
+                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
+      caption = "Sample sizes shown as integers.",
+      x = "CAAR (%)",
+      y = "",
+      fill = "Significance"
+    ) +
+    scale_fill_manual(name = "Parametric \nSignificance",
+                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
+    scale_colour_manual(name = "Rank Test \nSignificance",
+                        values =  RColorBrewer::brewer.pal(5, 'Oranges')[-1]) +
+    scale_shape_manual(name = "Market Class",
+                       values = c("Developed"=21,"Advanced Emerging"=22,"Secondary Emerging"=23, "Frontier"=24)) +
+    scale_x_discrete(limits = df$group,
+                     guide = guide_axis(n.dodge = 1)) +
+    scale_y_continuous(n.breaks = 20) +
+    geom_text(mapping = aes(x = group,
+                            y = as.numeric(caars) * 100,
+                            label = sample.size),
+              position = position_dodge2(0)) +
+    guides(fill = guide_legend(override.aes = list(shape=21, size=8)),
+           shape = guide_legend(override.aes = list(size = 8)),
+           colour = guide_legend(override.aes = list(size = 8))
+           )
+  return (p)
+}
+
 # F: plot_car_stats() # PLOT CAR STATISTICS ####
 plot_car_stats <- function(car_lst,
                            grouping,
@@ -447,7 +537,8 @@ plot_car_stats <- function(car_lst,
                            Path = NULL,
                            Filename = NULL,
                            regional = NULL,
-                           rank_sig) {
+                           rank_sig,
+                           use_bar = FALSE) {
   # get data
   car_df <- car_lst$car_brown_warner_1985
   # get rank significance
@@ -508,46 +599,16 @@ plot_car_stats <- function(car_lst,
   # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
   car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
+  car_df$class <- gsub(pattern = '\\.', replacement = ' ', car_df$class) %>% factor(levels = c("Developed","Advanced Emerging","Secondary Emerging", "Frontier"))
   # Reorder
   car_df <- car_df[order(car_df$caars),]
   
-  p <- ggplot(data = car_df) +
-  geom_bar(
-      mapping = aes(
-        y = group,
-        x = as.numeric(caars) * 100,
-        fill = significance,
-        colour = rank.sig
-      ),
-      size = 1,
-      stat = 'identity',
-      show.legend = TRUE
-    ) +
-    theme_bw() +
-    labs(
-      title = Title,
-      subtitle = paste("Cumulative Average Abnormal Returns:",
-                       e_meta[[EVT]]$event_window[[1]],
-                       " to ",
-                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
-                       ),
-      caption = "Sample sizes shown as integers.",
-      x = "CAAR (%)",
-      y = "",
-      fill = "Significance"
-    ) +
-    scale_fill_manual(name = "Parametric \nSignificance",
-                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
-    scale_colour_manual(name = "Rank Test \nSignificance",
-                        values = RColorBrewer::brewer.pal(4, 'Oranges')) +
-    scale_y_discrete(limits = car_df$group,
-                     guide = guide_axis(n.dodge = 1)) +
-    scale_x_continuous(n.breaks = 20) +
-    geom_text(mapping = aes(y = group,
-                            x = as.numeric(caars) * 100,
-                            label = sample.size),
-              position = position_dodge2(0))
-
+  if ((grouping == "Geographic") & (!is.null(regional))) {
+    p <- caar_point_plot(car_df, plot_name = Title)
+    
+  } else {
+    p <- caar_bar_plot(car_df, plot_name = Title)
+  }
   
   if (!is.null(Path)) {
     Filename <- paste0(grouping, '_', 'E', EVT, '_car_stats_bar_graph.png')
@@ -587,7 +648,6 @@ merge_ar_stats <- function(ar_lst,
                            event_time(event_specification=event_spec[[first]] , dtype='character'),
                            by='date')
   }
-  
   # remove data already extracted
   rem <- name_lst[-1]
   # loop over names to
@@ -1025,7 +1085,8 @@ for (EVT in seq_along(e_meta)) {
                         d_plot,
                         E_DIR,
                         d_geo,
-                        "aar_caar/"))
+                        "aar_caar/"),
+                 regional = df_region)
   plot_car_stats(car_lst = car.stats[[E_NAME]][['indu']],
                  grouping = 'Industry',
                  ar_lst = ar_indu,
