@@ -82,7 +82,7 @@ all_events[[2]] <- event_spec(
   "event2",
   grouping = "meta",
   edate = as.Date("2020-01-23"),
-  bounds = c(-2, 8),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
@@ -90,7 +90,7 @@ all_events[[3]] <- event_spec(
   "event3",
   grouping = "meta",
   edate = as.Date("2020-02-24"),
-  bounds = c(-1, 9),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
@@ -98,7 +98,7 @@ all_events[[4]] <- event_spec(
   "event4",
   grouping = "meta",
   edate = as.Date("2020-03-09"),
-  bounds = c(-1, 9),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
