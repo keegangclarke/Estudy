@@ -150,8 +150,8 @@ e_meta[[1]] <- event_spec(
 e_meta[[2]] <- event_spec(
   e_name = "event2",
   grouping = "meta",
-  edate = as.Date("2020-01-23"),
-  bounds = c(-2, 8),
+  edate = as.Date("2020-01-30"),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
@@ -159,7 +159,7 @@ e_meta[[3]] <- event_spec(
   e_name = "event3",
   grouping = "meta",
   edate = as.Date("2020-02-24"),
-  bounds = c(-1, 9),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
@@ -167,7 +167,7 @@ e_meta[[4]] <- event_spec(
   e_name = "event4",
   grouping = "meta",
   edate = as.Date("2020-03-09"),
-  bounds = c(-1, 9),
+  bounds = c(-5, 5),
   est_len = 250,
   calendar = "weekdays"
 )
@@ -715,9 +715,7 @@ plot_ar_stats <- function(ar_lst,
   ar_df$group <- gsub(pattern = '\\.', replacement = ' ', ar_df$group)
   ar_df$group <- gsub(".Index", "", ar_df$group) %>% as.factor()
   ar_df$mean <- as.numeric(round(ar_df$mean*100, 2))
-  # Reorder
-  # ar_df <- ar_df[order(ar_df$mean),]
-  
+
   # make df for secondary plot
   lines <- ar_df$date %>% unique %>% as.data.frame %>% set_colnames('date')
   for (i in 1:length(ar_lst)) {
@@ -730,7 +728,6 @@ plot_ar_stats <- function(ar_lst,
         paste0('mean.',i))
       )
     # index by date
-    # lines <- lines %>% set_rownames(lines$date)
     rm(tmp_df)
   }
   # drop additional date column
@@ -741,11 +738,16 @@ plot_ar_stats <- function(ar_lst,
     round(digits = 2) %>% 
     cbind(tmp_df) %>%
     set_colnames(c('mean', 'date'))
+  lines[["cumulated"]] <- lines$mean %>% cumsum()
+  lines$date <- lines$date %>% as.Date()
+  lines[['Event.Time']] <- ar_df$Event.Time %>% unique() %>% sort()
+  # tmp_vec <- range(lines$mean) %>% divide_by(11) %>% round(2)
+  # lines[["y_breaks"]] <- seq(from = tmp_vec)
   rm(tmp_df)
   
   # ar_df[!("NA" == ar_df[["bh_signif"]])&!("NA" == ar_df[["mrank_signif"]]),]
   ar_df <- ar_df[!("NA" == ar_df[["bh_signif"]]),]
-  p <- ggplot(data = ar_df) +
+  p1 <- ggplot(data = ar_df) +
     geom_point(
       aes(
         x = date,
@@ -787,7 +789,7 @@ plot_ar_stats <- function(ar_lst,
     annotate(geom="text",
              x = unique(ar_df$date),
              y = seq(-1.65,-1.65, length.out=length(unique(ar_df$Event.Time))),
-             label=unique(ar_df$Event.Time),
+             label=sort(unique(ar_df$Event.Time)),
              size=3) +
     # scale_x_datetime("Date", #integer(length=length(unique(ar_df$Event.Time)))
     #                  date_labels = '%Y-%m-%d',
@@ -835,6 +837,41 @@ plot_ar_stats <- function(ar_lst,
   #           position = position_dodge2(0),
   #           hjust = -1
   #           )
+  
+  p2 <- ggplot(data = lines) +
+  geom_line(
+    mapping = aes(x = Event.Time,
+                  y = mean,
+                  colour = "Average AAR"),
+    size = 1
+  ) +
+    geom_line(
+      mapping = aes(x = Event.Time,
+                    y = cumulated,
+                    colour = "Cumulated Average AAR"),
+      size = 1,
+      show.legend = TRUE
+    ) + 
+    labs(color = 'Legend') +
+    scale_x_continuous(breaks = lines$Event.Time) +
+    scale_y_continuous(breaks = pretty_breaks(n=10)) + 
+    geom_hline(yintercept = 0,
+               size = 0.3) +
+    geom_ribbon(aes(x = Event.Time,
+                    ymin = mean,
+                    ymax = cumulated),
+                fill = "navyblue",
+                alpha = 0.1) +
+    theme_bw() +
+    scale_color_manual(name = "Type",
+                       values = c("Average AAR" = "navyblue",
+                                  "Cumulated Average AAR" = "darkred")) +
+    labs(title = grouping,
+         subtitle = "Average AARs",
+         y = "Average Abnormal Return (%)",
+         x = "Event day")
+  
+    p <- p1+p2
     
     if (dir.exists(Path)) {
       ggsave(
@@ -842,7 +879,7 @@ plot_ar_stats <- function(ar_lst,
         filename = Filename,
         path = Path,
         dpi = 600,
-        width = 13,
+        width = 28,
         height = 9,
         units = 'in'
       )
@@ -854,7 +891,7 @@ plot_ar_stats <- function(ar_lst,
         filename = Filename,
         path = Path,
         dpi = 600,
-        width = 13,
+        width = 28,
         height = 9,
         units = 'in'
       )
