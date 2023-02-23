@@ -857,7 +857,8 @@ plot_ar_stats <- function(ar_lst,
       color='black',
       box.padding = 0.3,
       nudge_x = 0.2,
-      size = 5
+      force = 0.5,
+      size = 4
     ) +
     ggrepel::geom_text_repel(
       data = ar_df[ar_df$mean<=0,],
@@ -869,9 +870,12 @@ plot_ar_stats <- function(ar_lst,
       color='firebrick3',
       box.padding = 0.3,
       nudge_x = 0.2,
-      size = 5
+      force = 0.5,
+      size = 4
     ) + 
-    theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
+    theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+          legend.text = element_text(size=15)) + 
+    guides(color = guide_legend(override.aes = list(size = 8)))
   
   p2 <- ggplot(data = lines) +
   geom_line(
@@ -906,7 +910,7 @@ plot_ar_stats <- function(ar_lst,
                           e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
          y = "Average Abnormal Return (%)",
          x = "Event day",
-         color = 'Legend')
+         color = 'Legend') 
   
     p <- p1/p2 + plot_layout(heights = c(2,1))
     
