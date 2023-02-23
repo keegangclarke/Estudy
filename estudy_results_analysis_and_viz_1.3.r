@@ -818,7 +818,7 @@ plot_ar_stats <- function(ar_lst,
     # ) +
     labs(
       title = Title,
-      subtitle = paste("Average Abnormal Returns:",
+      subtitle = paste("Average Abnormal Returns (%): ",
                        e_meta[[EVT]]$event_window[[1]],
                        " to ",
                        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
