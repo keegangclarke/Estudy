@@ -788,8 +788,6 @@ plot_ar_stats <- function(ar_lst,
   lines[["cumulated"]] <- lines$mean %>% cumsum()
   lines$date <- lines$date %>% as.Date()
   lines[['Event.Time']] <- ar_df$Event.Time %>% unique() %>% sort()
-  # tmp_vec <- range(lines$mean) %>% divide_by(11) %>% round(2)
-  # lines[["y_breaks"]] <- seq(from = tmp_vec)
   rm(tmp_df)
   
   # ar_df[!("NA" == ar_df[["bh_signif"]])&!("NA" == ar_df[["mrank_signif"]]),]
@@ -804,18 +802,9 @@ plot_ar_stats <- function(ar_lst,
         size = mrank_signif, #gsign_signif
         # group = mean
       ),
-      # shape = 21,
-      # stroke = 2,
       alpha = 0.7,
       show.legend = TRUE
     ) +
-    # geom_line(
-    #   # data = lines,
-    #     x = lines$date,
-    #     y = lines$mean,
-    #   alpha = 0.7,
-    #   show.legend = TRUE
-    # ) +
     labs(
       title = Title,
       subtitle = paste("Average Abnormal Returns (%): ",
@@ -837,12 +826,6 @@ plot_ar_stats <- function(ar_lst,
              y = seq(-1.65,-1.65, length.out=length(unique(ar_df$Event.Time))),
              label=sort(unique(ar_df$Event.Time)),
              size=0.1) +
-    # scale_x_datetime("Date", #integer(length=length(unique(ar_df$Event.Time)))
-    #                  date_labels = '%Y-%m-%d',
-    #                  sec.axis = sec_axis(
-    #                    name = "Event Time",
-    #                    labels = Event.Time
-    #                  )) #+
     coord_cartesian(ylim = c(0, length(unique(ar_df$group))+1),
                     xlim = c(0, length(unique(ar_df$date))+1),
                     expand = FALSE,
