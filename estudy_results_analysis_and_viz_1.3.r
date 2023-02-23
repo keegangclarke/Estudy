@@ -526,6 +526,52 @@ caar_point_plot <- function (df, plot_name=NULL) {
   return (p)
 }
 
+# F: caar_point_plot2() # ALTERNATIVE DOT PLOT FOR THE CAARs ####
+caar_point_plot2 <- function (df, plot_name=NULL) {
+  # same plot except without the classes
+  p <- ggplot(data = dplyr::arrange(df, caars)) +
+    geom_vline(xintercept = 0) +
+    geom_point(
+      mapping = aes(
+        y = group,
+        x = as.numeric(caars) * 100,
+        fill = significance,
+        colour = rank.sig
+      ),
+      shape = 21,
+      stroke = 2,
+      size = 10,
+      stat = 'identity',
+      show.legend = TRUE
+    ) +
+    theme_bw() +
+    labs(
+      title = plot_name,
+      subtitle = paste("Cumulative Average Abnormal Returns:",
+                       e_meta[[EVT]]$event_window[[1]],
+                       " to ",
+                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
+      caption = "Sample sizes shown as integers.",
+      y = "CAAR (%)",
+      x = "",
+      fill = "Significance"
+    ) +
+    scale_fill_manual(name = "Parametric \nSignificance",
+                      values = RColorBrewer::brewer.pal(4, 'PuBu')) +
+    scale_colour_manual(name = "Rank Test \nSignificance",
+                        values =  RColorBrewer::brewer.pal(5, 'Oranges')[-1]) +
+    scale_y_discrete(limits = df$group,
+                     guide = guide_axis(n.dodge = 1)) +
+    scale_x_continuous(n.breaks = 20) +
+    geom_text(mapping = aes(y = group,
+                            x = as.numeric(caars) * 100,
+                            label = sample.size),
+              position = position_dodge2(0)) +
+    guides(fill = guide_legend(override.aes = list(shape=21, size=3)),
+           colour = guide_legend(override.aes = list(size = 3))
+    )
+  return (p)
+}
 # F: plot_car_stats() # PLOT CAR STATISTICS ####
 plot_car_stats <- function(car_lst,
                            grouping,
@@ -592,6 +638,7 @@ plot_car_stats <- function(car_lst,
         car_df[car_df$group == nm,]$class <- as.character(regional[regional$B.Ticker==nm,]$Equity.Country.Classification)
       }
     }
+    car_df$class <- gsub(pattern = '\\.', replacement = ' ', car_df$class) %>% factor(levels = c("Developed","Advanced Emerging","Secondary Emerging", "Frontier"))
   } else if ((grouping == "Geographic")&(is.null(regional))) {
     warning("Not plotting regions for CAAR plot. If regions desired, please provide regional dataframe")
   } else {}
@@ -599,7 +646,7 @@ plot_car_stats <- function(car_lst,
   # format nicely
   car_df$group <- gsub(pattern = '\\.', replacement = ' ', car_df$group)
   car_df$group <- gsub(".Index", "", car_df$group) %>% as.factor()
-  car_df$class <- gsub(pattern = '\\.', replacement = ' ', car_df$class) %>% factor(levels = c("Developed","Advanced Emerging","Secondary Emerging", "Frontier"))
+  
   # Reorder
   car_df <- car_df[order(car_df$caars),]
   
@@ -607,7 +654,7 @@ plot_car_stats <- function(car_lst,
     p <- caar_point_plot(car_df, plot_name = Title)
     
   } else {
-    p <- caar_bar_plot(car_df, plot_name = Title)
+    p <- caar_point_plot2(car_df, plot_name = Title)
   }
   
   if (!is.null(Path)) {
@@ -758,7 +805,7 @@ plot_ar_stats <- function(ar_lst,
         # group = mean
       ),
       # shape = 21,
-      stroke = 2,
+      # stroke = 2,
       alpha = 0.7,
       show.legend = TRUE
     ) +
@@ -771,18 +818,17 @@ plot_ar_stats <- function(ar_lst,
     # ) +
     labs(
       title = Title,
-      subtitle = paste(
-        "Average Abnormal Returns:",
-        e_meta[[EVT]]$event_window[[1]],
-        " to ",
-        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
+      subtitle = paste("Average Abnormal Returns:",
+                       e_meta[[EVT]]$event_window[[1]],
+                       " to ",
+                       e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]
       ),
       # caption = "AARs sizes shown as percentages.",
       x = "Date",
-      y = "",
+      y = grouping,
       size = "Rank Test \nSignificance", #"Generalized \nSign Test \nSignificance"
     ) +
-    theme_bw() +
+    theme_bw(base_size = 15) +
     theme(plot.margin=unit(c(1,1,2.25,1),"lines"))+ #plot.caption.position = element_text(vjust=0)
     scale_colour_manual(name = "Parametric \nSignificance \n(Boehmer)", #"Rank Test \nSignificance",
                         values = viridis::viridis(4)) + #heat.colors(4))
@@ -790,7 +836,7 @@ plot_ar_stats <- function(ar_lst,
              x = unique(ar_df$date),
              y = seq(-1.65,-1.65, length.out=length(unique(ar_df$Event.Time))),
              label=sort(unique(ar_df$Event.Time)),
-             size=3) +
+             size=0.1) +
     # scale_x_datetime("Date", #integer(length=length(unique(ar_df$Event.Time)))
     #                  date_labels = '%Y-%m-%d',
     #                  sec.axis = sec_axis(
@@ -807,14 +853,11 @@ plot_ar_stats <- function(ar_lst,
         y = group,
         x = date,
         label = mean,
-      )
-      # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
-      #                   values = viridis::viridis(4)) +
-      # scale_size(name = "Generalized Sign Test \nSignificance") +
-      ,
+      ),
       color='black',
       box.padding = 0.3,
-      nudge_x = 0.2
+      nudge_x = 0.2,
+      size = 5
     ) +
     ggrepel::geom_text_repel(
       data = ar_df[ar_df$mean<=0,],
@@ -822,21 +865,13 @@ plot_ar_stats <- function(ar_lst,
         y = group,
         x = date,
         label = mean,
-      )
-      # scale_fill_manual(name = "Parametric \nSignificance \n(Boehmer)",
-      #                   values = viridis::viridis(4)) +
-      # scale_size(name = "Generalized Sign Test \nSignificance") +
-      ,
+      ),
       color='firebrick3',
       box.padding = 0.3,
-      nudge_x = 0.2
-    )
-  # geom_text(mapping = aes(y = group,
-  #                         x = date,
-  #                         label = round(mean*100,2)),
-  #           position = position_dodge2(0),
-  #           hjust = -1
-  #           )
+      nudge_x = 0.2,
+      size = 5
+    ) + 
+    theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1))
   
   p2 <- ggplot(data = lines) +
   geom_line(
@@ -852,7 +887,6 @@ plot_ar_stats <- function(ar_lst,
       size = 1,
       show.legend = TRUE
     ) + 
-    labs(color = 'Legend') +
     scale_x_continuous(breaks = lines$Event.Time) +
     scale_y_continuous(breaks = pretty_breaks(n=10)) + 
     geom_hline(yintercept = 0,
@@ -862,16 +896,19 @@ plot_ar_stats <- function(ar_lst,
                     ymax = cumulated),
                 fill = "navyblue",
                 alpha = 0.1) +
-    theme_bw() +
+    theme_bw(base_size = 15) +
     scale_color_manual(name = "Type",
                        values = c("Average AAR" = "navyblue",
                                   "Cumulated Average AAR" = "darkred")) +
-    labs(title = grouping,
-         subtitle = "Average AARs",
+    labs(subtitle = paste("Average AARs:",
+                          e_meta[[EVT]]$event_window[[1]],
+                          " to ",
+                          e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
          y = "Average Abnormal Return (%)",
-         x = "Event day")
+         x = "Event day",
+         color = 'Legend')
   
-    p <- p1+p2
+    p <- p1/p2 + plot_layout(heights = c(2,1))
     
     if (dir.exists(Path)) {
       ggsave(
@@ -879,8 +916,8 @@ plot_ar_stats <- function(ar_lst,
         filename = Filename,
         path = Path,
         dpi = 600,
-        width = 28,
-        height = 9,
+        width = 14,
+        height = 11,
         units = 'in'
       )
       
@@ -1111,7 +1148,7 @@ for (EVT in seq_along(e_meta)) {
   
   # PLOT CAR STATS ####
   # Plot CAR results: B&W & RANK
-  print("plotting CAAR bar charts.")
+  print("plotting CAAR charts.")
   plot_car_stats(car_lst = car.stats[[E_NAME]][['geo']],
                  grouping = 'Geographic',
                  ar_lst = ar_geo,
@@ -1148,18 +1185,6 @@ for (EVT in seq_along(e_meta)) {
                                d_icb,
                                d_supe,
                                "aar_caar/"))
-  # plot_car_stats(car_lst = car.stats[[E_NAME]][['supe']],
-  #                grouping = 'Supersector',
-  #                ar_lst = ar_supe,
-  #                aar_lst = aar_supe,
-  #                event_specification = e_meta[[E_NAME]],
-  #                Path = paste0(d_root,
-  #                              d_res_pres,
-  #                              d_plot,
-  #                              E_DIR,
-  #                              d_icb,
-  #                              d_supe,
-  #                              "aar_caar/"))
   
   # PLOT AR STATS ####
   print("plotting AAR dot plots.")
