@@ -478,7 +478,7 @@ caar_bar_plot <- function (df, plot_name=NULL) {
   return (p)
 } 
 # F: caar_point_plot() # ALTERNATIVE DOT PLOT FOR THE CAARs ####
-caar_point_plot <- function (df, plot_name=NULL) {
+caar_point_plot <- function (df, plot_name=NULL, GROUP = NULL) {
   p <- ggplot(data = dplyr::arrange(df, caars)) +
   geom_vline(xintercept = 0) +
     geom_point(
@@ -502,8 +502,8 @@ caar_point_plot <- function (df, plot_name=NULL) {
                        " to ",
                        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
       caption = "Sample sizes shown as integers.",
-      y = "CAAR (%)",
-      x = "",
+      y = GROUP,
+      x = "CAAR (%)",
       fill = "Significance"
     ) +
     scale_fill_manual(name = "Parametric \nSignificance",
@@ -527,7 +527,7 @@ caar_point_plot <- function (df, plot_name=NULL) {
 }
 
 # F: caar_point_plot2() # ALTERNATIVE DOT PLOT FOR THE CAARs ####
-caar_point_plot2 <- function (df, plot_name=NULL) {
+caar_point_plot2 <- function (df, plot_name=NULL, GROUP) {
   # same plot except without the classes
   p <- ggplot(data = dplyr::arrange(df, caars)) +
     geom_vline(xintercept = 0) +
@@ -552,8 +552,8 @@ caar_point_plot2 <- function (df, plot_name=NULL) {
                        " to ",
                        e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
       caption = "Sample sizes shown as integers.",
-      y = "CAAR (%)",
-      x = "",
+      y = GROUP,
+      x = "CAAR (%)",
       fill = "Significance"
     ) +
     scale_fill_manual(name = "Parametric \nSignificance",
@@ -651,10 +651,10 @@ plot_car_stats <- function(car_lst,
   car_df <- car_df[order(car_df$caars),]
   
   if ((grouping == "Geographic") & (!is.null(regional))) {
-    p <- caar_point_plot(car_df, plot_name = Title)
+    p <- caar_point_plot(car_df, plot_name = Title, GROUP = grouping)
     
   } else {
-    p <- caar_point_plot2(car_df, plot_name = Title)
+    p <- caar_point_plot2(car_df, plot_name = Title, GROUP = grouping)
   }
   
   if (!is.null(Path)) {
