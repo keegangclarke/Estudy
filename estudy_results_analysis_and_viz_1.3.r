@@ -521,8 +521,11 @@ caar_point_plot <- function (df, plot_name=NULL, GROUP = NULL) {
               position = position_dodge2(0)) +
     guides(fill = guide_legend(override.aes = list(shape=21, size=3)),
            shape = guide_legend(override.aes = list(size = 3)),
-           colour = guide_legend(override.aes = list(size = 3))
-           )
+           colour = guide_legend(override.aes = list(size = 3)) 
+           ) + 
+    theme(axis.text.x = element_text(size = 11.5),
+          axis.text.y = element_text(size = 13.5),
+          legend.text = element_text(size=15.5))
   return (p)
 }
 
@@ -569,7 +572,10 @@ caar_point_plot2 <- function (df, plot_name=NULL, GROUP) {
               position = position_dodge2(0)) +
     guides(fill = guide_legend(override.aes = list(shape=21, size=3)),
            colour = guide_legend(override.aes = list(size = 3))
-    )
+    ) + 
+    theme(axis.text.x = element_text(size = 11.5),
+          axis.text.y = element_text(size = 13.5),
+          legend.text = element_text(size=15.5))
   return (p)
 }
 # F: plot_car_stats() # PLOT CAR STATISTICS ####
@@ -856,8 +862,9 @@ plot_ar_stats <- function(ar_lst,
       force = 0.5,
       size = 4
     ) + 
-    theme(axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
-          legend.text = element_text(size=15)) + 
+    theme(axis.text.x = element_text(size = 13.5, angle = 45, hjust = 1),
+          axis.text.y = element_text(size = 13.5),
+          legend.text = element_text(size=15.5)) + 
     guides(color = guide_legend(override.aes = list(size = 8)))
   
   p2 <- ggplot(data = lines) +
@@ -893,7 +900,10 @@ plot_ar_stats <- function(ar_lst,
                           e_meta[[EVT]]$event_window[[length(e_meta[[EVT]]$event_window)]]),
          y = "Average Abnormal Return (%)",
          x = "Event day",
-         color = 'Legend') 
+         color = 'Legend') + 
+    theme(axis.text.x = element_text(size = 13.5),
+          axis.text.y = element_text(size = 13.5),
+          legend.text = element_text(size=15.5))
   
     p <- p1/p2 + plot_layout(heights = c(2,1))
     
